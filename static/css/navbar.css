@@ -1,0 +1,208 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 62.5%; /* Base font size for rem calculations */
+    font-family: 'Roboto', sans-serif;
+}
+
+li {
+    list-style: none;
+}
+
+a {
+    text-decoration: none;
+}
+
+/* Header and Navbar Styles */
+.header {
+    border-bottom: 1px solid #E2E8F0;
+    background-color: #222;
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    z-index: 1000;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 1.5rem;
+}
+
+.hamburger {
+    display: none; /* Hide by default */
+}
+
+.bar {
+    display: block;
+    width: 25px;
+    height: 3px;
+    margin: 5px auto;
+    background-color: #fff;
+    transition: all 0.3s ease-in-out;
+}
+
+.nav-menu {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-item {
+    margin-left: 5rem; /* Space between nav items */
+}
+
+.nav-link {
+    font-size: 2rem; /* Font size for links */
+    font-weight: 400;
+    color: #fff;
+}
+
+.nav-link:hover {
+    color: #482ff7;
+}
+
+.nav-logo {
+    font-size: 3rem; /* Logo font size */
+    font-weight: 500;
+    color: #fff;
+}
+
+/* Add padding to main content to prevent overlap with fixed header */
+main {
+    padding-top: 10rem; /* Adjust based on header height */
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column; /* Stack navbar items on small screens */
+        align-items: flex-start; /* Align items to the left */
+        padding: 1rem; /* Reduce padding on mobile */
+    }
+
+    .nav-menu {
+        display: none; /* Hide menu by default */
+        flex-direction: column; /* Stack items vertically */
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background-color: #222; /* Same background as header */
+        padding: 10px 0; /* Vertical padding */
+        z-index: 999;
+    }
+
+    .nav-menu.active {
+        display: flex; /* Show menu when active */
+    }
+
+    .nav-item {
+        margin-left: 0; /* Remove left margin on mobile */
+        padding: 1rem; /* Add padding for touch targets */
+        text-align: center; /* Center-align text */
+    }
+
+    .nav-link {
+        font-size: 20px; /* Smaller font size on mobile */
+    }
+
+    .nav-logo {
+        font-size: 2.5rem; /* Smaller logo size on mobile */
+    }
+
+    .hamburger {
+        display: block; /* Show hamburger on mobile */
+        cursor: pointer;
+    }
+
+    .hamburger.active .bar:nth-child(2) {
+        opacity: 0; /* Hide the middle bar */
+    }
+
+    .hamburger.active .bar:nth-child(1) {
+        transform: translateY(8px) rotate(45deg); /* Rotate first bar */
+    }
+
+    .hamburger.active .bar:nth-child(3) {
+        transform: translateY(-8px) rotate(-45deg); /* Rotate third bar */
+    }
+}
+
+/* Navbar Dropdown Styles */
+.nav-item.dropdown {
+    position: relative;
+}
+
+.dropdown-content {
+    display: none; 
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #0f0031;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    z-index: 1000;
+    width: 240px; /* Set width */
+    height: 360px; /* Set height */
+    overflow: auto; /* Allows scrolling if needed */
+}
+
+.dropdown-content.active {
+    display: block; /* Show dropdown when active */
+}
+
+/* Tool Card Styles */
+.tool-card {
+    background: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 5px; /* Space between cards */
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.tool-card img {
+    width: 80px; /* Square image size */
+    height: 80px; /* Square image size */
+    object-fit: cover;
+    margin-bottom: 5px; /* Space between image and text */
+}
+
+.tool-card p {
+    font-size: 1.4rem; /* Use rem for responsive text size */
+    margin: 0;
+    color: #333;
+}
+
+/* Hover and Active State for Tool Cards */
+.tool-card:hover {
+    background-color: #f1f1f1;
+    transform: scale(1.05);
+}
+
+/* Additional Responsive Styles */
+@media (max-width: 480px) {
+    .nav-link {
+        font-size: 1.2rem; /* Smaller link size for very small screens */
+    }
+
+    .nav-logo {
+        font-size: 2rem; /* Smaller logo size for very small screens */
+    }
+
+    .tool-card p {
+        font-size: 1.2rem; /* Smaller text size for tool cards on mobile */
+    }
+}

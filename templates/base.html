@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+    <!-- Inside your base.html in the <head> section -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tools.css') }}">
+
+
+    
+    {% if request.endpoint == 'home' %}
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/home.css') }}">
+    {% endif %}
+    
+    <title>{% block title %}Pentest Website{% endblock %}</title>
+</head>
+
+<body>
+    {% include 'navbar.html' %}
+    
+    <div>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    {% block content %}{% endblock %}
+
+    <script src="{{ url_for('static', filename='navbar.js') }}"></script>
+    
+</body>
+
+</html>

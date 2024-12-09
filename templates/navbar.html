@@ -1,0 +1,43 @@
+<!-- templates/navbar.html -->
+<header class="header">
+    <div class="nav-container">
+        <nav class="navbar">
+            <a href="{{ url_for('home') }}" class="nav-logo">Autosecure</a>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('home') }}" class="nav-link">Home</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a href="javascript:void(0);" class="nav-link dropdown-toggle" onclick="toggleDropdown(event)">Tools</a>
+                    <div id="toolsDropdown" class="dropdown-content">
+                        <a href="{{ url_for('network_scanner') }}" class="tool-card">
+                            <img src="{{ url_for('static', filename='images/tool1.png') }}" alt="Network Scanner">
+                            <p>Network Scanner</p>
+                        </a>
+                        <a href="{{ url_for('website_scanner') }}" class="tool-card">
+                            <img src="{{ url_for('static', filename='images/web.jpg') }}" alt="Website Scanner">
+                            <p>Website Scanner</p>
+                        </a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">Resources</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">Blog</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">Contact</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </nav>
+    </div>
+</header>

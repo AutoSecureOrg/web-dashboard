@@ -1,0 +1,8 @@
+Flask
+ipaddress
+python-nmap
+requests
+Jinja2
+pymetasploit3
+prettytable
+fpdf

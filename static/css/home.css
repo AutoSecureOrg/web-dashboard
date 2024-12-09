@@ -1,0 +1,125 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 30 auto;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+h1, h2, h3 {
+    color: #2c3e50;
+}
+
+p {
+    color: #7f8c8d;
+}
+
+.hero-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 40px;
+    background: #161617;
+    text-align: left;
+    border-bottom: 1px solid #bdc3c7;
+    margin-top: 100px; /* Adjust this value to push content down */
+
+}
+
+.hero-content {
+    max-width: 50%;
+}
+
+.hero-image img {
+    max-width: 100%;
+    border-radius: 10px;
+}
+
+.cta-button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #154242;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 5px;
+    margin-top: 20px;
+}
+
+.cta-button:hover {
+    background-color: #0a202e;
+}
+
+.features-section {
+    padding: 40px;
+    background-color: #1c1a1a;
+}
+
+.features-container {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+}
+
+.feature {
+    flex: 1 1 300px;
+    margin: 20px;
+    padding: 20px;
+    background: #252323;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.feature h3 {
+    color: #2980b9;
+}
+
+.feature p {
+    margin-top: 10px;
+}
+
+.testimonials-section {
+    padding: 40px;
+    background-color: #2a2d2e;
+    text-align: center;
+}
+
+.testimonials {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.testimonial {
+    max-width: 600px;
+    margin: 20px;
+    padding: 20px;
+    background-color: #1f1c1c;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.testimonial cite {
+    display: block;
+    margin-top: 10px;
+    font-style: italic;
+    color: #95a5a6;
+}
+
+@media screen and (max-width: 768px) {
+    .hero-section {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .hero-content {
+        max-width: 100%;
+    }
+
+    .features-container {
+        flex-direction: column;
+    }
+
+    .feature {
+        max-width: 100%;
+    }
+}

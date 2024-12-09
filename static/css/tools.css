@@ -1,0 +1,339 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #0c1b37; 
+    color: #f0f0f0; 
+}
+
+.container {
+    max-width: 1200px;
+    margin: 80px auto; 
+    padding: 20px;
+}
+
+header {
+    display: flex;
+    align-items: center; 
+    justify-content: space-between; 
+    margin-bottom: 50px; 
+    flex-wrap: wrap;
+}
+
+h2 {
+    color: #ffcc00; 
+    font-size: 48px;
+    font-weight: bold;
+}
+.hidden {
+    display: none; 
+}
+
+p {
+    font-size: 18px; 
+    line-height: 1.7; 
+    color: #b0c4de; 
+}
+
+.header-text {
+    max-width: 60%; 
+}
+
+.header-image {
+    max-width: 35%; /* Adjust image size for better balance */
+    height: auto; /* Maintain aspect ratio */
+    border-radius: 10px; /* Subtle rounding for a modern look */
+}
+
+.scanner-wrapper {
+    display: flex;
+    justify-content: center;
+    flex-direction: column; /* Stack cards vertically for simplicity */
+    margin-top: 20px;
+}
+
+.scanner-card {
+    background-color: #18233d; /* Slightly lighter background for contrast */
+    padding: 30px; /* Extra padding for better spacing */
+    border-radius: 12px; /* Rounded edges for a softer look */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Stronger shadow for depth */
+    margin: 15px auto; /* Center alignment with spacing */
+    max-width: 600px; /* Limit card width for readability */
+}
+
+.scanner-card h3 {
+    color: #ffcc00; 
+    margin-bottom: 20px; /* Consistent spacing */
+    font-size: 24px;
+    text-align: center;
+    border-bottom: 2px solid #ffcc00; /* Underline for emphasis */
+    padding-bottom: 10px;
+}
+
+label {
+    color: #f0f0f0; /* Maintain light text color */
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+input, select {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0 20px; /* Spacing between inputs */
+    border: 1px solid #3a4d67; /* Subtle border for inputs */
+    border-radius: 6px; /* Smooth edges for a modern look */
+    background-color: #101a2b; /* Dark input background */
+    color: #f0f0f0; /* Light text inside inputs */
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+input:focus, select:focus {
+    border-color: #ffcc00; /* Highlight input on focus */
+}
+
+input::placeholder {
+    color: #9ca3af; /* Softer gray for placeholder text */
+}
+
+button {
+    background-color: #ffcc00;
+    color: #0c1b37; 
+    border: none;
+    border-radius: 8px;
+    padding: 12px 15px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+}
+
+button:hover {
+    background-color: #ffd633; 
+}
+
+button:active {
+    background-color: #e6b800; 
+}
+
+.info-card {
+    margin-top: 40px;
+    background-color: #23314a; 
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); 
+}
+
+.info-card h4 {
+    margin-top: 0;
+    color: #ffcc00; 
+}
+
+/* Results Section */
+#results-content {
+    background-color: #192c44; 
+    border: 1px solid #3a4d67; 
+    padding: 15px;
+    margin-top: 20px;
+    max-height: 300px;
+    overflow-y: auto; /* Scrollable for large results */
+    border-radius: 8px;
+}
+
+#toggle-results {
+    background-color: #ffcc00; 
+    color: #0c1b37;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 6px;
+    font-weight: bold;
+    margin-top: 10px;
+    transition: background-color 0.3s ease;
+}
+
+#toggle-results:hover {
+    background-color: #ffd633; 
+}
+
+/* Scanning Icon */
+#scanning-icon {
+    text-align: center;
+    margin: 20px 0;
+}
+
+#scanning-icon img {
+    width: 50px; 
+}
+
+/* Media Queries for Responsive Design */
+@media (max-width: 768px) {
+    .header-text {
+        max-width: 100%; /* Full width on smaller screens */
+        text-align: center;
+    }
+
+    .header-image {
+        max-width: 100%; /* Full width */
+        margin-top: 20px; /* Spacing between elements */
+    }
+
+    h2 {
+        font-size: 2.5rem;
+    }
+
+    p {
+        font-size: 1rem; /* Adjust for smaller screens */
+    }
+
+    .scanner-card {
+        max-width: 100%; 
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    h2 {
+        font-size: 2rem;
+    }
+
+    p {
+        font-size: 0.9rem;
+    }
+}
+/* Spinner Styles */
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3; 
+    border-top: 4px solid #ffcc00; 
+    border-radius: 50%; 
+    animation: spin 1s linear infinite; 
+    margin: 0 auto; 
+}
+
+/* Animation for the spinner */
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+
+
+
+
+
+
+
+
+/* Input Card Styles */
+.input-card {
+    background-color: #1e2a3f; /* Darker background for the card */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Slight shadow for depth */
+    max-width: 400px; /* Limit card width for compact appearance */
+    margin: 0 auto; /* Center the card */
+    text-align: left; /* Align text to the left */
+}
+
+.input-card h3 {
+    color: #ffcc00; /* Bright yellow header */
+    margin-bottom: 20px; /* Space below the title */
+    text-align: center; /* Center the header text */
+    font-size: 20px;
+}
+
+label {
+    color: #ffffff; /* Light text for dark background */
+    font-size: 14px;
+    margin-bottom: 5px;
+    display: block; /* Ensure labels are above inputs */
+}
+
+input, select {
+    width: 100%; /* Full width input fields */
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #3a4d67; /* Subtle border for input fields */
+    border-radius: 5px; /* Rounded edges */
+    background-color: #101a2b; /* Darker background for inputs */
+    color: #ffffff; /* Light text for inputs */
+    font-size: 14px;
+}
+
+input::placeholder {
+    color: #9ca3af; /* Lighter placeholder text */
+}
+
+button {
+    background-color: #ffcc00; /* Bright yellow button */
+    color: #0c1b37; /* Dark text for contrast */
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #ffd633; /* Slightly lighter yellow on hover */
+}
+
+/* Center the spinner */
+.spinner {
+    margin: 0 auto;
+}
+
+
+/* Sliding animation for results */
+@keyframes slide-up {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slide-down {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+}
+
+#results-content {
+    background-color: #1e2a3f;
+    border-radius: 10px;
+    padding: 20px;
+    border: 1px solid #3a4d67;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Initial hidden state */
+.slide-hidden {
+    animation: slide-down 0.5s ease forwards;
+}
+
+/* Visible state */
+.slide-visible {
+    animation: slide-up 0.5s ease forwards;
+}
