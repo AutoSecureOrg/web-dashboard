@@ -5,12 +5,17 @@
 {% block content %}
 <div class="hero-section">
     <div class="hero-content">
-        <h1>Welcome to the Penetration Testing Platform</h1>
-        <p>Get a hacker's perspective on your web apps, network security.</p>
-        <a href="#tools" class="cta-button">Explore Tools</a>
+        <h1>Get a hacker's perspective on your open ports and web vulnerabilities</h1>
+        <p>Our platform helps security teams automate port exploitation and web scanning, easily and without expert hacking skills.</p>
+        <ul class="feature-list">
+            <li>Automatically scan and exploit vulnerable ports</li>
+            <li>Detect critical web vulnerabilities with automation</li>
+            <li>Evaluate security risks through automated exploitation</li>
+            <li>Streamline your testing process and reporting</li>
+        </ul>
     </div>
     <div class="hero-image">
-        <img src="https://via.placeholder.com/500x300" alt="Security Illustration">
+        <img src="{{ url_for('static', filename='images/penetration.png') }}" alt="Dashboard Screenshot">
     </div>
 </div>
 

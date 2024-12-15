@@ -1,28 +1,32 @@
+
+
+/* Basic Reset and Global Styles */
 body {
     font-family: Arial, sans-serif;
-    margin: 30 auto;
+    margin: 0;
     padding: 0;
     box-sizing: border-box;
+    background-color: #1b1e21;
+    color: #ecf0f1;
 }
 
 h1, h2, h3 {
-    color: #2c3e50;
+    color: #ecf0f1;
 }
 
 p {
-    color: #7f8c8d;
+    color: #bdc3c7;
 }
 
+/* Hero Section */
 .hero-section {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 40px;
+    padding: 50px;
     background: #161617;
     text-align: left;
-    border-bottom: 1px solid #bdc3c7;
-    margin-top: 100px; /* Adjust this value to push content down */
-
+    margin-top: 100px;
 }
 
 .hero-content {
@@ -30,24 +34,49 @@ p {
 }
 
 .hero-image img {
-    max-width: 100%;
+    width: 80%;  /* Increase image width */
+    height: auto; /* Maintain aspect ratio */
     border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin-left: 10%; /* Center the image by pulling it slightly to the left */
 }
 
-.cta-button {
-    display: inline-block;
-    padding: 10px 20px;
-    background-color: #154242;
-    color: #fff;
-    text-decoration: none;
-    border-radius: 5px;
-    margin-top: 20px;
+
+.hero-content h1 {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
 }
 
-.cta-button:hover {
-    background-color: #0a202e;
+.hero-content p {
+    font-size: 2.1rem;
+    margin-bottom: 30px;
 }
 
+.feature-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.feature-list li {
+    font-size: 1.9rem;
+    color: #ecf0f1;
+    margin: 10px 0;
+    position: relative;
+    padding-left: 25px;
+}
+
+.feature-list li::before {
+    content: '✔';
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: #4CAF50;
+}
+
+/* Hero Image Styling */
+.hero-image {
+    max-width: 50%;
+}
 .features-section {
     padding: 40px;
     background-color: #1c1a1a;
@@ -105,7 +134,8 @@ p {
     color: #95a5a6;
 }
 
-@media screen and (max-width: 768px) {
+/* Media Queries for Responsiveness */
+@media (max-width: 768px) {
     .hero-section {
         flex-direction: column;
         text-align: center;
@@ -115,6 +145,10 @@ p {
         max-width: 100%;
     }
 
+    .hero-image {
+        max-width: 100%;
+        margin-top: 30px;
+    }
     .features-container {
         flex-direction: column;
     }
@@ -123,3 +157,4 @@ p {
         max-width: 100%;
     }
 }
+
