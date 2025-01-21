@@ -5,184 +5,50 @@
 {% block content %}
 <div class="hero-section">
     <div class="hero-content">
-        <h1>Get a hacker's perspective on your open ports port exploits, and web vulnerabilities</h1>
-        <p>Our platform helps security teams automate port exploitation and web scanning, easily and without expert hacking skills.</p>
-        <ul class="feature-list">
-            <li>Automatically scan and exploit vulnerable ports</li>
-            <li>Detect and exploit critical port vulnerabilities with automation</li>
-            <li>Evaluate security risks through automated port and web exploitation</li>
-            <li>Streamline your testing process and reporting</li>
-
-        </ul>
+        <h1>Welcome to the Penetration Testing Platform</h1>
+        <p>Get a hacker's perspective on your web apps, network security.</p>
+        <a href="#tools" class="cta-button">Explore Tools</a>
     </div>
-    <link
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
-  rel="stylesheet"
-/>
-
     <div class="hero-image">
-        <img src="{{ url_for('static', filename='images/penetration.png') }}" alt="Dashboard Screenshot">
+        <img src="https://via.placeholder.com/500x300" alt="Security Illustration">
     </div>
 </div>
-<div class="pentest-title">
-    <h2>Penetration Testing Process</h2>
-    <div class="divider"></div>
-    <p>A comprehensive overview of the steps involved in a web application penetration test.</p>
-</div>
 
-<div class="penetration-testing-flow">
-    <div class="step-card" onclick="showModal('recon-modal')" title="Gather information about your target.">
-        <div class="step-icon">
-            <i class="fas fa-search"></i>
+<div class="features-section">
+    <h2>Why Choose Our Platform?</h2>
+    <div class="features-container">
+        <div class="feature">
+            <h3>Attack Surface Mapping</h3>
+            <p>Identify subdomains, open ports, technologies, and hidden files to assess the attack surface.</p>
         </div>
-        <p class="step-title">Reconnaissance</p>
-    </div>
-
-    <div class="arrow">
-        <i class="fas fa-chevron-right"></i>
-    </div>
-
-    <div class="step-card" onclick="showModal('scanning-modal')" title="Scan for vulnerabilities and open ports.">
-        <div class="step-icon">
-            <i class="fas fa-network-wired"></i>
+        <div class="feature">
+            <h3>Vulnerability Scanning</h3>
+            <p>Scan your network and applications for the latest vulnerabilities, including SQLi, XSS, and more.</p>
         </div>
-        <p class="step-title">Scanning</p>
-    </div>
-
-    <div class="arrow">
-        <i class="fas fa-chevron-right"></i>
-    </div>
-
-    <div class="step-card" onclick="showModal('gaining-access-modal')" title="Exploit vulnerabilities to gain access.">
-        <div class="step-icon">
-            <i class="fas fa-lock-open"></i>
+        <div class="feature">
+            <h3>Exploitation</h3>
+            <p>Demonstrate the business impact of vulnerabilities by safely exploiting common security issues.</p>
         </div>
-        <p class="step-title">Gaining Access</p>
-    </div>
-
-    <div class="arrow">
-        <i class="fas fa-chevron-right"></i>
-    </div>
-
-    <div class="step-card" onclick="showModal('maintaining-access-modal')" title="Ensure continued access without detection.">
-        <div class="step-icon">
-            <i class="fas fa-user-shield"></i>
+        <div class="feature">
+            <h3>Reporting</h3>
+            <p>Generate detailed, customizable reports to simplify your documentation process.</p>
         </div>
-        <p class="step-title">Maintaining Access</p>
     </div>
+</div>
 
-    <div class="arrow">
-        <i class="fas fa-chevron-right"></i>
-    </div>
-
-    <div class="step-card" onclick="showModal('covering-tracks-modal')" title="Remove traces of your activity.">
-        <div class="step-icon">
-            <i class="fas fa-eraser"></i>
+<div class="testimonials-section">
+    <h2>Trusted by Leading Security Teams</h2>
+    <div class="testimonials">
+        <div class="testimonial">
+            <p>"vulnerability assessments and saved hours in reporting."</p>
+            <cite>- Security Team</cite>
         </div>
-        <p class="step-title">Covering Tracks</p>
-    </div>
-</div>
-
-<!-- Modals for Detailed Info -->
-<div class="modal" id="recon-modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal('recon-modal')">&times;</span>
-        <h3>Reconnaissance</h3>
-        <p>Gather information about the target using both active and passive methods.</p>
-    </div>
-</div>
-
-<div class="modal" id="scanning-modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal('scanning-modal')">&times;</span>
-        <h3>Scanning</h3>
-        <p>Scan for vulnerabilities, open ports, and misconfigurations using automated tools.</p>
-    </div>
-</div>
-
-<!-- Repeat similar modal structures for all steps -->
-
-
-<div class="attack-surface-section">
-    <div class="attack-surface-content">
-        <h2>Attack Surface Mapping</h2>
-        <ul class="feature-list">
-            <li>Discover the attack surface of your network targets, including subdomains, open ports, and running services</li>
-            <li>Map web application technologies, take screenshots, detect WAFs, and discover hidden files by fuzzing</li>
-            <li>Popular tools: <a href="#">Subdomain Finder</a>, <a href="#">Port Scanner</a>, <a href="#">URL Fuzzer</a></li>
-        </ul>
-        <button class="explore-button">Explore recon tools</button>
-    </div>
-    <div class="attack-surface-image">
-        <img src="{{ url_for('static', filename='images/attack.png') }}" alt="Attack Surface Mapping Visualization">
-    </div>
-</div>
-
-<div class="attack-surface-section reverse">
-    <div class="attack-surface-image">
-        <img src="{{ url_for('static', filename='images/vulnerability .png') }}" alt="Vulnerability Scanning Visualization">
-    </div>
-    <div class="attack-surface-content">
-        <h2 class="attack-title">Vulnerability Scanning</h2>
-        <div class="attack-subsection">
-            <h3>Web Application Scanning</h3>
-            <ul class="feature-list">
-                <li>
-                    <i class="fas fa-check-circle"></i>
-                    Use our powerful, custom <a href="{{ url_for('website_scanner') }}" class="link-highlight">Website Vulnerability Scanner</a> to accurately detect common vulnerabilities (e.g. XSS, SQLi, OS Command injection) in classic and modern web applications (SPAs).
-                </li>
-                <li>
-                    <i class="fas fa-check-circle"></i>
-                    Quickly identify specific security issues with dedicated scanners for API vulnerabilities and widely used CMSs (<strong></strong>).
-                </li>
-            </ul>
+        <div class="testimonial">
+            <p>"The tools provided valuable insights into potential weaknesses we had overlooked."</p>
+            <cite>- Cybersecurity Analyst</cite>
         </div>
-        <div class="attack-subsection">
-            <h3>Port exploit</h3>
-            <ul class="feature-list">
-                <li>
-                    <i class="fas fa-check-circle"></i>
-                    Uncover a wide range of infrastructure security issues with our <a href="{{ url_for('network_scanner') }}" class="link-highlight">Port exploit</a>, a custom tool which finds unnecessary open ports, missing security patches, service misconfigurations, and critical CVEs (<strong>Log4shell, ProxyShell</strong>, etc.).
-                </li>
-                <li>
-                    <i class="fas fa-check-circle"></i>
-                    Find weak credentials and prove the risk of unauthorized access with our Password Auditor tool.
-                </li>
-            </ul>
-        </div>
-        <button class="explore-button">Explore scanning tools</button>
     </div>
 </div>
-
-<div class="attack-surface-section">
-    <div class="attack-surface-content">
-        <h2>Exploitation Tools</h2>
-        <ul class="feature-list">
-            <li>Demonstrate business risks with safe vulnerability exploitation</li>
-            <li>Test real-world scenarios for unauthorized access</li>
-            <li>Generate detailed exploit reports with proof-of-concept</li>
-        </ul>
-        <button class="explore-button">Explore exploitation tools</button>
-    </div>
-    <div class="attack-surface-image">
-        <img src="{{ url_for('static', filename='images/exploit.png') }}" alt="Exploitation Tools Visualization">
-    </div>
-</div>
-
-<div class="attack-surface-section reverse">
-    <div class="attack-surface-image">
-        <img src="{{ url_for('static', filename='images/report.png') }}" alt="Reporting Tools Visualization">
-    </div>
-    <div class="attack-surface-content">
-        <h2>Reporting</h2>
-        <ul class="feature-list">
-            <li>Create customizable reports for documentation</li>
-            <li>Streamline collaboration with ready-to-use templates</li>
-            <li>Export results in multiple formats (PDF, HTML, etc.)</li>
-        </ul>
-        <button class="explore-button">Explore reporting tools</button>
-    </div>
-</div>
-
 
 {% endblock %}
+

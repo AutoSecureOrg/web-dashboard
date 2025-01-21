@@ -1,13 +1,15 @@
 {% extends 'base.html' %}
 
-{% block title %}Network Vulnerability Scanner{% endblock %}
+{% block title %}System Vulnerability Testing{% endblock %}
 
 {% block content %}
 <div class="container">
     <header>
         <div class="header-text">
-            <h2>Port Exploit</h2>
-            <p>Our Port Exploit tool offers an efficient, automated way to detect and exploit vulnerabilities in over 12,000 CVEs across common software. With real-time updates and minimal false positives, it ensures highly accurate results, allowing security teams to quickly assess risks and take action. This streamlined process reduces manual effort, accelerates vulnerability discovery, and enhances overall testing efficiency for reliable, rapid protection of your network.</p>
+            <h2>Network Vulnerability Scanner</h2>
+            <p>The Network Vulnerability Scanner is a highly accurate tool that detects 12,073 CVEs in extensively used
+                software products and technologies. With daily vulnerability updates and a very low rate of false
+                positives, the scanner provides reliable results for your next move.</p>
         </div>
         <img class="header-image" src="{{ url_for('static', filename='images/net.jpg') }}" alt="Authenticated Scanning">
     </header>
@@ -52,22 +54,11 @@
         <div class="spinner"></div>
         <p>Scanning in progress... Please wait.</p>
     </div>
-
-    <div id="results">
-        <h3>Scan Results:</h3>
-        <button id="toggle-results">Show Results</button>
-        <div id="results-content" class="slide-hidden">
-            <pre>No results yet. Start a scan to view results.</pre>
-        </div>
-    </div>
 </div>
 
 <script>
     const form = document.getElementById('scanner-form');
     const scanningIcon = document.getElementById('scanning-icon');
-    const resultsDiv = document.getElementById('results');
-    const toggleResults = document.getElementById('toggle-results');
-    const resultsContent = document.getElementById('results-content');
     const scanType = document.getElementById('scan_type');
     const singleScan = document.getElementById('single-scan');
     const rangeScan = document.getElementById('range-scan');
@@ -84,56 +75,9 @@
     });
 
     // Handle form submission
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        // Show scanning icon and hide results
+    form.addEventListener('submit', () => {
+        // Show scanning icon
         scanningIcon.classList.remove('hidden');
-        resultsDiv.classList.add('hidden');
-        resultsContent.innerHTML = "<pre>Scanning...</pre>";
-        toggleResults.textContent = 'Show Results';
-        resultsContent.classList.add('slide-hidden');
-
-        const formData = new FormData(form);
-        try {
-            const response = await fetch(form.action, {
-                method: form.method,
-                body: formData,
-            });
-
-            scanningIcon.classList.add('hidden'); // Hide scanning icon
-
-            if (response.ok) {
-                const data = await response.json();
-                resultsContent.innerHTML = `
-                    <pre>${data.output}</pre>
-                    <p><a href="${data.pdf_link}" target="_blank">Download PDF Report</a></p>
-                    <p><a href="${data.text_link}" target="_blank">Download Text File Report</a></p>
-                `;
-                resultsDiv.classList.remove('hidden'); // Show results
-            } else {
-                const errorData = await response.json();
-                resultsContent.innerHTML = `<pre>${errorData.error}</pre>`;
-                resultsDiv.classList.remove('hidden'); // Show results on error
-            }
-        } catch (error) {
-            scanningIcon.classList.add('hidden');
-            resultsContent.innerHTML = `<pre>An error occurred: ${error.message}</pre>`;
-            resultsDiv.classList.remove('hidden'); // Show error in results
-        }
-    });
-
-    // Handle results toggle with slide animation
-    toggleResults.addEventListener('click', () => {
-        if (resultsContent.classList.contains('slide-hidden')) {
-            resultsContent.classList.remove('slide-hidden');
-            resultsContent.classList.add('slide-visible');
-            toggleResults.textContent = 'Hide Results';
-        } else {
-            resultsContent.classList.remove('slide-visible');
-            resultsContent.classList.add('slide-hidden');
-            toggleResults.textContent = 'Show Results';
-        }
     });
 </script>
 
