@@ -1,247 +1,208 @@
-/* General Reset */
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 html {
-  font-size: 62.5%; /* 1rem = 10px */
-  font-family: 'Roboto', sans-serif;
-  background-color: #0d1117; /* Dark background */
-  color: #c9d1d9; /* Default text color */
+    font-size: 62.5%; /* Base font size for rem calculations */
+    font-family: 'Roboto', sans-serif;
 }
 
 li {
-  list-style: none;
+    list-style: none;
 }
 
 a {
-  text-decoration: none;
-  color: #58a6ff; /* Blue links */
-  transition: color 0.3s ease;
+    text-decoration: none;
 }
 
-a:hover {
-  color: #1256a3; /* Darker blue on hover */
-}
-
-/* Header Styling */
+/* Header and Navbar Styles */
 .header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  background-color: rgba(34, 34, 34, 0.8); /* Transparent dark background */
-  backdrop-filter: blur(5px); /* Blur effect */
-  border-bottom: 1px solid #3e6392; /* Navbar border */
-  transition: backdrop-filter 0.3s ease, background-color 0.3s ease;
+    border-bottom: 1px solid #E2E8F0;
+    background-color: #222;
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    z-index: 1000;
 }
 
-/* Navbar */
 .navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 1.5rem;
 }
 
-.logo-image {
-  max-width: 100%;
-  height: auto;
-  max-height: 50px;
-}
-
-.nav-logo {
-  display: inline-block;
-}
-
-/* Nav Menu */
-.nav-menu {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 3rem;
-}
-
-.nav-item {
-  margin-left: 2rem;
-}
-
-.nav-link {
-  font-size: 2rem;
-  font-weight: 400;
-  color: #f0f6fc; /* Light text */
-  transition: color 0.3s ease;
-}
-
-.nav-link:hover {
-  color: #58a6ff; /* Highlighted blue */
-}
-
-/* Hamburger Menu */
 .hamburger {
-  display: none;
-  cursor: pointer;
-  z-index: 1000;
+    display: none; /* Hide by default */
 }
 
 .bar {
-  display: block;
-  width: 25px;
-  height: 3px;
-  margin: 5px auto;
-  background-color: #d6cfcf;
-  transition: all 0.3s ease-in-out;
+    display: block;
+    width: 25px;
+    height: 3px;
+    margin: 5px auto;
+    background-color: #fff;
+    transition: all 0.3s ease-in-out;
 }
 
-/* Hamburger Animation */
-.hamburger.active .bar:nth-child(2) {
-  opacity: 0;
+.nav-menu {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.hamburger.active .bar:nth-child(1) {
-  transform: translateY(8px) rotate(45deg);
+.nav-item {
+    margin-left: 5rem; /* Space between nav items */
 }
 
-.hamburger.active .bar:nth-child(3) {
-  transform: translateY(-8px) rotate(-45deg);
+.nav-link {
+    font-size: 2rem; /* Font size for links */
+    font-weight: 400;
+    color: #fff;
 }
 
-/* Dropdown Styles */
+.nav-link:hover {
+    color: #482ff7;
+}
+
+.nav-logo {
+    font-size: 3rem; /* Logo font size */
+    font-weight: 500;
+    color: #fff;
+}
+
+/* Add padding to main content to prevent overlap with fixed header */
+main {
+    padding-top: 10rem; /* Adjust based on header height */
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column; /* Stack navbar items on small screens */
+        align-items: flex-start; /* Align items to the left */
+        padding: 1rem; /* Reduce padding on mobile */
+    }
+
+    .nav-menu {
+        display: none; /* Hide menu by default */
+        flex-direction: column; /* Stack items vertically */
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background-color: #222; /* Same background as header */
+        padding: 10px 0; /* Vertical padding */
+        z-index: 999;
+    }
+
+    .nav-menu.active {
+        display: flex; /* Show menu when active */
+    }
+
+    .nav-item {
+        margin-left: 0; /* Remove left margin on mobile */
+        padding: 1rem; /* Add padding for touch targets */
+        text-align: center; /* Center-align text */
+    }
+
+    .nav-link {
+        font-size: 20px; /* Smaller font size on mobile */
+    }
+
+    .nav-logo {
+        font-size: 2.5rem; /* Smaller logo size on mobile */
+    }
+
+    .hamburger {
+        display: block; /* Show hamburger on mobile */
+        cursor: pointer;
+    }
+
+    .hamburger.active .bar:nth-child(2) {
+        opacity: 0; /* Hide the middle bar */
+    }
+
+    .hamburger.active .bar:nth-child(1) {
+        transform: translateY(8px) rotate(45deg); /* Rotate first bar */
+    }
+
+    .hamburger.active .bar:nth-child(3) {
+        transform: translateY(-8px) rotate(-45deg); /* Rotate third bar */
+    }
+}
+
+/* Navbar Dropdown Styles */
 .nav-item.dropdown {
-  position: relative;
+    position: relative;
 }
 
 .dropdown-content {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background-color: #161b22; /* Dark dropdown background */
-  padding: 1rem;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  border-radius: 0.5rem;
-  z-index: 1000;
+    display: none; 
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #0f0031;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    z-index: 1000;
+    width: 240px; /* Set width */
+    height: 360px; /* Set height */
+    overflow: auto; /* Allows scrolling if needed */
 }
 
 .dropdown-content.active {
-  display: block;
+    display: block; /* Show dropdown when active */
 }
 
-/* Tool Card Styling */
+/* Tool Card Styles */
 .tool-card {
-  background: linear-gradient(145deg, #1e2328, #161b22); /* Dark gradient background */
-  border: 1px solid #3e6392; /* Border matching the theme */
-  border-radius: 1rem; /* Rounded corners */
-  margin: 1.5rem;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 2rem;
-  transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); /* Subtle shadow */
+    background: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 5px; /* Space between cards */
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
 }
 
 .tool-card img {
-  width: 120px; /* Slightly larger image */
-  height: 120px;
-  object-fit: cover;
-  margin-bottom: 1rem;
-  border-radius: 50%; /* Circular image */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Image shadow */
-  transition: transform 0.3s ease;
-}
-
-.tool-card h3 {
-  font-size: 1.8rem;
-  color: #f0f6fc; /* Light text for headings */
-  margin-bottom: 1rem;
-  font-weight: 500;
+    width: 80px; /* Square image size */
+    height: 80px; /* Square image size */
+    object-fit: cover;
+    margin-bottom: 5px; /* Space between image and text */
 }
 
 .tool-card p {
-  font-size: 1.4rem;
-  color: #8b949e; /* Softer gray for paragraph text */
-  margin-bottom: 1rem;
-  line-height: 1.6;
+    font-size: 1.4rem; /* Use rem for responsive text size */
+    margin: 0;
+    color: #333;
 }
 
-.tool-card a {
-  font-size: 1.4rem;
-  color: #58a6ff; /* Bright blue links */
-  text-decoration: none;
-  margin-top: 1rem;
-  transition: color 0.3s ease;
-}
-
-.tool-card a:hover {
-  color: #1256a3; /* Darker blue on hover */
-}
-
+/* Hover and Active State for Tool Cards */
 .tool-card:hover {
-  transform: translateY(-10px); /* Slight lift effect */
-  background-color: #2a3036; /* Slightly lighter background on hover */
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6); /* Stronger shadow */
+    background-color: #f1f1f1;
+    transform: scale(1.05);
 }
 
-.tool-card img:hover {
-  transform: scale(1.1); /* Zoom effect on image hover */
-}
+/* Additional Responsive Styles */
+@media (max-width: 480px) {
+    .nav-link {
+        font-size: 1.2rem; /* Smaller link size for very small screens */
+    }
 
-/* Responsive Card Grid */
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Flexible grid */
-  gap: 2rem;
-  padding: 2rem;
-  margin: 0 auto;
-  max-width: 1200px; /* Centered and responsive */
-}
+    .nav-logo {
+        font-size: 2rem; /* Smaller logo size for very small screens */
+    }
 
-/* Additional Styling for Visual Hierarchy */
-.tool-card h3::after {
-  content: "";
-  display: block;
-  width: 50%;
-  height: 3px;
-  background: #58a6ff; /* Blue underline */
-  margin: 1rem auto;
-  border-radius: 5px;
-}
-
-/* Hover Effects */
-.tool-card:hover h3 {
-  color: #58a6ff; /* Blue highlight on heading */
-}
-
-.tool-card:hover p {
-  color: #c9d1d9; /* Brighter text on hover */
-}
-
-/* Responsive Design for Small Screens */
-@media (max-width: 768px) {
-  .card-grid {
-    grid-template-columns: 1fr; /* Single column for smaller screens */
-    padding: 1rem;
-  }
-
-  .tool-card {
-    padding: 1.5rem;
-  }
-
-  .tool-card img {
-    width: 100px;
-    height: 100px;
-  }
-
-  .tool-card h3 {
-    font-size: 1.6rem;
-  }
-
-  .tool-card p {
-    font-size: 1.2rem;
-  }
+    .tool-card p {
+        font-size: 1.2rem; /* Smaller text size for tool cards on mobile */
+    }
 }
