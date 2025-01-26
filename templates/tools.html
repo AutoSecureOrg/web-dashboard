@@ -1,0 +1,312 @@
+{% extends 'base.html' %}
+
+{% block title %}Website Vulnerability Scanner{% endblock %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Scanner</title>
+    
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-text">
+                <h2>Website Vulnerability Scanner</h2>
+                <p>The Website Vulnerability Scanner is a highly-accurate vulnerability scanning solution, battle-tested in real life penetration testing engagements.
+                Quickly detect XSS, SQL injection, Command injection, XXE and other critical issues - automatically validated to eliminate false positives.</p>
+            </div>
+            <img class="header-image" src="{{ url_for('static', filename='images/web.svg') }}" alt="Authenticated Scanning">
+        </header>
+
+        <div class="scanner-wrapper">
+            <div class="scanner-card">
+                <h3>Scan Type</h3>
+                <form action="{{ url_for('website_scanner') }}" method="POST" id="scanForm">
+                    <label for="target_url">Target URL:</label>
+                    <input type="url" id="target_url" name="target_url" placeholder="https://example.com" required>
+
+                    <label for="scan_type">Select Scan Type:</label>
+                    <select id="scan_type" name="scan_type" required>
+                        <option value="" disabled selected>Select a scan type</option>
+                        <option value="all">All Scans</option>
+                        <option value="sql_injection">SQL Injection</option>
+                        <option value="xss">Cross-Site Scripting (XSS)</option>
+                        <option value="csrf">Cross-Site Request Forgery (CSRF)</option>
+                        <option value="open_ports">Open Ports</option>
+                        <option value="security_headers">Security Headers</option>
+                    </select>
+
+                    <button type="submit">Start Scan</button>
+                </form>
+            </div>
+        </div>
+
+        
+<div class="horizontal-section">
+    <div class="horizontal-icon">
+        <img src="{{ url_for('static', filename='images/port.png') }}" alt="Icon Description">
+    </div>
+    <div class="vertical-divider"></div>
+    <div class="horizontal-content">
+        <h2>Developed by Offensive Security Pros</h2>
+        <p>
+            Built for what experienced pentesters need, the tool automates security checks such as examining services
+            and software versions and scanning multiple protocols on network hosts. This robust analysis of network hosts
+            delivers results that help security and IT pros to prioritize their work.
+        </p>
+    </div>
+</div>
+
+    
+    <div class="horizontal-section reverse">
+        <div class="horizontal-icon">
+            <img src="{{ url_for('static', filename='images/comprehensive-technology.png') }}" alt="Comprehensive technology coverage illustration">
+        </div>
+        <div class="vertical-divider"></div>
+
+        <div class="horizontal-content">
+            <h2>Comprehensive Technology Coverage</h2>
+            <p>
+                The Network Vulnerability Scanner accurately identifies <strong>10,000+ CVEs</strong> including the famous CitrixBleed, Log4Shell, ProxyShell, and BlueKeep bugs, plus many more.
+                Through the database of detection modules, the tool addresses critical vulnerabilities in software applications of well-known vendors such as Microsoft, Cisco, Citrix, Juniper, Atlassian, and others.
+            </p>
+        </div>
+    </div>
+    
+    <div class="horizontal-section">
+        <div class="horizontal-icon">
+            <img src="{{ url_for('static', filename='images/self-updating-detection.png') }}" alt="Self-updating detection illustration">
+        </div>
+        <div class="vertical-divider"></div>
+
+        <div class="horizontal-content">
+            <h2>Self-Updating Detection</h2>
+            <p>
+                Our team integrates new detection modules each day and develops custom ones, keeping the tool relevant in a constantly evolving threatscape.
+                Automated updates keep the Network Vulnerability Scanner consistently effective in uncovering emerging security issues. No need to update plugins and databases manually!
+            </p>
+        </div>
+    </div>
+    
+    <div class="horizontal-section reverse">
+        <div class="horizontal-icon">
+            <img src="{{ url_for('static', filename='images/Port.png') }}" alt="Findings confirmed by solid evidence illustration">
+        </div>
+        <div class="vertical-divider"></div>
+
+        <div class="horizontal-content">
+            <h2>Findings Confirmed by Solid Evidence</h2>
+            <p>
+                The Network Vulnerability Scanner delivers robust evidence for findings, such as targeted endpoints, specific ports, and more.
+                The intuitive interface lets you easily integrate findings into professional reports, making it easier to understand potential security risks and speed up the remediation process.
+            </p>
+        </div>
+    </div>
+    
+    <div class="horizontal-section">
+        <div class="horizontal-icon">
+            <img src="{{ url_for('static', filename='images/Port.png') }}" alt="Automatically validated findings illustration">
+        </div>
+        <div class="vertical-divider"></div>
+
+        <div class="horizontal-content">
+            <h2>Automatically Validated Findings</h2>
+            <p>
+                The Network Vulnerability Scanner uses an automatic system to validate findings, which minimizes false positives and improves accuracy.
+                It assigns a "Confirmed" tag to the vulnerabilities it investigates after interpreting sent requests and received responses, and it also provides evidence of how it discovered the validated issues.
+            </p>
+        </div>
+    </div>
+    <section class="network-scanner">
+        <div class="scanner-container">
+          <div class="scanner-text">
+            <h2>How does the Network Vulnerability Scanner work?</h2>
+            <p>
+              The Network Vulnerability Scanner confirms if the target host is alive, pinpoints open ports and associated services, then runs the vulnerability detection routines.
+            </p>
+            <p>
+              Featuring four complementary scanning engines, it checks software versions against a regularly updated CVE database, uses OpenVAS to target network services, runs custom Sniper modules for critical vulnerability detection, and automates network security checks through Nuclei templates.
+            </p>
+          </div>
+          <div class="scanner-cards">
+            <div class="card" onclick="showDetails('port-discovery')">
+              <div class="card-icon">
+                <img src="{{ url_for('static', filename='images/port-icon.png') }}" alt="Port Discovery Icon">
+              </div>
+              <div class="card-content">
+                <h3>Port Discovery</h3>
+                <p>Each network scan starts with a host discovery phase...</p>
+              </div>
+              <div class="card-overlay">
+                <span class="expand-icon">+</span>
+              </div>
+            </div>
+            <div class="card" onclick="showDetails('sniper-detection')">
+              <div class="card-icon">
+                <img src="{{ url_for('static', filename='images/Port.png') }}" alt="Sniper Detection Icon">
+              </div>
+              <div class="card-content">
+                <h3>Sniper Detection</h3>
+                <p>The Sniper Auto-Exploiter engine uses custom modules...</p>
+              </div>
+              <div class="card-overlay">
+                <span class="expand-icon">+</span>
+              </div>
+            </div>
+            <div class="card" onclick="showDetails('openvas-detection')">
+              <div class="card-icon">
+                <img src="{{ url_for('static', filename='images/openvas-icon.png') }}" alt="OpenVAS Detection Icon">
+              </div>
+              <div class="card-content">
+                <h3>OpenVAS Detection</h3>
+                <p>Target network services with updated CVE databases...</p>
+              </div>
+              <div class="card-overlay">
+                <span class="expand-icon">+</span>
+              </div>
+            </div>
+            <div class="card" onclick="showDetails('nuclei-detection')">
+              <div class="card-icon">
+                <img src="{{ url_for('static', filename='images/nuclei-icon.png') }}" alt="Nuclei Detection Icon">
+              </div>
+              <div class="card-content">
+                <h3>Nuclei Detection</h3>
+                <p>Automates security checks through Nuclei templates...</p>
+              </div>
+              <div class="card-overlay">
+                <span class="expand-icon">+</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      
+      <div class="modal" id="details-modal">
+        <div class="modal-content">
+          <span class="close" onclick="closeDetails()">&times;</span>
+          <div id="modal-details"></div>
+        </div>
+      </div>
+
+      <div class="easy-scan-section">
+        <div class="scan-container">
+            <div class="scan-text">
+                <h2>It's really easy to scan your network for vulnerabilities</h2>
+            </div>
+            <div class="scan-features">
+                <div class="feature">
+                    <div class="feature-text">
+                        <h3>No setup required. No processing power limits</h3>
+                        <p>Operating as a cloud-based scanner, the Network Vulnerability Scanner works out of the box. No need to install anything on your end to scan public-facing or internal network hosts.</p>
+                    </div>
+                    <div class="feature-icon">
+                        <i class="icon">&#9889;</i>
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-text">
+                        <h3>Scheduling & running parallel scans</h3>
+                        <p>Automatically execute recurring and routine scans for your network hosts. Combine scheduling with the option to run multiple scans in parallel for a productivity boost.</p>
+                    </div>
+                    <div class="feature-icon">
+                        <i class="icon">&#8635;</i>
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-text">
+                        <h3>API access for easy integration</h3>
+                        <p>Initiate scans programmatically with our REST API. Integrate findings into your internal processes for an efficient and automated workflow.</p>
+                    </div>
+                    <div class="feature-icon">
+                        <i class="icon">&#128187;</i>
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-text">
+                        <h3>Internal scanning</h3>
+                        <p>Detect vulnerabilities, misconfigurations, and other security issues in hosts from internal networks, intranets, private clouds, or restricted-access systems.</p>
+                    </div>
+                    <div class="feature-icon">
+                        <i class="icon">&#127760;</i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    
+
+ 
+<script>
+    const form = document.getElementById('scanner-form');
+    const scanningIcon = document.getElementById('scanning-icon');
+    const scanType = document.getElementById('scan_type');
+    const singleScan = document.getElementById('single-scan');
+    const rangeScan = document.getElementById('range-scan');
+
+    // Show/hide scan options
+    scanType.addEventListener('change', () => {
+        if (scanType.value === 'single') {
+            singleScan.style.display = 'block';
+            rangeScan.style.display = 'none';
+        } else {
+            singleScan.style.display = 'none';
+            rangeScan.style.display = 'block';
+        }
+    });
+
+    // Handle form submission
+    form.addEventListener('submit', () => {
+        // Show scanning icon
+        scanningIcon.classList.remove('hidden');
+    });
+   
+
+
+
+    const details = {
+  "port-discovery": {
+    title: "Port Discovery",
+    description:
+      "Each network scan starts with a host discovery phase that uses an optional 'Check if host is alive before scanning' feature alongside port discovery functionalities.",
+  },
+  "sniper-detection": {
+    title: "Sniper Detection",
+    description:
+      "The Sniper Auto-Exploiter engine uses custom vulnerability checks and modules for critical vulnerability detection.",
+  },
+  "openvas-detection": {
+    title: "OpenVAS Detection",
+    description:
+      "OpenVAS focuses on targeting network services with updated CVE databases for accurate vulnerability identification.",
+  },
+  "nuclei-detection": {
+    title: "Nuclei Detection",
+    description:
+      "Nuclei automates network security checks using flexible, template-based detection routines.",
+  },
+};
+
+function showDetails(key) {
+  const modal = document.getElementById("details-modal");
+  const modalDetails = document.getElementById("modal-details");
+  const { title, description } = details[key];
+
+  modalDetails.innerHTML = `<h3>${title}</h3><p>${description}</p>`;
+  modal.style.display = "flex";
+}
+
+function closeDetails() {
+  document.getElementById("details-modal").style.display = "none";
+}
+
+
+</script>
+
+{% include 'footer.html' %}
+{% endblock %}

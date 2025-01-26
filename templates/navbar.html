@@ -2,36 +2,29 @@
 <header class="header">
     <div class="nav-container">
         <nav class="navbar">
-            <a href="{{ url_for('home') }}" class="nav-logo">Autosecure</a>
-            <ul class="nav-menu">
-                <li class="nav-item">
+            
+            <a href="{{ url_for('home') }}" class="nav-logo">
+                <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="Logo" class="logo-image">                       <ul class="nav-menu">
+                <span class="logo-text">Auto Secure</span></a> 
+             
+                    <li class="nav-item">
                     <a href="{{ url_for('home') }}" class="nav-link">Home</a>
                 </li>
                 <li class="nav-item dropdown">
                     <a href="javascript:void(0);" class="nav-link dropdown-toggle" onclick="toggleDropdown(event)">Tools</a>
                     <div id="toolsDropdown" class="dropdown-content">
                         <a href="{{ url_for('network_scanner') }}" class="tool-card">
-                            <img src="{{ url_for('static', filename='images/tool1.png') }}" alt="System Vulnerability Testing">
-                            <p>System Vulnerability Testing</p>
+                            <img src="{{ url_for('static', filename='images/port1.png') }}" alt=" Port Exploit">
+                            <p>Port exploit</p>
                         </a>
                         <a href="{{ url_for('website_scanner') }}" class="tool-card">
-                            <img src="{{ url_for('static', filename='images/web.jpg') }}" alt="Website Vulnerability Testing">
-                            <p>Website Vulnerability Testing</p>
+                            <img src="{{ url_for('static', filename='images/web1.png') }}" alt="Website Scanner">
+                            <p>Website Scanner</p>
                         </a>
                     </div>
                 </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">Resources</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">Blog</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">About</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">Contact</a>
-                </li>
+                
+             
             </ul>
             <div class="hamburger">
                 <span class="bar"></span>
