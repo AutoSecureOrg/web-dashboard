@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Feedback</title>
+</head>
+<body>
+    <h2>Feedback Form</h2>
+
+    {% if name and feedback %}
+        <h3>Feedback Received</h3>
+        <p><b>Name:</b> {{ name|safe }}</p>  <!-- Using |safe makes it explicitly vulnerable -->
+        <p><b>Feedback:</b> {{ feedback|safe }}</p>  <!-- User input is rendered directly -->
+        <a href="/feedback">Submit Another Feedback</a>
+    {% else %}
+        <form method="POST">
+            Your Name: <input type="text" name="name"><br>
+            Feedback: <textarea name="feedback"></textarea><br>
+            <button type="submit">Submit</button>
+        </form>
+    {% endif %}
+
+    <div class="nav">
+        <a href="/dashboard">Home</a>
+    </div>
+    
+</body>
+</html>
