@@ -1,9 +1,10 @@
 import threading
 import time
 from flask import Flask, render_template, request, jsonify, send_file
-import os
+import os, subprocess
 from fpdf import FPDF
 from scripts.portExploit import nmap_scan, connect_to_metasploit, search_and_run_exploit, get_local_ip, port_exploit_report
+from scripts.web_scanner import test_sql_injection, test_xss, test_command_injection, xss_only, command_only
 
 app = Flask(__name__)
 
@@ -172,23 +173,48 @@ def convert_text_to_pdf(text_file, pdf_file):
 def website_scanner():
     if request.method == 'POST':
         target_url = request.form['target_url']
+        scan_type = request.form['scan_type']
 
-        # Run the web_scanner.py script with the provided target URL
+        # Initialize results variable to store scan output
+        results = ""
+
         try:
-            results = subprocess.run(
-                ['python', 'scripts/web_scanner.py', target_url],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            output = results.stdout
-        except subprocess.CalledProcessError as e:
-            output = f"Error occurred during scanning: {e.stderr}"
+            if scan_type == "all":
+                # Run the entire script for all scans
+                results = subprocess.run(
+                    ['python', 'scripts/web_scanner.py', target_url],
+                    capture_output=True,
+                    text=True,
+                    check=True
+                ).stdout
+            elif scan_type == "sql_injection":
+                # Run the SQL Injection test only
+                results = test_sql_injection(target_url,None)
+            elif scan_type == "xss":
+                # Run SQL Injection first to log in, then XSS
+                results = xss_only(target_url)
+            elif scan_type == "csrf":
+                # Add CSRF handling here if implemented in your script
+                results = "CSRF testing not yet implemented."
+            elif scan_type == "open_ports":
+                # Add open ports handling here if implemented in your script
+                results = "Open Ports scanning not yet implemented."
+            elif scan_type == "security_headers":
+                # Add security headers handling here if implemented in your script
+                results = "Security Headers scanning not yet implemented."
+            elif scan_type == "command_injection":
+                # Run SQL Injection first to log in, then Command Injection
+                results = command_only(target_url)
+            else:
+                results = "Invalid scan type selected."
 
-        return render_template('report.html', output=output, tool='Website Scanner')
+        except Exception as e:
+            results = f"An error occurred: {str(e)}"
+
+        # Render the results in the report.html template
+        return render_template('report.html', output=results, tool='Website Scanner')
 
     return render_template('website_scanner.html')
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
