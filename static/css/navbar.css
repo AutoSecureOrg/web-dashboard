@@ -1,208 +1,261 @@
+/* General Reset */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 html {
-    font-size: 62.5%; /* Base font size for rem calculations */
-    font-family: 'Roboto', sans-serif;
+  font-size: 62.5%; /* 1rem = 10px */
+  font-family: 'Roboto', sans-serif;
+  background-color: #0d1117; /* Dark background */
+  color: #c9d1d9; /* Default text color */
 }
 
 li {
-    list-style: none;
+  list-style: none;
 }
 
 a {
-    text-decoration: none;
+  text-decoration: none;
+  color: #1e7180; /* Blue links */
+  transition: color 0.3s ease;
 }
 
-/* Header and Navbar Styles */
+a:hover {
+  color: #0e6467; /* Darker blue on hover */
+}
+
+/* Header Styling */
 .header {
-    border-bottom: 1px solid #E2E8F0;
-    background-color: #222;
-    position: fixed;
-    left: 0;
-    right: 0;
-    top: 0;
-    z-index: 1000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background-color: rgba(34, 34, 34, 0.8); /* Transparent dark background */
+  backdrop-filter: blur(5px); /* Blur effect */
+  border-bottom: 1px solid #3e6392; /* Navbar border */
+  transition: backdrop-filter 0.3s ease, background-color 0.3s ease;
 }
 
 .navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem 1.5rem;
-}
-
-.hamburger {
-    display: none; /* Hide by default */
-}
-
-.bar {
-    display: block;
-    width: 25px;
-    height: 3px;
-    margin: 5px auto;
-    background-color: #fff;
-    transition: all 0.3s ease-in-out;
-}
-
-.nav-menu {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.nav-item {
-    margin-left: 5rem; /* Space between nav items */
-}
-
-.nav-link {
-    font-size: 2rem; /* Font size for links */
-    font-weight: 400;
-    color: #fff;
-}
-
-.nav-link:hover {
-    color: #482ff7;
+  display: flex;
+  justify-content: flex-start; /* Align everything to the left */
+  align-items: center;
+  padding: 1rem 2rem;
 }
 
 .nav-logo {
-    font-size: 3rem; /* Logo font size */
-    font-weight: 500;
-    color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 50px; /* Increased space between the logo and text */
+  text-decoration: none; /* Remove underline from link */
+  cursor: pointer;
 }
 
-/* Add padding to main content to prevent overlap with fixed header */
-main {
-    padding-top: 10rem; /* Adjust based on header height */
+
+.logo-text {
+  font-size: 1.8rem; /* Adjust text size */
+  color: #48879a; /* Blue color for the text */
+  font-weight: bold;
+  font-family: Arial, sans-serif;
+  text-transform: uppercase; /* Optional: Makes text uppercase */
+  margin-left: 10px; /* Move text closer to the left */
 }
 
-/* Mobile Styles */
-@media (max-width: 768px) {
-    .navbar {
-        flex-direction: column; /* Stack navbar items on small screens */
-        align-items: flex-start; /* Align items to the left */
-        padding: 1rem; /* Reduce padding on mobile */
-    }
-
-    .nav-menu {
-        display: none; /* Hide menu by default */
-        flex-direction: column; /* Stack items vertically */
-        position: absolute;
-        top: 100%;
-        left: 0;
-        width: 100%;
-        background-color: #222; /* Same background as header */
-        padding: 10px 0; /* Vertical padding */
-        z-index: 999;
-    }
-
-    .nav-menu.active {
-        display: flex; /* Show menu when active */
-    }
-
-    .nav-item {
-        margin-left: 0; /* Remove left margin on mobile */
-        padding: 1rem; /* Add padding for touch targets */
-        text-align: center; /* Center-align text */
-    }
-
-    .nav-link {
-        font-size: 20px; /* Smaller font size on mobile */
-    }
-
-    .nav-logo {
-        font-size: 2.5rem; /* Smaller logo size on mobile */
-    }
-
-    .hamburger {
-        display: block; /* Show hamburger on mobile */
-        cursor: pointer;
-    }
-
-    .hamburger.active .bar:nth-child(2) {
-        opacity: 0; /* Hide the middle bar */
-    }
-
-    .hamburger.active .bar:nth-child(1) {
-        transform: translateY(8px) rotate(45deg); /* Rotate first bar */
-    }
-
-    .hamburger.active .bar:nth-child(3) {
-        transform: translateY(-8px) rotate(-45deg); /* Rotate third bar */
-    }
+.logo-image {
+  max-width: 50px; /* Adjust logo size */
+  height: auto;
 }
 
-/* Navbar Dropdown Styles */
+
+
+/* Nav Menu */
+.nav-menu {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 3rem;
+}
+
+.nav-item {
+  margin-left: 2rem;
+}
+
+.nav-link {
+  font-size: 2rem;
+  font-weight: 400;
+  color: #f0f6fc; /* Light text */
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #58a6ff; /* Highlighted blue */
+}
+
+/* Hamburger Menu */
+.hamburger {
+  display: none;
+  cursor: pointer;
+  z-index: 1000;
+}
+
+.bar {
+  display: block;
+  width: 25px;
+  height: 3px;
+  margin: 5px auto;
+  background-color: #d6cfcf;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Hamburger Animation */
+.hamburger.active .bar:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.active .bar:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+
+.hamburger.active .bar:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
+}
+
+/* Dropdown Styles */
 .nav-item.dropdown {
-    position: relative;
+  position: relative;
 }
 
 .dropdown-content {
-    display: none; 
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background-color: #0f0031;
-    padding: 15px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    border-radius: 10px;
-    z-index: 1000;
-    width: 240px; /* Set width */
-    height: 360px; /* Set height */
-    overflow: auto; /* Allows scrolling if needed */
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #161b22; /* Dark dropdown background */
+  padding: 1rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border-radius: 0.5rem;
+  z-index: 1000;
 }
 
 .dropdown-content.active {
-    display: block; /* Show dropdown when active */
+  display: block;
 }
 
-/* Tool Card Styles */
+/* Tool Card Styling */
 .tool-card {
-    background: #f9f9f9;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin: 5px; /* Space between cards */
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    cursor: pointer;
-    transition: transform 0.2s, background-color 0.2s;
+  background: linear-gradient(145deg, #1e2328, #161b22); /* Dark gradient background */
+  border: 1px solid #3e6392; /* Border matching the theme */
+  border-radius: 1rem; /* Rounded corners */
+  margin: 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); /* Subtle shadow */
 }
 
 .tool-card img {
-    width: 80px; /* Square image size */
-    height: 80px; /* Square image size */
-    object-fit: cover;
-    margin-bottom: 5px; /* Space between image and text */
+  width: 120px; /* Slightly larger image */
+  height: 120px;
+  object-fit: cover;
+  margin-bottom: 1rem;
+  border-radius: 50%; /* Circular image */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Image shadow */
+  transition: transform 0.3s ease;
+}
+
+.tool-card h3 {
+  font-size: 1.8rem;
+  color: #f0f6fc; /* Light text for headings */
+  margin-bottom: 1rem;
+  font-weight: 500;
 }
 
 .tool-card p {
-    font-size: 1.4rem; /* Use rem for responsive text size */
-    margin: 0;
-    color: #333;
+  font-size: 1.4rem;
+  color: #8b949e; /* Softer gray for paragraph text */
+  margin-bottom: 1rem;
+  line-height: 1.6;
 }
 
-/* Hover and Active State for Tool Cards */
+.tool-card a {
+  font-size: 1.4rem;
+  color: #58f4ff; /* Bright blue links */
+  text-decoration: none;
+  margin-top: 1rem;
+  transition: color 0.3s ease;
+}
+
+.tool-card a:hover {
+  color: #1256a3; /* Darker blue on hover */
+}
+
 .tool-card:hover {
-    background-color: #f1f1f1;
-    transform: scale(1.05);
+  transform: translateY(-10px); /* Slight lift effect */
+  background-color: #2a3036; /* Slightly lighter background on hover */
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6); /* Stronger shadow */
 }
 
-/* Additional Responsive Styles */
-@media (max-width: 480px) {
-    .nav-link {
-        font-size: 1.2rem; /* Smaller link size for very small screens */
-    }
+.tool-card img:hover {
+  transform: scale(1.1); /* Zoom effect on image hover */
+}
 
-    .nav-logo {
-        font-size: 2rem; /* Smaller logo size for very small screens */
-    }
+/* Responsive Card Grid */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Flexible grid */
+  gap: 2rem;
+  padding: 2rem;
+  margin: 0 auto;
+  max-width: 1200px; /* Centered and responsive */
+}
 
-    .tool-card p {
-        font-size: 1.2rem; /* Smaller text size for tool cards on mobile */
-    }
+/* Additional Styling for Visual Hierarchy */
+.tool-card h3::after {
+  content: "";
+  display: block;
+  width: 50%;
+  height: 3px;
+  background: #58a6ff; /* Blue underline */
+  margin: 1rem auto;
+  border-radius: 5px;
+}
+
+/* Hover Effects */
+.tool-card:hover h3 {
+  color: #256b71; /* Blue highlight on heading */
+}
+
+.tool-card:hover p {
+  color: #c9d1d9; /* Brighter text on hover */
+}
+
+/* Responsive Design for Small Screens */
+@media (max-width: 768px) {
+  .card-grid {
+    grid-template-columns: 1fr; /* Single column for smaller screens */
+    padding: 1rem;
+  }
+
+  .tool-card {
+    padding: 1.5rem;
+  }
+
+  .tool-card img {
+    width: 100px;
+    height: 100px;
+  }
+
+  .tool-card h3 {
+    font-size: 1.6rem;
+  }
+
+  .tool-card p {
+    font-size: 1.2rem;
+  }
 }

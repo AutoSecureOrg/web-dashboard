@@ -6,14 +6,16 @@
 <div class="container">
     <header>
         <div class="header-text">
-            <h2>Network Vulnerability Scanner</h2>
-            <p>The Network Vulnerability Scanner is a highly accurate tool that detects 12,073 CVEs in extensively used
-                software products and technologies. With daily vulnerability updates and a very low rate of false
-                positives, the scanner provides reliable results for your next move.</p>
-        </div>
-        <img class="header-image" src="{{ url_for('static', filename='images/net.jpg') }}" alt="Authenticated Scanning">
+            <h2>Port Exploit</h2>
+            <p>
+              The Port Exploiter is a versatile tool for identifying and exploiting vulnerabilities in open network ports. Combining advanced scanning with vulnerability databases, it detects misconfigurations, outdated services, and security weaknesses. Designed for both professionals and beginners, it simplifies port scanning, service enumeration, and exploitation, providing an accessible and efficient way to identify, exploit, and document network vulnerabilities.          </p> 
+          </div>
+        <img class="header-image" src="{{ url_for('static', filename='images/exploit4.png') }}" alt="Authenticated Scanning">
     </header>
-
+    <head>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    </head>
+    
     <div class="input-card">
         <h3>Scan Options</h3>
         <form id="scanner-form" action="{{ url_for('network_scanner') }}" method="POST">
@@ -41,10 +43,13 @@
             <label for="end_port">End Port:</label>
             <input type="number" id="end_port" name="end_port" value="65535" required>
 
-            <input type="checkbox" id="authorized" name="authorized" required>
-            <label for="authorized">
-                I agree to the <a href="#">Terms of Service</a>.
-            </label>
+            <div class="checkbox-container">
+                <input type="checkbox" id="authorized" name="authorized" required>
+                <label for="authorized">
+                    I agree to the <a href="#">Terms of Service</a>.
+                </label>
+            </div>
+            
 
             <button type="submit">Start Scan</button>
         </form>
@@ -56,6 +61,204 @@
     </div>
 </div>
 
+<div class="horizontal-section">
+    <div class="horizontal-icon">
+        <img src="{{ url_for('static', filename='images/malware.png') }}" alt="Icon Description">
+    </div>
+    <div class="vertical-divider"></div>
+    <div class="horizontal-content">
+      <h2>Why Use the Port Exploiter?</h2>
+      <p>
+        The Port Exploiter simplifies and enhances network security by automating the detection and exploitation of vulnerabilities. It performs comprehensive port scanning, service enumeration, and exploit deployment with precision. By leveraging real-time scanning and integration with the Metasploit framework, it identifies issues such as unprotected ports, outdated software, and misconfigurations, providing actionable insights to secure your network      </p>
+    </div>
+</div>
+
+    
+    <div class="horizontal-section reverse">
+        <div class="horizontal-icon">
+            <img src="{{ url_for('static', filename='images/technology.png') }}" alt="Comprehensive technology coverage illustration">
+        </div>
+        <div class="vertical-divider"></div>
+
+        <div class="horizontal-content">
+          <h2>Comprehensive Technology Coverage</h2>
+        
+         
+          <p>
+              The Port Exploiter not only identifies these vulnerabilities but also provides detailed evidence and actionable insights, allowing IT and security teams to prioritize remediation efforts effectively. Its comprehensive approach ensures that no critical gap in security goes unnoticed.
+          </p>
+          
+        </div>
+    </div>
+    
+    <div class="horizontal-section">
+        <div class="horizontal-icon">
+            <img src="{{ url_for('static', filename='images/application.png') }}" alt="Self-updating detection illustration">
+        </div>
+        <div class="vertical-divider"></div>
+
+        <div class="horizontal-content">
+          <h2>Findings Confirmed by Solid Evidence</h2>
+          <p>
+              The Network Vulnerability Scanner delivers robust evidence for findings, such as targeted endpoints, specific ports, and more.
+              The intuitive interface lets you easily integrate findings into professional reports, making it easier to understand potential security risks and speed up the remediation process.
+          </p>
+        </div>
+    </div>
+    
+    <div class="horizontal-section reverse">
+        <div class="horizontal-icon">
+            <img src="{{ url_for('static', filename='images/research.png') }}" alt="Findings confirmed by solid evidence illustration">
+        </div>
+        <div class="vertical-divider"></div>
+
+        <div class="horizontal-content">
+          <h2>Automatically Validated Findings</h2>
+          <p>
+              The Port Exploiter incorporates an automated validation system to ensure the accuracy of its findings, minimizing false positives. 
+              It dynamically interprets scan results, configures exploit parameters, and confirms vulnerabilities by analyzing real-time requests and responses. 
+              Each validated issue is tagged as "Confirmed," providing clear evidence of how the exploit was discovered and executed, ensuring reliable results for effective remediation.
+          </p>
+          <p>
+              With its intuitive interface, the tool generates professional, comprehensive reports that are easy to interpret and integrate into your security workflow. 
+              These reports ensure clear communication of potential risks, empowering teams to prioritize and accelerate the remediation process effectively.
+          </p>
+      </div>
+      
+    </div>
+    
+    
+    <section class="network-scanner">
+        <div class="scanner-container">
+          <div class="scanner-text">
+            <h2>How does the Network Vulnerability Scanner work?</h2>
+            <p>
+              The Network Vulnerability Scanner identifies live hosts, scans for open ports, and enumerates associated services, laying the foundation for targeted vulnerability detection and exploitation.
+          </p>
+          <p>
+              Powered by dynamic scanning routines, it leverages Nmap for port and service discovery, integrates with Metasploit for real-time exploit matching, and automatically configures payloads to execute precision-targeted attacks.
+          </p>
+          </div>
+          <div class="scanner-cards">
+            <div class="card" onclick="showDetails('port-discovery')">
+              <div class="card-icon">
+                <img src="{{ url_for('static', filename='images/live.png') }}" alt="Port Discovery Icon">
+              </div>
+              <div class="card-content">
+               <h3>Port Discovery</h3>
+        <p>
+            Each network scan begins with a host discovery phase, featuring an optional 
+            “Check if host is alive before scanning” functionality  ....
+        </p>
+        </div>
+              <div class="card-overlay">
+                <span class="expand-icon">+</span>
+              </div>
+            </div>
+            <div class="card" onclick="showDetails('sniper-detection')">
+              <div class="card-icon">
+                <img src="{{ url_for('static', filename='images/browser1.png') }}" alt="Sniper Detection Icon">
+              </div>
+              <div class="card-content">
+                <h3>Exploit Detection</h3>
+                <p>Using Metasploit RPC, the scanner dynamically searches for exploits tailored to the detected services and ports  ....</p>
+            </div>
+              <div class="card-overlay">
+                <span class="expand-icon">+</span>
+              </div>
+            </div>
+            <div class="card" onclick="showDetails('openvas-detection')">
+              <div class="card-icon">
+                <img src="{{ url_for('static', filename='images/detection1.png') }}" alt="OpenVAS Detection Icon">
+              </div>
+              <div class="card-content">
+                <h3>Version-based detection</h3>
+                <p> After completing the port-scanning phase, the Network Scanner actively cross-references the results with a comprehensive vulnerability database ....</p>
+              </div>
+              <div class="card-overlay">
+                <span class="expand-icon">+</span>
+              </div>
+            </div>
+            <div class="card" onclick="showDetails('nuclei-detection')">
+              <div class="card-icon">
+                <img src="{{ url_for('static', filename='images/report1.png') }}" alt="Nuclei Detection Icon">
+              </div>
+              <div class="card-content">
+                <h3>Detailed Reporting</h3>
+              <p>The tool generates comprehensive reports, including scan results, exploit attempts, and statuses, ensuring actionable insights for effective remediation ....</p>
+        
+              </div>
+              <div class="card-overlay">
+                <span class="expand-icon">+</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      
+      <div class="modal" id="details-modal">
+        <div class="modal-content">
+          <span class="close" onclick="closeDetails()">&times;</span>
+          <div id="modal-details"></div>
+        </div>
+      </div>
+      <div class="easy-scan-section">
+        <div class="scan-container">
+            <div class="scan-text">
+                <h2>It's Really Easy to Scan Your Network for Vulnerabilities</h2>
+            </div>
+            <div class="scan-features">
+                <div class="feature">
+                    <div class="feature-text">
+                        <h3>Set Up the Raspberry Pi</h3>
+                        <p>Power on your Raspberry Pi, connect it to the network, and access it remotely via SSH or VNC. It’s lightweight, portable, and ready to perform penetration testing on the go.</p>
+                    </div>
+                    <div class="feature-icon">
+                        <img src="{{ url_for('static', filename='images/raspberry.png') }}" alt="Raspberry Pi Setup">
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-text">
+                        <h3>Mobile-Friendly Dashboard</h3>
+                        <p>Access the Port Exploiter from any mobile device or browser. Perform scans, execute exploits, and review results directly from your smartphone or tablet.</p>
+                    </div>
+                    <div class="feature-icon">
+                        <img src="{{ url_for('static', filename='images/mobile.png') }}" alt="Mobile Dashboard">
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-text">
+                        <h3>Scan for Vulnerabilities</h3>
+                        <p>Start a scan by entering the target IP address. The tool automatically detects open ports, enumerates running services, and identifies potential vulnerabilities.</p>
+                    </div>
+                    <div class="feature-icon">
+                        <img src="{{ url_for('static', filename='images/vulnerability-assessment.png') }}" alt="Scan Vulnerabilities">
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-text">
+                        <h3>Execute Exploits</h3>
+                        <p>Leverage Metasploit to find and execute exploits automatically. The tool configures parameters like `RHOST`, `RPORT`, and payloads for efficient execution.</p>
+                    </div>
+                    <div class="feature-icon">
+                        <img src="{{ url_for('static', filename='images/exploit1.png') }}" alt="Execute Exploits">
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-text">
+                        <h3>Generate Reports</h3>
+                        <p>Automatically create professional reports with scan results and exploitation outcomes. Actionable insights help you prioritize and address vulnerabilities effectively.</p>
+                    </div>
+                    <div class="feature-icon">
+                        <img src="{{ url_for('static', filename='images/seo-report.png') }}" alt="Generate Reports">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+ 
 <script>
     const form = document.getElementById('scanner-form');
     const scanningIcon = document.getElementById('scanning-icon');
@@ -79,6 +282,48 @@
         // Show scanning icon
         scanningIcon.classList.remove('hidden');
     });
+   
+
+
+
+    const details = {
+  "port-discovery": {
+    title: "Port Discovery",
+    description:
+      "  Each network scan begins with a host discovery phase, featuring an optional Check if host is alive before scanning functionality. This ensures accurate targeting before proceeding.Once the target is confirmed, the port discovery phase identifies open ports and gathers critical data on running services. The scan adapts based on results and the selected scan type, enabling a comprehensive vulnerability assessment.",
+  },
+  "sniper-detection": {
+    title: "Exploit Detection",
+    description:
+      "Using Metasploit RPC, the scanner dynamically searches for exploits tailored to the detected services and ports. It ensures precision by matching the latest vulnerabilities from an updated database.",
+  },
+  "openvas-detection": {
+    title: "Version-based detection",
+    description:
+      " After completing the port-scanning phase, the Network Scanner actively cross-references the results with a comprehensive vulnerability database. It then checks the identified service versions for any known vulnerabilities or issues.This meticulous process actively tests your network's resilience against potential attackers through the very tactics they use. ",
+  },
+  "nuclei-detection": {
+    title: "Detailed Reporting",
+    description:
+      "The tool generates comprehensive reports, including scan results, exploit attempts, and statuses, ensuring actionable insights for effective remediation.",
+  },
+};
+
+function showDetails(key) {
+  const modal = document.getElementById("details-modal");
+  const modalDetails = document.getElementById("modal-details");
+  const { title, description } = details[key];
+
+  modalDetails.innerHTML = `<h3>${title}</h3><p>${description}</p>`;
+  modal.style.display = "flex";
+}
+
+function closeDetails() {
+  document.getElementById("details-modal").style.display = "none";
+}
+
+
 </script>
 
+{% include 'footer.html' %}
 {% endblock %}
