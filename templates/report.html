@@ -4,7 +4,13 @@
 
 {% block content %}
 <h2>{{ tool }} Results</h2>
-<pre>{{ output }}</pre>
+
+<ul>
+    {% for line in output %}
+        <li>{{ line }}</li>
+    {% endfor %}
+</ul>
+
 <a href="{{ url_for('download_report', report_type='pdf') }}" class="btn">Download PDF Report</a>
 <a href="{{ url_for('download_report', report_type='word') }}" class="btn">Download Word Report</a>
 {% endblock %}
