@@ -2,7 +2,7 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #0a1937; 
+    background-color: #0d1117; /* Dark background */
     color: #f0f0f0; 
 }
 
@@ -11,14 +11,12 @@ body {
     margin: 80px auto; 
     padding: 20px;
 }
-
 header {
-    display: flex;
-    align-items: center; 
-    justify-content: space-between; 
-    margin-bottom: 50px; 
-    flex-wrap: wrap;
+    display: flex; /* Enables Flexbox for horizontal alignment */
+    align-items: center; /* Aligns text and image vertically on the same line */
+    justify-content: space-between; /* Ensures even spacing between text and image */
 }
+
 
 h2 {
     color: #ffffff; 
@@ -28,22 +26,37 @@ h2 {
 .hidden {
     display: none; 
 }
-
-p {
-    font-size: 18px; 
-    line-height: 1.7; 
-    color: #b0c4de; 
+.header-text h2 {
+    color: #ffffff; 
+    font-size: 48px;
+    font-weight: bold;
 }
+
+/* Paragraph styling */
+.header-text p {
+    font-size: 18px; /* Readable font size */
+    line-height: 1.7; /* Adequate line spacing */
+    margin: 0; /* Remove unnecessary top/bottom margins */
+}
+
 
 .header-text {
     max-width: 60%; 
+    margin: 0; 
+    text-align: left; 
+    padding-right: 20px;
+    color: #b0c4de; 
+}
+.header-text strong {
+    font-weight: bold; /* Highlight important text */
+    color: #ffffff; /* Match bold text color with heading */
 }
 
+/* Styling the image */
 .header-image {
-    max-width: 20%; /* Reduce the maximum width of the image */
-    margin-left: 30px;
-    height: auto; /* Maintain aspect ratio */
-    border-radius: 10px; /* Keep subtle rounding for a modern look */
+    max-width: 35%; 
+    height: auto; 
+    margin-left: 20px; 
 }
 
 
@@ -468,7 +481,7 @@ button:active {
     align-items: center;
     justify-content: center;
     margin-top: 20px; 
-    gap: 10px; 
+    gap: 10px; /* Space between the checkbox and label */
 }
 
 /* Style for the checkbox */
@@ -563,7 +576,7 @@ button:active {
     position: absolute;
     width: 450px;
     height: 450px;
-    background: radial-gradient(circle, rgba(0, 255, 200, 0.2), transparent);
+    background: radial-gradient(circle, rgba(33, 99, 87, 0.2), transparent);
     border-radius: 50%;
     top: -20%;
     left: -20%;

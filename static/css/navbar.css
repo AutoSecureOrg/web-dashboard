@@ -91,7 +91,7 @@ a:hover {
 }
 
 .nav-link:hover {
-  color: #58a6ff; /* Highlighted blue */
+  color: #48879a; /* Highlighted blue */
 }
 
 /* Hamburger Menu */
@@ -144,6 +144,7 @@ a:hover {
   display: block;
 }
 
+
 /* Tool Card Styling */
 .tool-card {
   background: linear-gradient(145deg, #1e2328, #161b22); /* Dark gradient background */
@@ -164,7 +165,7 @@ a:hover {
   height: 120px;
   object-fit: cover;
   margin-bottom: 1rem;
-  border-radius: 50%; /* Circular image */
+  border-radius: 5%; /* Circular image */
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Image shadow */
   transition: transform 0.3s ease;
 }
