@@ -143,7 +143,7 @@ def test_command_injection(base_url, session):
     for form in forms:
         form_action = base_url + form["action"]
         payload = {
-            input_field["name"]: "127.0.0.1 & dir" if input_field["type"] == "text" else "test"
+            input_field["name"]: "127.0.0.1; ls" if input_field["type"] == "text" else "test"
             for input_field in form["inputs"] if input_field["name"]
         }
         try:
@@ -152,7 +152,7 @@ def test_command_injection(base_url, session):
             else:
                 response = session.get(form_action, params=payload)
             results.append(f"\n[DEBUG] Command Injection Response:")
-            if "Directory" in response.text or "bin" in response.text:
+            if "app" in response.text or "bin" in response.text:
                 results.append(f"[+] Command Injection successful!")
             else:
                 results.append(f"[-] Command Injection failed.")
