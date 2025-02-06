@@ -172,7 +172,7 @@ def convert_text_to_pdf(text_file, pdf_file):
 @app.route('/website_scanner', methods=['GET', 'POST'])
 def website_scanner():
     if request.method == 'POST':
-        target_url = request.form['target_url']
+        target_url = request.form['target_url']  # Get the entered target URL
         scan_type = request.form['scan_type']
 
         # Initialize results variable to store scan output
@@ -180,25 +180,14 @@ def website_scanner():
 
         try:
             if scan_type == "all":
-                # Run the entire script for all scans
                 results = complete_scan(target_url)
-                '''subprocess.run(
-                    ['python', 'scripts/web_scanner.py', target_url],
-                    capture_output=True,
-                    text=True,
-                    check=True
-                ).stdout'''
             elif scan_type == "sql_injection":
-                # Run the SQL Injection test only
-                results = test_sql_injection(target_url,None)
+                results = test_sql_injection(target_url, None)
             elif scan_type == "xss":
-                # Run SQL Injection first to log in, then XSS
                 results = xss_only(target_url)
             elif scan_type == "html_injection":
-                # Add open ports handling here if implemented in your script
                 results = html_only(target_url)
             elif scan_type == "command_injection":
-                # Run SQL Injection first to log in, then Command Injection
                 results = command_only(target_url)
             else:
                 results = "Invalid scan type selected."
@@ -206,8 +195,18 @@ def website_scanner():
         except Exception as e:
             results = f"An error occurred: {str(e)}"
 
-        # Render the results in the report.html template
-        return render_template('report.html', output=results, tool='Website Scanner')
+        # Convert results to a list if it's a multiline string
+        if isinstance(results, str):
+            results_list = results.split('\n')
+        else:
+            results_list = results
+
+        # Pass target_url and results_list to the template
+        return render_template(
+            'report.html',
+            output=results_list,
+            target_url=target_url  # Pass the entered target URL
+        )
 
     return render_template('website_scanner.html')
 
