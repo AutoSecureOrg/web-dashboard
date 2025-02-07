@@ -19,23 +19,37 @@
         <p id="progress-text">Scanning target...</p>
     </div>
 
-    <!-- Results Section (Initially Hidden) -->
-    <div class="results-section" id="results-section" style="display: none;">
-        <h2>Scan Results</h2>
-        <ul class="results-list">
-            {% for line in output %}
-            <li>
-                {% if '[+]' in line %}
-                <span class="positive">{{ line }}</span>
-                {% elif '[-]' in line %}
-                <span class="negative">{{ line }}</span>
-                {% else %}
-                <span class="neutral">{{ line }}</span>
-                {% endif %}
-            </li>
-            {% endfor %}
-        </ul>
+    <div class="results-list">
+        {% if output and output|length > 0 %}
+        <table class="table-auto w-full border border-gray-500">
+            <thead>
+                <tr class="bg-gray-700 text-white">
+                    <th class="px-4 py-2">Vulnerability Type</th>
+                    <th class="px-4 py-2">Status</th>
+                    <th class="px-4 py-2">Payload</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in output %}
+                <tr class="border-b border-gray-400">
+                    <td class="px-4 py-2 text-center">{{ result.type }}</td>
+                    <td class="px-4 py-2 text-center">
+                        {% if result.status == "Safe" %}
+                        <span class="positive">{{ result.status }}</span>
+                        {% else %}
+                        <span class="negative">{{ result.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-2 text-center">{{ result.payload }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-green-500">No vulnerabilities found! The target appears to be safe.</p>
+        {% endif %}
     </div>
+    
 
     <!-- Action Buttons -->
     <div class="actions">
@@ -46,7 +60,6 @@
 </div>
 
 <style>
-    /* General Styling */
     body {
         margin: 0;
         padding: 0;
@@ -103,7 +116,7 @@
 
     .progress {
         height: 100%;
-        background-color: #28a745;
+        background-color: #5ac585;
         width: 0%;
         transition: width 0.4s ease;
     }

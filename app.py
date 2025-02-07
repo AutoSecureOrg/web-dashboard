@@ -5,6 +5,7 @@ import os, subprocess
 from fpdf import FPDF
 from scripts.portExploit import nmap_scan, connect_to_metasploit, search_and_run_exploit, get_local_ip, port_exploit_report
 from scripts.web_scanner import test_sql_injection,xss_only, command_only,html_only,complete_scan
+from scripts.web_report import web_vuln_report
 
 app = Flask(__name__)
 
@@ -168,14 +169,39 @@ def convert_text_to_pdf(text_file, pdf_file):
 
     pdf.output(pdf_file)
 
+@app.route('/download-web-report/<report_type>')
+def download_web_report(report_type):
+    try:
+        # Get the latest web vulnerability scan report
+        latest_file = sorted(
+            [os.path.join(REPORTS_DIR, f) 
+             for f in os.listdir(REPORTS_DIR) if f.startswith("web_scan") and f.endswith('.txt')],
+            key=os.path.getmtime,
+            reverse=True
+        )[0]
 
+        if report_type == "text":
+            return send_file(latest_file, as_attachment=True)
+
+        elif report_type == "pdf":
+            pdf_path = os.path.splitext(latest_file)[0] + ".pdf"
+            convert_text_to_pdf(latest_file, pdf_path)
+            return send_file(pdf_path, as_attachment=True)
+
+        else:
+            return jsonify({"error": "Invalid report type. Use 'text' or 'pdf'."}), 400
+
+    except IndexError:
+        return jsonify({"error": "No web vulnerability reports found."}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 @app.route('/website_scanner', methods=['GET', 'POST'])
 def website_scanner():
     if request.method == 'POST':
-        target_url = request.form['target_url']  # Get the entered target URL
+        target_url = request.form['target_url']
         scan_type = request.form['scan_type']
 
-        # Initialize results variable to store scan output
         results = ""
 
         try:
@@ -195,20 +221,39 @@ def website_scanner():
         except Exception as e:
             results = f"An error occurred: {str(e)}"
 
-        # Convert results to a list if it's a multiline string
-        if isinstance(results, str):
-            results_list = results.split('\n')
-        else:
-            results_list = results
+        # Format results into a list of dictionaries
+        results_list = []
+        if isinstance(results, str):  # Convert strings to list of dictionaries
+            for line in results.split("\n"):
+                if line.strip():
+                    results_list.append({"type": "General", "status": "Info", "payload": line})
+        elif isinstance(results, list):  # Use provided list format
+            for res in results:
+                if isinstance(res, dict):
+                    results_list.append({
+                        "type": res.get("type", "Unknown"),
+                        "status": res.get("status", "Unknown"),
+                        "payload": res.get("payload", "N/A")
+                    })
+                else:
+                    results_list.append({"type": "General", "status": "Info", "payload": str(res)})
 
-        # Pass target_url and results_list to the template
+        # Display all results (including General) in the dashboard
+        display_results = results_list if results_list else [{"type": "No vulnerabilities found", "status": "Safe", "payload": "N/A"}]
+
+        # Generate a report
+        report_path = web_vuln_report(REPORTS_DIR, target_url, results_list)
+
         return render_template(
             'report.html',
-            output=results_list,
-            target_url=target_url  # Pass the entered target URL
+            output=display_results,
+            target_url=target_url,
+            report_path=report_path
         )
 
     return render_template('website_scanner.html')
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
