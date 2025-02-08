@@ -6,6 +6,7 @@ body {
     color: #f0f0f0; 
 }
 
+
 .container {
     max-width: 1200px;
     margin: 80px auto; 
@@ -1189,3 +1190,106 @@ button:active {
         width: 100%;
     }
 }
+
+
+
+
+
+/* Section Layout */
+.web-vulnerability-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 80px 50px; /* Added more padding for spacing */
+    background: #0d1b2a;
+    color: #e0e6ed;
+    gap: 80px; /* Increased gap between text and image */
+  }
+  
+  /* Text Content Styling */
+  .vulnerability-content {
+    flex: 1;
+    padding-right: 20px; /* Add extra spacing on the right side */
+  }
+  
+  .vulnerability-content h2 {
+    font-size: 3.2rem; /* Increased font size */
+    color: #00c2ff;
+    margin-bottom: 25px;
+    font-weight: bold;
+  }
+  
+  .vulnerability-content p {
+    font-size: 1.9rem; /* Increased font size */
+    line-height: 2; /* Adjusted for better readability */
+    margin-bottom: 25px; /* Increased spacing between paragraphs */
+    color: #b0c7de;
+  }
+  
+  .vulnerability-content .highlight {
+    color: #dbd4d2;
+    font-weight: bold;
+  }
+  
+  /* Image Styling */
+  .vulnerability-image {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .vulnerability-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+  }
+  
+
+  .vulnerability-content p:hover {
+    color: #ffffff;
+    transition: color 0.3s ease;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 1024px) {
+    .web-vulnerability-section {
+      flex-direction: column;
+      text-align: center;
+      padding: 60px 30px; /* Adjusted padding for smaller screens */
+    }
+  
+    .vulnerability-content {
+      margin-bottom: 20px;
+    }
+  
+    .vulnerability-image {
+      margin-top: 20px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .vulnerability-content h2 {
+      font-size: 2.5rem; /* Slightly smaller on small screens */
+    }
+  
+    .vulnerability-content p {
+      font-size: 1.2rem;
+    }
+  
+    .web-vulnerability-section {
+      padding: 40px 20px; /* Reduced padding */
+    }
+  }
+  
+
+
+
+
+
+
+
+
+
+
+
