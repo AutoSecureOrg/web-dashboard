@@ -5,6 +5,7 @@ import os, subprocess
 from fpdf import FPDF
 from scripts.portExploit import nmap_scan, connect_to_metasploit, search_and_run_exploit, get_local_ip, port_exploit_report
 from scripts.web_scanner import test_sql_injection,xss_only, command_only,html_only,complete_scan
+from scripts.web_report import web_vuln_report
 
 app = Flask(__name__)
 
@@ -168,37 +169,51 @@ def convert_text_to_pdf(text_file, pdf_file):
 
     pdf.output(pdf_file)
 
+@app.route('/download-web-report/<report_type>')
+def download_web_report(report_type):
+    try:
+        # Get the latest web vulnerability scan report
+        latest_file = sorted(
+            [os.path.join(REPORTS_DIR, f) 
+             for f in os.listdir(REPORTS_DIR) if f.startswith("web_scan") and f.endswith('.txt')],
+            key=os.path.getmtime,
+            reverse=True
+        )[0]
 
+        if report_type == "text":
+            return send_file(latest_file, as_attachment=True)
+
+        elif report_type == "pdf":
+            pdf_path = os.path.splitext(latest_file)[0] + ".pdf"
+            convert_text_to_pdf(latest_file, pdf_path)
+            return send_file(pdf_path, as_attachment=True)
+
+        else:
+            return jsonify({"error": "Invalid report type. Use 'text' or 'pdf'."}), 400
+
+    except IndexError:
+        return jsonify({"error": "No web vulnerability reports found."}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 @app.route('/website_scanner', methods=['GET', 'POST'])
 def website_scanner():
     if request.method == 'POST':
         target_url = request.form['target_url']
         scan_type = request.form['scan_type']
 
-        # Initialize results variable to store scan output
         results = ""
 
         try:
             if scan_type == "all":
-                # Run the entire script for all scans
                 results = complete_scan(target_url)
-                '''subprocess.run(
-                    ['python', 'scripts/web_scanner.py', target_url],
-                    capture_output=True,
-                    text=True,
-                    check=True
-                ).stdout'''
             elif scan_type == "sql_injection":
-                # Run the SQL Injection test only
-                results = test_sql_injection(target_url,None)
+                results = test_sql_injection(target_url, None)
             elif scan_type == "xss":
-                # Run SQL Injection first to log in, then XSS
                 results = xss_only(target_url)
             elif scan_type == "html_injection":
-                # Add open ports handling here if implemented in your script
                 results = html_only(target_url)
             elif scan_type == "command_injection":
-                # Run SQL Injection first to log in, then Command Injection
                 results = command_only(target_url)
             else:
                 results = "Invalid scan type selected."
@@ -206,10 +221,39 @@ def website_scanner():
         except Exception as e:
             results = f"An error occurred: {str(e)}"
 
-        # Render the results in the report.html template
-        return render_template('report.html', output=results, tool='Website Scanner')
+        # Format results into a list of dictionaries
+        results_list = []
+        if isinstance(results, str):  # Convert strings to list of dictionaries
+            for line in results.split("\n"):
+                if line.strip():
+                    results_list.append({"type": "General", "status": "Info", "payload": line})
+        elif isinstance(results, list):  # Use provided list format
+            for res in results:
+                if isinstance(res, dict):
+                    results_list.append({
+                        "type": res.get("type", "Unknown"),
+                        "status": res.get("status", "Unknown"),
+                        "payload": res.get("payload", "N/A")
+                    })
+                else:
+                    results_list.append({"type": "General", "status": "Info", "payload": str(res)})
+
+        # Display all results (including General) in the dashboard
+        display_results = results_list if results_list else [{"type": "No vulnerabilities found", "status": "Safe", "payload": "N/A"}]
+
+        # Generate a report
+        report_path = web_vuln_report(REPORTS_DIR, target_url, results_list)
+
+        return render_template(
+            'report.html',
+            output=display_results,
+            target_url=target_url,
+            report_path=report_path
+        )
 
     return render_template('website_scanner.html')
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

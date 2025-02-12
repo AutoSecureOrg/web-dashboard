@@ -15,16 +15,15 @@
     <div class="container">
         <header>
             <div class="header-text">
-                <h2>Website Vulnerability Scanner</h2>
-                <p>The Website Vulnerability Scanner is a highly-accurate vulnerability scanning solution, battle-tested in real life penetration testing engagements.
-                Quickly detect XSS, SQL injection, Command injection, XXE and other critical issues - automatically validated to eliminate false positives.</p>
+                <h2>Website vulnerability Testing</h2>
+                <p><strong>The Website Vulnerability Testing</strong> is a cutting-edge security solution, rigorously tested in real-world penetration testing scenarios. It swiftly identifies <strong>XSS, SQL Injection, Command Injection, XXE,</strong> and other <strong>critical vulnerabilities</strong>, ensuring precise detection with <strong>automated validation to eliminate false positives</strong>. Designed for efficiency and reliability, it streamlines the process of detecting and addressing security flaws with confidence.
+                </p>
             </div>
-            <img class="header-image" src="{{ url_for('static', filename='images/web.svg') }}" alt="Authenticated Scanning">
+            <img class="header-image" src="{{ url_for('static', filename='images/web.png') }}" alt="Authenticated Scanning">
         </header>
 
-        <div class="scanner-wrapper">
-            <div class="scanner-card">
-                <h3>Scan Type</h3>
+        <div class="input-card">
+                <h3>Scan </h3>
                 <form action="{{ url_for('website_scanner') }}" method="POST" id="scanForm">
                     <label for="target_url">Target URL:</label>
                     <input type="url" id="target_url" name="target_url" placeholder="https://example.com" required>
@@ -44,30 +43,163 @@
                 </form>
             </div>
         </div>
+        <section class="web-vulnerability-section">
+            <div class="vulnerability-content">
+              <h2>Find exploitable web vulnerabilities with documented evidence</h2>
+              <p>
+                Our proprietary Website Vulnerability Scanner gives security pros and appsec teams what they need:
+                highly <span class="highlight">accurate, validated findings</span> and actionable evidence - not just a long list of possible exposure points.
+              </p>
+              <p>
+                Unlike generic scanners that flag potential issues without context, our tool uses <span class="highlight">out-of-band detection</span> to minimize false positives and ensure reliable results, collecting proof along the way.
+              </p>
+              <p>
+                Perform unauthenticated recon, deep authenticated testing, or automated compliance scans - all with a powerful, easy-to-use tool that blends into your workflow.
+              </p>
+            </div>
+            <div class="vulnerability-image">
+              <img src="{{ url_for('static', filename='images/web4.png') }}" alt="Website Vulnerability Scanner Report" />
+            </div>
+          </section>
+<div class="horizontal-section">
+    <div class="horizontal-icon">
+        <img src="{{ url_for('static', filename='images/web5.png') }}" alt="Web Security Illustration">
+    </div>
+    <div class="vertical-divider"></div>
+    <div class="horizontal-content">
+        <h2>Why Use AutoSecure's for Web Vulnerability Testing?</h2>
+        <p>
+            AutoSecure's Web Vulnerability Testing provides a robust, accurate, and automated solution for securing your web applications. 
+            It simplifies vulnerability detection with comprehensive scanning and actionable insights, empowering your team to fortify web security effectively.
+        </p>
+    </div>
+</div>
 
-        <div class="info-card">
-            <h4>A powerful Website Scanner for all web applications</h4>
-            <p>Part of the Pentest-Tools.com pentesting arsenal, the Website Vulnerability Scanner is a custom web application scanner that our team of security researchers and engineers developed from scratch.</p>
-            <p>Designed to be both powerful and easy to use, the scanner accommodates the needs of both security teams and application security professionals.</p>
+<div class="horizontal-section reverse">
+    <div class="horizontal-icon">
+        <img src="{{ url_for('static', filename='images/security-testing.png') }}" alt="Comprehensive Technology Illustration">
+    </div>
+    <div class="vertical-divider"></div>
+    <div class="horizontal-content">
+        <h2>Comprehensive Vulnerability Detection</h2>
+        <p>
+            AutoSecure scans your web applications to detect a wide range of vulnerabilities, including SQL Injection, Cross-Site Scripting (XSS), 
+            Command Injection, HTML Injection, and more. Our tool ensures that no critical gap in security goes unnoticed.
+        </p>
+    </div>
+</div>
+
+<div class="horizontal-section">
+    <div class="horizontal-icon">
+        <img src="{{ url_for('static', filename='images/web-security.png') }}" alt="Evidence Illustration">
+    </div>
+    <div class="vertical-divider"></div>
+    <div class="horizontal-content">
+        <h2>Findings Confirmed by Solid Evidence</h2>
+        <p>
+            Unlike generic scanners, AutoSecure uses advanced detection techniques to minimize false positives and provide reliable results. 
+            Each finding is validated and accompanied by actionable evidence, such as proof-of-concept exploits and risk-level scores.
+        </p>
+    </div>
+</div>
+
+<div class="horizontal-section reverse">
+    <div class="horizontal-icon">
+        <img src="{{ url_for('static', filename='images/bug.png') }}" alt="Validated Findings Illustration">
+    </div>
+    <div class="vertical-divider"></div>
+    <div class="horizontal-content">
+        <h2>Automatically Validated Findings</h2>
+        <p>
+            AutoSecure incorporates an automated validation system to ensure accuracy. It dynamically interprets scan results, configures exploit 
+            parameters, and confirms vulnerabilities by analyzing real-time responses. Each validated issue is tagged as "Confirmed" with detailed insights.
+        </p>
+    </div>
+</div>
+
+<div class="horizontal-section">
+    <div class="horizontal-icon">
+        <img src="{{ url_for('static', filename='images/reseach.png') }}" alt="Reports Illustration">
+    </div>
+    <div class="vertical-divider"></div>
+    <div class="horizontal-content">
+        <h2>Comprehensive Reports</h2>
+        <p>
+            The tool generates detailed reports that summarize vulnerabilities, exploit attempts, and remediation suggestions. These professional 
+            reports make it easier for security teams to communicate risks effectively and prioritize actions.
+        </p>
+    </div>
+</div>
+
+<div class="easy-scan-section">
+    <div class="scan-container">
+        <div class="scan-text">
+            <h2>How Does the Web Vulnerability Testing Work?</h2>
         </div>
-
-        <div class="info-card">
-            <h4>Low false positives rate</h4>
-            <p>We’re constantly fine-tuning the scanner to produce highly accurate results so you don’t waste precious time with manual validation. The Website Vulnerability Scanner does automatic finding validation, applying a Confirmed label when the tool is confident the vulnerability is there.</p>
-        </div>
-
-        <div class="info-card">
-            <h4>Authenticated scanning</h4>
-            <p>You can also use the Website Vulnerability Scanner to scan behind login pages and uncover vulnerabilities as an authenticated user. The tool offers multiple authentication methods such as username/password, custom headers, cookies, and recorded login sessions.</p>
-        </div>
-
-        <div class="info-card">
-            <h4>High-quality reports</h4>
-            <p>Our customers love the reports of the Website Vulnerability Scanner because they include relevant findings explained in a friendly language. There’s also enough evidence and information to help you reproduce and manually validate the finding, plus detailed remediation recommendations.</p>
+        <div class="scan-features">
+            <div class="feature">
+                <div class="feature-text">
+                    <h3>Set Up the Raspberry Pi</h3>
+                    <p>
+                        Power on your Raspberry Pi, connect it to your network, and access it remotely via SSH or VNC. The lightweight and portable setup ensures that 
+                        you can initiate web vulnerability testing from any location with ease.
+                    </p>
+                </div>
+                <div class="feature-icon">
+                    <img src="{{ url_for('static', filename='images/raspberry.png') }}" alt="Raspberry Pi Setup">
+                </div>
+            </div>
+            <div class="feature">
+                <div class="feature-text">
+                    <h3>Scan for Vulnerabilities</h3>
+                    <p>
+                        Enter the target web application's URL to start the scan. AutoSecure maps the application, identifies endpoints, and uses advanced techniques to detect vulnerabilities like SQL Injection, XSS, Command Injection, and more.
+                    </p>
+                </div>
+                <div class="feature-icon">
+                    <img src="{{ url_for('static', filename='images/vulnerability-assessment.png') }}" alt="Scan for Vulnerabilities">
+                </div>
+            </div>
+            <div class="feature">
+                <div class="feature-text">
+                    <h3>Validate Exploits</h3>
+                    <p>
+                        Leverage the Metasploit framework integrated into AutoSecure to validate detected vulnerabilities. It dynamically executes payloads and confirms exploits, providing proof-of-concept evidence.
+                    </p>
+                </div>
+                <div class="feature-icon">
+                    <img src="{{ url_for('static', filename='images/exploit1.png') }}" alt="Validate Exploits">
+                </div>
+            </div>
+            <div class="feature">
+                <div class="feature-text">
+                    <h3>Mobile-Friendly Dashboard</h3>
+                    <p>
+                        Monitor and control all scanning activities via the AutoSecure dashboard, accessible on any device. Whether using a PC, tablet, or smartphone, you can start scans, view results, and download reports on the go.
+                    </p>
+                </div>
+                <div class="feature-icon">
+                    <img src="{{ url_for('static', filename='images/mobile.png') }}" alt="Mobile-Friendly Dashboard">
+                </div>
+            </div>
+            <div class="feature">
+                <div class="feature-text">
+                    <h3>Generate Reports</h3>
+                    <p>
+                        Automatically generate detailed reports, including vulnerabilities, validated exploits, and remediation steps. The professional-grade reports integrate seamlessly into your security workflow, ensuring effective risk management.
+                    </p>
+                </div>
+                <div class="feature-icon">
+                    <img src="{{ url_for('static', filename='images/document.png') }}" alt="Generate Reports">
+                </div>
+            </div>
         </div>
     </div>
+</div>
 
 </body>
 </html>
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% include 'footer.html' %}
+
 {% endblock %}
