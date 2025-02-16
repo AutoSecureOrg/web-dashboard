@@ -6,3 +6,4 @@ Jinja2
 pymetasploit3
 prettytable
 fpdf
+bs4

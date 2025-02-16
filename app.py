@@ -1,10 +1,10 @@
 import threading
 import time
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, json, render_template, request, jsonify, send_file
 import os, subprocess
 from fpdf import FPDF
 from scripts.portExploit import nmap_scan, connect_to_metasploit, search_and_run_exploit, get_local_ip, port_exploit_report
-from scripts.web_scanner import login_sql_injection,xss_only, command_only,html_only,complete_scan,sql_only
+from scripts.web_scanner import login_sql_injection, xss_only, command_only, html_only, complete_scan, sql_only
 from scripts.web_report import web_vuln_report
 from datetime import datetime
 
@@ -15,7 +15,8 @@ REPORTS_DIR = "/home/autosecure/FYP/reports/"
 os.makedirs(REPORTS_DIR, exist_ok=True)
 
 # Global variables to hold scan and test results
-services_found = []
+services_found = {}
+targets = []
 nmap_results = []
 exploitation_results = []
 test_status = {"complete": False}
@@ -29,24 +30,44 @@ def home():
 @app.route('/network-scanner', methods=['GET', 'POST'])
 def network_scanner():
     global services_found
+    global targets
+    # init variables to avoid overlap with previous test runs
+    targets = []
+    nmap_results = {}
+    exploitation_results = {}
     if request.method == 'POST':
+        start_ip = request.form.get('start_ip')
+        end_ip = request.form.get('end_ip')
         target_ip = request.form.get('target_ip')
         start_port = request.form.get('start_port', type=int)
         end_port = request.form.get('end_port', type=int)
 
-        if not target_ip:
+        if start_ip and end_ip and not target_ip:
+            end_num = end_ip.split(".")[-1]
+            start_num = start_ip.split(".")[-1]
+            prefix = start_ip.split(".", 3)
+            prefix = prefix[0] + '.' + prefix[1] + '.' + prefix[2] + '.'
+
+            for i in range(int(start_num), int(end_num) +1):
+                targets.append(prefix + str(i))
+        elif target_ip:
+            targets.append(target_ip)
+
+        if (len(targets) < 1):
             return jsonify({"error": "Target IP is required"}), 400
 
-        if start_port is None or end_port is None:
-            return jsonify({"error": "Start Port and End Port are required"}), 400
-
         try:
-            # Pass start_port and end_port to the nmap_scan function
-            open_ports = nmap_scan(target_ip, start_port=start_port, end_port=end_port)
-            services_found = [
-                {"service": port_info["service"], "port": port_info["port"], "version": port_info.get("version", "Unknown")}
-                for port_info in open_ports
-            ]
+            for target_ip in targets:
+                # Pass start_port and end_port to the nmap_scan function
+                open_ports = nmap_scan(target_ip, start_port=start_port, end_port=end_port)
+                services_found[target_ip] = [
+                    {"service": port_info["service"],
+                     "port": port_info["port"],
+                     "version": port_info.get("version", "Unknown")
+                    }
+                    for port_info in open_ports
+                ]
+
             return render_template('service_selection.html', services=services_found)
         except Exception as e:
             return jsonify({"error": str(e)}), 500
@@ -58,51 +79,56 @@ def network_scanner():
 def run_tests():
     global test_status, nmap_results, exploitation_results
     test_status["complete"] = False
-    nmap_results = []
-    exploitation_results = []
+    nmap_results = {}
+    exploitation_results = {}
 
-    selected_services = request.form.get('services').split(',')
-    target_ip = request.form.get('target_ip')
+    selected_services = json.loads(request.form.get('services'))  # Convert JSON string to list of objects
 
     if not selected_services:
         return jsonify({"error": "No services selected"}), 400
 
     # Run tests in a background thread
     def perform_tests():
-        global test_status, nmap_results, exploitation_results
+        #global test_status, nmap_results, exploitation_results
         try:
             client = connect_to_metasploit()
             if not client:
                 raise Exception("Failed to connect to Metasploit.")
 
             local_ip = get_local_ip()
-            results = []
 
-            # Populate Nmap results
-            nmap_results = [{
-                "port": service["port"],
-                "service": service["service"],
-                "version": service.get("version", "Unknown")
-            } for service in services_found]
+            # Iterate over each IP and perform tests
+            for target_ip in targets:
+                results = []
 
-            # Run exploits
-            for service_info in services_found:
-                if 'All' in selected_services or service_info['service'] in selected_services:
-                    module_name, success = search_and_run_exploit(
-                        client, service_info['service'], target_ip, service_info['port'], local_ip
-                    )
-                    results.append({
-                        "service": service_info['service'],
-                        "port": service_info['port'],
-                        "exploit": module_name if module_name else "No exploit found",
-                        "status": "Succeeded" if success else "Failed"
-                    })
+                if target_ip not in services_found:
+                    continue  # Skip if no services were found for this IP
 
-            # Update global results
-            exploitation_results = results
+                # Populate Nmap results for each IP
+                nmap_results[target_ip] = [{
+                    "port": service["port"],
+                    "service": service["service"],
+                    "version": service.get("version", "Unknown")
+                } for service in services_found[target_ip]]
 
-            # Generate a report
-            port_exploit_report(REPORTS_DIR, target_ip, nmap_results, exploitation_results)
+                # Run exploits for each service
+                for service_info in services_found[target_ip]:
+                    if any(service_info['service'].lower() == entry['service'].lower() for entry in selected_services):
+                        module_name, success = search_and_run_exploit(
+                            client, service_info['service'], target_ip, service_info['port'], local_ip
+                        )
+                        results.append({
+                            "service": service_info['service'],
+                            "port": service_info['port'],
+                            "exploit": module_name if module_name else "No exploit found",
+                            "status": "Succeeded" if success else "Failed"
+                        })
+
+                # Store results per IP
+                exploitation_results[target_ip] = results
+
+                # Generate a report for each IP
+                port_exploit_report(REPORTS_DIR, targets, nmap_results, exploitation_results)
 
         except Exception as e:
             print(f"Error during tests: {e}")
