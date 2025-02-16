@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, jsonify, send_file
 import os, subprocess
 from fpdf import FPDF
 from scripts.portExploit import nmap_scan, connect_to_metasploit, search_and_run_exploit, get_local_ip, port_exploit_report
-from scripts.web_scanner import test_sql_injection,xss_only, command_only,html_only,complete_scan
+from scripts.web_scanner import login_sql_injection,xss_only, command_only,html_only,complete_scan,sql_only
 from scripts.web_report import web_vuln_report
 
 app = Flask(__name__)
@@ -51,7 +51,6 @@ def network_scanner():
             return jsonify({"error": str(e)}), 500
 
     return render_template('network_scanner.html')
-
 
 
 @app.route('/run-tests', methods=['POST'])
@@ -169,6 +168,7 @@ def convert_text_to_pdf(text_file, pdf_file):
 
     pdf.output(pdf_file)
 
+
 @app.route('/download-web-report/<report_type>')
 def download_web_report(report_type):
     try:
@@ -195,7 +195,8 @@ def download_web_report(report_type):
         return jsonify({"error": "No web vulnerability reports found."}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+
 @app.route('/website_scanner', methods=['GET', 'POST'])
 def website_scanner():
     if request.method == 'POST':
@@ -207,8 +208,10 @@ def website_scanner():
         try:
             if scan_type == "all":
                 results = complete_scan(target_url)
+            elif scan_type == "sql_login":
+                results = login_sql_injection(target_url, None)   
             elif scan_type == "sql_injection":
-                results = test_sql_injection(target_url, None)
+                results = sql_only(target_url)
             elif scan_type == "xss":
                 results = xss_only(target_url)
             elif scan_type == "html_injection":
@@ -252,7 +255,6 @@ def website_scanner():
         )
 
     return render_template('website_scanner.html')
-
 
 
 if __name__ == '__main__':
