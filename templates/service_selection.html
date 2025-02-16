@@ -36,6 +36,20 @@
             color: white;
         }
 
+        .ip-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #12264d;
+            border-radius: 8px;
+        }
+
+        .ip-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
         #loading-spinner {
             display: none;
             margin-top: 10px;
@@ -52,16 +66,23 @@
     <div class="container mt-5">
         <h1 class="text-center">Select Services to Run Tests</h1>
         <form method="POST" action="/run-tests" id="service-form">
-            <input type="hidden" name="target_ip" value="{{ request.form.target_ip }}">
 
             <div class="mt-4 mb-3 text-center">
                 <button type="button" id="select-all-button" class="all-button">Select All</button>
             </div>
 
-            <div id="services-container" class="d-flex flex-wrap justify-content-center">
-                {% for service in services %}
-                <div class="service-button" data-service="{{ service.service }}" data-port="{{ service.port }}">
-                    {{ service.service }} (Port {{ service.port }})
+            <div id="services-container">
+                {% for ip, services in services.items() %}
+                <div class="ip-section">
+                    <div class="ip-title">IP Address: {{ ip }}</div>
+                    <div class="d-flex flex-wrap justify-content-center">
+                        {% for service in services %}
+                        <div class="service-button" data-service="{{ service.service }}" data-port="{{ service.port }}"
+                            data-ip="{{ ip }}">
+                            {{ service.service }} (Port {{ service.port }})
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
                 {% endfor %}
             </div>
@@ -107,8 +128,12 @@
         // Update hidden input with selected services
         function updateSelectedServices() {
             const selected = Array.from(document.querySelectorAll('.service-button.active'))
-                .map(button => button.getAttribute('data-service'));
-            selectedServicesInput.value = selected.join(',');
+                .map(button => ({
+                    ip: button.getAttribute('data-ip'),
+                    service: button.getAttribute('data-service'),
+                    port: button.getAttribute('data-port')
+                }));
+            selectedServicesInput.value = JSON.stringify(selected);
         }
 
         // Select/Deselect All button logic

@@ -42,6 +42,20 @@
         .home-button:hover {
             border: #f0f0f0;
         }
+
+        .ip-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #12264d;
+            border-radius: 8px;
+        }
+
+        .ip-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
     </style>
 </head>
 
@@ -49,57 +63,66 @@
     <div class="container mt-5">
         <h1 class="text-center">Scan and Exploit Results</h1>
 
-        <h3 class="mt-4">Scan Results</h3>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Port</th>
-                    <th>Service</th>
-                    <th>Version</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for result in nmap_results %}
-                <tr>
-                    <td>{{ result.port }}</td>
-                    <td>{{ result.service }}</td>
-                    <td>{{ result.version }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        {% for ip, scan_results in nmap_results.items() %}
+        <div class="ip-section">
+            <h3 class="ip-title">Scan Results for IP: {{ ip }}</h3>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Port</th>
+                        <th>Service</th>
+                        <th>Version</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in scan_results %}
+                    <tr>
+                        <td>{{ result.port }}</td>
+                        <td>{{ result.service }}</td>
+                        <td>{{ result.version }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
 
-        <h3 class="mt-4">Exploitation Results</h3>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Service</th>
-                    <th>Port</th>
-                    <th>Exploit</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for result in exploitation_results %}
-                <tr>
-                    <td>{{ result.service }}</td>
-                    <td>{{ result.port }}</td>
-                    <td>{{ result.exploit }}</td>
-                    <td>{{ result.status }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        {% if exploitation_results %}
+        {% for ip, exploit_results in exploitation_results.items() %}
+        <div class="ip-section">
+            <h3 class="ip-title">Exploitation Results for IP: {{ ip }}</h3>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Port</th>
+                        <th>Exploit</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in exploit_results %}
+                    <tr>
+                        <td>{{ result.service }}</td>
+                        <td>{{ result.port }}</td>
+                        <td>{{ result.exploit }}</td>
+                        <td>{{ result.status }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
+        {% endif %}
 
         <div class="text-center mt-5">
             <a href="{{ url_for('home') }}" class="btn home-button">Return to Home</a>
             <a href="{{ url_for('download_report', report_type='text') }}" class="btn btn-primary">Download Text
                 Report</a>
-            <a href="{{ url_for('download_report', report_type='pdf') }}" class="btn pdf-button">Download PDF
-                Report</a>
+            <a href="{{ url_for('download_report', report_type='pdf') }}" class="btn pdf-button">Download PDF Report</a>
         </div>
 
-        <br/>
+        <br />
     </div>
 </body>
 
