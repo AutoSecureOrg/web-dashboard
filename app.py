@@ -4,7 +4,9 @@ from flask import Flask, json, render_template, request, jsonify, send_file
 import os, subprocess
 from fpdf import FPDF
 from scripts.portExploit import nmap_scan, connect_to_metasploit, search_and_run_exploit, get_local_ip, port_exploit_report
-from scripts.web_scanner import test_sql_injection, xss_only, command_only, html_only, complete_scan
+from scripts.web_scanner import login_sql_injection, xss_only, command_only, html_only, complete_scan, sql_only
+from scripts.web_report import web_vuln_report
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -181,17 +183,113 @@ def download_report(report_type):
         return jsonify({"error": str(e)}), 500
 
 
+class PDF(FPDF):
+    def header(self):
+        """Create a header with a title and timestamp."""
+        self.set_fill_color(50, 50, 50)  # Dark gray
+        self.set_text_color(255, 255, 255)  # White text
+        self.set_font("Courier", "B", 11)
+        self.cell(0, 8, "TESTING REPORT", ln=True, align="C", fill=True)
+
+        # Timestamp
+        self.set_text_color(0, 0, 0)  # Reset text to black
+        self.set_font("Courier", "B", 8)
+        self.cell(0, 5, f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", ln=True, align="C")
+        self.ln(3)  # Small spacing
+
+    def footer(self):
+        """Create a footer with page number."""
+        self.set_y(-12)
+        self.set_font("Courier", size=7)
+        self.cell(0, 8, f"Page {self.page_no()}", align="C")
+
+    def add_table_row(self, col1, col2, col3, col_widths, row_fill):
+        """Helper function to format table rows with alternating colors and black text."""
+        self.set_fill_color(230, 230, 230) if row_fill else self.set_fill_color(255, 255, 255)
+        self.set_text_color(0, 0, 0)  # Ensure text remains black
+        self.cell(col_widths[0], 6, col1, border=1, fill=True)
+        self.cell(col_widths[1], 6, col2, border=1, fill=True)
+        self.multi_cell(col_widths[2], 6, col3, border=1, fill=True)
+
 def convert_text_to_pdf(text_file, pdf_file):
-    pdf = FPDF()
-    pdf.set_auto_page_break(auto=True, margin=15)
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
+    """Convert structured ASCII vulnerability scan report into a well-formatted PDF."""
+    try:
+        pdf = PDF()
+        pdf.set_auto_page_break(auto=True, margin=12)
+        pdf.set_margins(10, 10, 10)
+        pdf.add_page()
+        pdf.set_font("Courier", size=7)
 
-    with open(text_file, "r") as file:
-        for line in file:
-            pdf.cell(200, 10, txt=line.strip(), ln=True)
+        page_width = pdf.w - 2 * pdf.l_margin
+        col_widths = [page_width * 0.2, page_width * 0.15, page_width * 0.65]  # Adjusted widths
 
-    pdf.output(pdf_file)
+        row_fill = False  # Alternating row color flag
+
+        with open(text_file, "r", encoding="utf-8") as file:
+            for line in file:
+                line = line.rstrip()
+
+                # Handle ASCII table lines
+                if line.startswith("+"):
+                    if pdf.get_y() + 4.5 > pdf.h - 12:
+                        pdf.add_page()
+                    pdf.set_font("Courier", "B", 7)
+                    pdf.set_text_color(0, 0, 0)  # Ensure table separators remain black
+                    pdf.cell(0, 4.5, line, ln=True)
+                elif line.startswith("|"):
+                    parts = line.strip("|").split("|")
+                    parts = [p.strip() for p in parts]
+
+                    if len(parts) == 3:
+                        if pdf.get_y() + 6 > pdf.h - 12:
+                            pdf.add_page()
+                        pdf.add_table_row(parts[0], parts[1], parts[2], col_widths, row_fill)
+                        row_fill = not row_fill  # Toggle row color
+                    else:
+                        if pdf.get_y() + 6 > pdf.h - 12:
+                            pdf.add_page()
+                        pdf.set_text_color(0, 0, 0)  # Keep text black
+                        pdf.multi_cell(0, 6, line, border=1)
+
+                else:
+                    # Regular text outside of table
+                    if pdf.get_y() + 6 > pdf.h - 12:
+                        pdf.add_page()
+                    pdf.set_text_color(0, 0, 0)  # Keep text black
+                    pdf.multi_cell(0, 6, line)
+
+        pdf.output(pdf_file)
+        print(f"✅ PDF successfully created: {pdf_file}")
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
+
+@app.route('/download-web-report/<report_type>')
+def download_web_report(report_type):
+    try:
+        # Get the latest web vulnerability scan report
+        latest_file = sorted(
+            [os.path.join(REPORTS_DIR, f) 
+             for f in os.listdir(REPORTS_DIR) if f.startswith("web_scan") and f.endswith('.txt')],
+            key=os.path.getmtime,
+            reverse=True
+        )[0]
+
+        if report_type == "text":
+            return send_file(latest_file, as_attachment=True)
+
+        elif report_type == "pdf":
+            pdf_path = os.path.splitext(latest_file)[0] + ".pdf"
+            convert_text_to_pdf(latest_file, pdf_path)
+            return send_file(pdf_path, as_attachment=True)
+
+        else:
+            return jsonify({"error": "Invalid report type. Use 'text' or 'pdf'."}), 400
+
+    except IndexError:
+        return jsonify({"error": "No web vulnerability reports found."}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/website_scanner', methods=['GET', 'POST'])
@@ -200,30 +298,20 @@ def website_scanner():
         target_url = request.form['target_url']
         scan_type = request.form['scan_type']
 
-        # Initialize results variable to store scan output
         results = ""
 
         try:
             if scan_type == "all":
-                # Run the entire script for all scans
                 results = complete_scan(target_url)
-                '''subprocess.run(
-                    ['python', 'scripts/web_scanner.py', target_url],
-                    capture_output=True,
-                    text=True,
-                    check=True
-                ).stdout'''
+            elif scan_type == "sql_login":
+                results = login_sql_injection(target_url, None)   
             elif scan_type == "sql_injection":
-                # Run the SQL Injection test only
-                results = test_sql_injection(target_url,None)
+                results = sql_only(target_url)
             elif scan_type == "xss":
-                # Run SQL Injection first to log in, then XSS
                 results = xss_only(target_url)
             elif scan_type == "html_injection":
-                # Add open ports handling here if implemented in your script
                 results = html_only(target_url)
             elif scan_type == "command_injection":
-                # Run SQL Injection first to log in, then Command Injection
                 results = command_only(target_url)
             else:
                 results = "Invalid scan type selected."
@@ -231,10 +319,38 @@ def website_scanner():
         except Exception as e:
             results = f"An error occurred: {str(e)}"
 
-        # Render the results in the report.html template
-        return render_template('report.html', output=results, tool='Website Scanner')
+        # Format results into a list of dictionaries
+        results_list = []
+        if isinstance(results, str):  # Convert strings to list of dictionaries
+            for line in results.split("\n"):
+                if line.strip():
+                    results_list.append({"type": "General", "status": "Info", "payload": line})
+        elif isinstance(results, list):  # Use provided list format
+            for res in results:
+                if isinstance(res, dict):
+                    results_list.append({
+                        "type": res.get("type", "Unknown"),
+                        "status": res.get("status", "Unknown"),
+                        "payload": res.get("payload", "N/A")
+                    })
+                else:
+                    results_list.append({"type": "General", "status": "Info", "payload": str(res)})
+
+        # Display all results (including General) in the dashboard
+        display_results = results_list if results_list else [{"type": "No vulnerabilities found", "status": "Safe", "payload": "N/A"}]
+
+        # Generate a report
+        report_path = web_vuln_report(REPORTS_DIR, target_url, results_list)
+
+        return render_template(
+            'report.html',
+            output=display_results,
+            target_url=target_url,
+            report_path=report_path
+        )
 
     return render_template('website_scanner.html')
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

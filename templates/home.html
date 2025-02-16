@@ -193,34 +193,19 @@
   </section>
   
 
-<div class="attack-surface-section">
-    <div class="attack-surface-content">
-        <h2>Attack Surface Mapping</h2>
-        <ul class="feature-list">
-            <li>Discover the attack surface of your network targets, including subdomains, open ports, and running services</li>
-            <li>Map web application technologies, take screenshots, detect WAFs, and discover hidden files by fuzzing</li>
-            <li>Popular tools: <a href="#">Subdomain Finder</a>, <a href="#">Port Scanner</a>, <a href="#">URL Fuzzer</a></li>
-        </ul>
-        <button class="explore-button">Explore recon tools</button>
-    </div>
-    <div class="vertical-divider"></div>
-    <div class="attack-surface-image">
-        <img src="{{ url_for('static', filename='images/attack.png') }}" alt="Attack Surface Mapping Visualization">
-    </div>
-</div>
 
 <div class="attack-surface-section reverse">
     <div class="attack-surface-image">
         <img src="{{ url_for('static', filename='images/vulnerability .png') }}" alt="Vulnerability Scanning Visualization">
     </div>
     <div class="attack-surface-content">
-        <h2 class="attack-title">Vulnerability Scanning</h2>
+        <h2 class="attack-title">Vulnerability Assessment</h2>
         <div class="attack-subsection">
             <h3>Web Application Scanning</h3>
             <ul class="feature-list">
                 <li>
                     <i class="fas fa-check-circle"></i>
-                    Use our powerful, custom <a href="{{ url_for('website_scanner') }}" class="link-highlight">Website Vulnerability Scanner</a> to accurately detect common vulnerabilities (e.g. XSS, SQLi, OS Command injection) in classic and modern web applications.
+                    Use our powerful, custom <a href="{{ url_for('website_scanner') }}" class="link-highlight">Website Vulnerability Testing</a> to accurately detect common vulnerabilities (e.g. XSS, SQLi, OS Command injection) in classic and modern web applications.
                 </li>
                 <li>
                     <i class="fas fa-check-circle"></i>
@@ -233,7 +218,7 @@
             <ul class="feature-list">
                 <li>
                     <i class="fas fa-check-circle"></i>
-                    Uncover a wide range of infrastructure security issues with our <a href="{{ url_for('network_scanner') }}" class="link-highlight">Port exploit</a>, a custom tool which finds unnecessary open ports, missing security patches, service misconfigurations etc.
+                    Uncover a wide range of infrastructure security issues with our <a href="{{ url_for('network_scanner') }}" class="link-highlight">System Testing</a>, a custom tool which finds unnecessary open ports, missing security patches, service misconfigurations etc.
                 </li>
                 
             </ul>
