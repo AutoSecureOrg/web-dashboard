@@ -5,13 +5,12 @@
 {% block content %}
 <div class="hero-section">
     <div class="hero-content">
-        <h1>Get a hacker's perspective on your open ports port exploits, and web vulnerabilities</h1>
-        <p>Our platform helps security teams automate port exploitation and web scanning, easily and without expert hacking skills.</p>
+        <h1>Get a hacker's perspective on your vulnerable port exploits, and web vulnerabilities</h1>
+        <p>Our platform helps security teams automate system and web testing, with ease and user-friendliness like never before.</p>
         <ul class="feature-list">
-            <li>Automatically scan and exploit vulnerable ports</li>
-            <li>Detect and exploit critical port vulnerabilities with automation</li>
-            <li>Evaluate security risks through automated port and web exploitation</li>
-            <li>Streamline your testing process and reporting</li>
+            <li>Automated scanning and exploitation of vulnerable ports</li>
+            <li>Automate detection of various web vulnerabilities</li>
+            <li>AI Powered insights to fixes</li>
 
         </ul>
     </div>
@@ -25,8 +24,6 @@
     </div>
 </div>
 
-
-
 <div class="penetration-test-section">
     <div class="penetration-content">
         <img src="{{ url_for('static', filename='images/penetration_testing.png') }}" alt="Access Granted" class="penetration-image">
@@ -35,29 +32,18 @@
         <div class="penetration-text">
             <h2>Penetration Testing</h2>
             <p>
-                A <strong>penetration test</strong> simulates a real-world cyber attack to identify vulnerabilities in your IT systems that could be exploited by malicious actors. 
+                A <strong>penetration test</strong> simulates a real-world cyber attack to identify vulnerabilities in your IT systems that could be exploited by malicious actors.
                 Our experts help you uncover security weaknesses <em>before the hackers do</em>.
             </p>
             <p>
-                With cyberattacks growing more sophisticated and frequent, <strong>regular penetration testing</strong> is crucial to safeguarding your business and protecting sensitive data. 
+                With cyberattacks growing more sophisticated and frequent, <strong>regular penetration testing</strong> is crucial to safeguarding your business and protecting sensitive data.
                 Stay ahead of evolving threats by ensuring your security measures are always up-to-date. With us, you’re always one step ahead.
             </p>
         </div>
     </div>
 </div>
 
-
-
-
-
-
-
-
-
-
 <div class="pentest-title">
-    <h2>    </h2>
-    
     <h2>Penetration Testing Process</h2>
     <div class="divider"></div>
     <p>A comprehensive overview of the steps involved in a penetration test.</p>
@@ -133,15 +119,10 @@
     </div>
 </div>
 
-
-
-
-
-
 <section class="penetration-benefits">
     <div class="container">
         <h2>Why do Penetration Tests?</h2>
-        
+
         <div class="benefits-grid">
             <div class="benefit-card">
                 <div class="benefit-icon">
@@ -175,24 +156,14 @@
     </div>
 </section>
 
-
-
-
-
-
 <section class="about-autosecure">
     <div class="content-container">
       <h2>What you can do with AutoSecure</h2>
       <p>
-     <strong>AutoSecure</strong> is a web-based platform designed to streamline essential steps in cybersecurity assessments, including reconnaissance, vulnerability scanning, exploitation, and reporting. With our suite of advanced tools, you can identify weaknesses, secure systems, and stay ahead of cyber threats.
-      </p>
-      <p>
-        Leverage the power of over  built-in features to gain deep insights into your targets' vulnerabilities, enabling you to protect your infrastructure effectively and efficiently.
+     <strong>AutoSecure</strong> is designed to streamline essential steps in cybersecurity assessments, including reconnaissance, vulnerability scanning, exploitation, and reporting. With our suite of advanced tools, you can identify weaknesses, secure systems, and stay ahead of cyber threats.
       </p>
     </div>
   </section>
-  
-
 
 <div class="attack-surface-section reverse">
     <div class="attack-surface-image">
@@ -201,26 +172,22 @@
     <div class="attack-surface-content">
         <h2 class="attack-title">Vulnerability Assessment</h2>
         <div class="attack-subsection">
-            <h3>Web Application Scanning</h3>
+            <h3>System Testing</h3>
+            <ul class="feature-list">
+                <li>
+                    <i class="fas fa-check-circle"></i>
+                    Uncover a wide range of infrastructure security issues with our <a href="{{ url_for('network_scanner') }}"
+                        class="link-highlight">System Testing</a>, a custom tool which finds open ports and services, automatically runs payloads and exploits and safely checks if they are exploitable.
+                </li>
+            </ul>
+        </div>
+        <div class="attack-subsection">
+            <h3>Web Application Testing</h3>
             <ul class="feature-list">
                 <li>
                     <i class="fas fa-check-circle"></i>
                     Use our powerful, custom <a href="{{ url_for('website_scanner') }}" class="link-highlight">Website Vulnerability Testing</a> to accurately detect common vulnerabilities (e.g. XSS, SQLi, OS Command injection) in classic and modern web applications.
                 </li>
-                <li>
-                    <i class="fas fa-check-circle"></i>
-                    Quickly identify specific security issues with dedicated scanners <strong></strong>.
-                </li>
-            </ul>
-        </div>
-        <div class="attack-subsection">
-            <h3>Port exploit</h3>
-            <ul class="feature-list">
-                <li>
-                    <i class="fas fa-check-circle"></i>
-                    Uncover a wide range of infrastructure security issues with our <a href="{{ url_for('network_scanner') }}" class="link-highlight">System Testing</a>, a custom tool which finds unnecessary open ports, missing security patches, service misconfigurations etc.
-                </li>
-                
             </ul>
         </div>
         <button class="explore-button">Explore scanning tools</button>
@@ -249,9 +216,9 @@
     <div class="attack-surface-content">
         <h2>Reporting</h2>
         <ul class="feature-list">
-            <li>Create customizable reports for documentation</li>
-            <li>Streamline collaboration with ready-to-use templates</li>
-            <li>Export results in multiple formats (PDF, HTML, etc.)</li>
+            <li>Create reports for analysis</li>
+            <li>Export results in multiple formats (TXT, PDF)</li>
+            <li>Get AI-Powered Insights on fixing detected security vulnerabilities</li>
         </ul>
     </div>
 </div>
