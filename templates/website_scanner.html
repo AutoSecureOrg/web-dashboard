@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block title %}Website Vulnerability Scanner{% endblock %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Scanner</title>
+
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-text">
+                <h2>Website vulnerability Testing</h2>
+                <p><strong>The Website Vulnerability Testing</strong> is a cutting-edge security solution, rigorously tested in real-world penetration testing scenarios. It swiftly identifies <strong>XSS, SQL Injection, Command Injection, XXE,</strong> and other <strong>critical vulnerabilities</strong>, ensuring precise detection with <strong>automated validation to eliminate false positives</strong>. Designed for efficiency and reliability, it streamlines the process of detecting and addressing security flaws with confidence.
+                </p>
+            </div>
+            <img class="header-image" src="{{ url_for('static', filename='images/web.png') }}" alt="Authenticated Scanning">
+        </header>
+
+        <div class="input-card">
+                <h3>Scan </h3>
+                <form action="{{ url_for('website_scanner') }}" method="POST" id="scanForm">
+                    <label for="target_url">Target URL:</label>
+                    <input type="url" id="target_url" name="target_url" placeholder="https://example.com" required>
+
+                    <label for="scan_type">Select Scan Type:</label>
+                    <select id="scan_type" name="scan_type" required>
+                        <option value="" disabled selected>Select a scan type</option>
+                        <option value="all">All Scans</option>
+                        <option value="sql_login">SQL Login Bypass</option>
+                        <option value="sql_injection">SQL Injection</option>
+                        <option value="xss">Cross-Site Scripting (XSS)</option>
+                        <option value="html_injection">HTML Injection</option>
+                        <option value="command_injection">Command Injection</option>
+
+                    </select>
+
+                    <button type="submit">Start Assessment</button>
+                </form>
+            </div>
+        </div>
+        <section class="web-vulnerability-section">
+            <div class="vulnerability-content">
+              <h2>Find exploitable web vulnerabilities with documented evidence</h2>
+              <p>
+                Our proprietary Website Vulnerability Scanner gives security pros and appsec teams what they need:
+                highly <span class="highlight">accurate, validated findings</span> and actionable evidence - not just a long list of possible exposure points.
+              </p>
+              <p>
+                Unlike generic scanners that flag potential issues without context, our tool uses <span class="highlight">out-of-band detection</span> to minimize false positives and ensure reliable results, collecting proof along the way.
+              </p>
+              <p>
+                Perform unauthenticated recon, deep authenticated testing, or automated compliance scans - all with a powerful, easy-to-use tool that blends into your workflow.
+              </p>
+            </div>
+            <div class="vulnerability-image">
+              <img src="{{ url_for('static', filename='images/web4.png') }}" alt="Website Vulnerability Scanner Report" />
+            </div>
+          </section>
+<div class="horizontal-section">
+    <div class="horizontal-icon">
+        <img src="{{ url_for('static', filename='images/web5.png') }}" alt="Web Security Illustration">
+    </div>
+    <div class="vertical-divider"></div>
+    <div class="horizontal-content">
+        <h2>Why Use AutoSecure's for Web Vulnerability Testing?</h2>
+        <p>
+            AutoSecure's Web Vulnerability Testing provides a robust, accurate, and automated solution for securing your web applications.
+            It simplifies vulnerability detection with comprehensive scanning and actionable insights, empowering your team to fortify web security effectively.
+        </p>
+    </div>
+</div>
+
+<div class="horizontal-section reverse">
+    <div class="horizontal-icon">
+        <img src="{{ url_for('static', filename='images/security-testing.png') }}" alt="Comprehensive Technology Illustration">
+    </div>
+    <div class="vertical-divider"></div>
+    <div class="horizontal-content">
+        <h2>Comprehensive Vulnerability Detection</h2>
+        <p>
+            AutoSecure scans your web applications to detect a wide range of vulnerabilities, including SQL Injection, Cross-Site Scripting (XSS),
+            Command Injection, HTML Injection, and more. Our tool ensures that no critical gap in security goes unnoticed.
+        </p>
+    </div>
+</div>
+
+<div class="horizontal-section">
+    <div class="horizontal-icon">
+        <img src="{{ url_for('static', filename='images/web-security.png') }}" alt="Evidence Illustration">
+    </div>
+    <div class="vertical-divider"></div>
+    <div class="horizontal-content">
+        <h2>Findings Confirmed by Solid Evidence</h2>
+        <p>
+            Unlike generic scanners, AutoSecure uses advanced detection techniques to minimize false positives and provide reliable results.
+            Each finding is validated and accompanied by actionable evidence, such as proof-of-concept exploits and risk-level scores.
+        </p>
+    </div>
+</div>
+
+<div class="horizontal-section reverse">
+    <div class="horizontal-icon">
+        <img src="{{ url_for('static', filename='images/bug.png') }}" alt="Validated Findings Illustration">
+    </div>
+    <div class="vertical-divider"></div>
+    <div class="horizontal-content">
+        <h2>Automatically Validated Findings</h2>
+        <p>
+            AutoSecure incorporates an automated validation system to ensure accuracy. It dynamically interprets scan results, configures exploit
+            parameters, and confirms vulnerabilities by analyzing real-time responses. Each validated issue is tagged as "Confirmed" with detailed insights.
+        </p>
+    </div>
+</div>
+
+<div class="horizontal-section">
+    <div class="horizontal-icon">
+        <img src="{{ url_for('static', filename='images/reseach.png') }}" alt="Reports Illustration">
+    </div>
+    <div class="vertical-divider"></div>
+    <div class="horizontal-content">
+        <h2>Comprehensive Reports</h2>
+        <p>
+            The tool generates detailed reports that summarize vulnerabilities, exploit attempts, and remediation suggestions. These professional
+            reports make it easier for security teams to communicate risks effectively and prioritize actions.
+        </p>
+    </div>
+</div>
+
+<div class="easy-scan-section">
+    <div class="scan-container">
+        <div class="scan-text">
+            <h2>How Does the Web Vulnerability Testing Work?</h2>
+        </div>
+        <div class="scan-features">
+            <div class="feature">
+                <div class="feature-text">
+                    <h3>Set Up the Raspberry Pi</h3>
+                    <p>
+                        Power on your Raspberry Pi, connect it to your network, and access it remotely via SSH or VNC. The lightweight and portable setup ensures that
+                        you can initiate web vulnerability testing from any location with ease.
+                    </p>
+                </div>
+                <div class="feature-icon">
+                    <img src="{{ url_for('static', filename='images/raspberry.png') }}" alt="Raspberry Pi Setup">
+                </div>
+            </div>
+            <div class="feature">
+                <div class="feature-text">
+                    <h3>Scan for Vulnerabilities</h3>
+                    <p>
+                        Enter the target web application's URL to start the scan. AutoSecure maps the application, identifies endpoints, and uses advanced techniques to detect vulnerabilities like SQL Injection, XSS, Command Injection, and more.
+                    </p>
+                </div>
+                <div class="feature-icon">
+                    <img src="{{ url_for('static', filename='images/vulnerability-assessment.png') }}" alt="Scan for Vulnerabilities">
+                </div>
+            </div>
+            <div class="feature">
+                <div class="feature-text">
+                    <h3>Validate Exploits</h3>
+                    <p>
+                        Leverage the Metasploit framework integrated into AutoSecure to validate detected vulnerabilities. It dynamically executes payloads and confirms exploits, providing proof-of-concept evidence.
+                    </p>
+                </div>
+                <div class="feature-icon">
+                    <img src="{{ url_for('static', filename='images/exploit1.png') }}" alt="Validate Exploits">
+                </div>
+            </div>
+            <div class="feature">
+                <div class="feature-text">
+                    <h3>Mobile-Friendly Dashboard</h3>
+                    <p>
+                        Monitor and control all scanning activities via the AutoSecure dashboard, accessible on any device. Whether using a PC, tablet, or smartphone, you can start scans, view results, and download reports on the go.
+                    </p>
+                </div>
+                <div class="feature-icon">
+                    <img src="{{ url_for('static', filename='images/mobile.png') }}" alt="Mobile-Friendly Dashboard">
+                </div>
+            </div>
+            <div class="feature">
+                <div class="feature-text">
+                    <h3>Generate Reports</h3>
+                    <p>
+                        Automatically generate detailed reports, including vulnerabilities, validated exploits, and remediation steps. The professional-grade reports integrate seamlessly into your security workflow, ensuring effective risk management.
+                    </p>
+                </div>
+                <div class="feature-icon">
+                    <img src="{{ url_for('static', filename='images/document.png') }}" alt="Generate Reports">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% include 'footer.html' %}
+
+{% endblock %}

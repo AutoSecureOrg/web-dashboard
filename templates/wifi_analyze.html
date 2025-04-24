@@ -1,0 +1,333 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wi-Fi Network Analysis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #1e1e1e;
+            color: #f1f1f1;
+        }
+    
+        h1, h2, h3 {
+            color: #ffffff;
+        }
+    
+        button {
+            padding: 6px 12px;
+            font-size: 14px;
+            margin: 10px 4px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    
+        button:hover {
+            background-color: #0056b3;
+        }
+    
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: #2c2c2c;
+            color: #f1f1f1;
+        }
+    
+        th, td {
+            border: 1px solid #555;
+            padding: 8px;
+            text-align: left;
+        }
+    
+        th {
+            background-color: #333;
+        }
+    
+        pre {
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            line-height: 1.5;
+            background-color: #111;
+            color: rgb(231, 235, 231);
+            padding: 12px;
+            border-radius: 5px;
+        }
+    
+        #logArea {
+            background: #111;
+            color: rgb(226, 233, 226);
+            padding: 12px;
+            margin-top: 30px;
+            white-space: pre-wrap;
+            height: 250px;
+            overflow-y: scroll;
+            border: 1px solid #444;
+        }
+    
+        #arpFloodOutput,
+        #deviceVulnTable {
+            margin-top: 40px;
+            background-color: #2c2c2c;
+            padding: 16px;
+            border: 1px solid #444;
+            color: #f1f1f1;
+            white-space: pre-wrap;
+        }
+
+    /* ✅ Responsive adjustments for smaller screens */
+    @media (max-width: 768px) {
+        .container {
+            padding: 20px 15px;
+        }
+
+        h1, h2, h3 {
+            font-size: 1.2em;
+        }
+
+        button {
+            width: 100%;
+            font-size: 15px;
+        }
+
+        table {
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 8px;
+        }
+
+        #logArea,
+        #arpFloodOutput,
+        #deviceVulnTable {
+            font-size: 13px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        h1, h2 {
+            font-size: 1.1em;
+        }
+
+        pre {
+            font-size: 13px;
+        }
+    }
+    </style>
+    
+</head>
+<body>
+    <h1>🚱 Wi-Fi Analysis Result</h1>
+
+    <!-- 🎯 Target Identification -->
+    <h2>🎯 Target Identification</h2>
+    <div id="targetInfoTable"></div>
+
+    <!-- 🔍 Encryption & Risk Analysis -->
+    <h2>🔍 Encryption & Risk Analysis</h2>
+    <div id="vulnTable"></div>
+    <h3>🧷 Router Admin Interface Check</h3>
+    <pre id="routerAdminResult">Scanning...</pre>
+    <div class="section">
+        <h3>🧩 UPnP Vulnerability Check</h3>
+        <div id="upnpResult">Running check...</div>
+    </div>
+    
+
+
+    <!-- 💎 Connected Devices Fingerprinting -->
+    <h2>💎 Connected Devices Fingerprinting</h2>
+    <div id="deviceTable"></div>
+
+    <!-- 🚨 Device Vulnerability Table -->
+    <div id="deviceVulnTable"></div>
+    
+    
+    <!-- 🛠️ ARP Flood Output -->
+    <div id="arpFloodOutput"></div>
+    <!-- 📥 Report Download -->
+    <h2>📥 Download Wi-Fi Report</h2>
+    <a href="/download-wifi-report/text">
+        <button>📄 Download TXT Report</button>
+    </a>
+    <a href="/download-wifi-report/pdf">
+        <button>📑 Download PDF Report</button>
+    </a>
+
+    <script>
+        const data = JSON.parse(localStorage.getItem('analyze_data') || '{}');
+
+        function renderTargetInfo(info) {
+            if (!info) return;
+            let html = `<table><thead><tr><th>Attribute</th><th>Details</th></tr></thead><tbody>`;
+            for (const [key, value] of Object.entries(info)) {
+                html += `<tr><td><strong>${key}</strong></td><td>${value}</td></tr>`;
+            }
+            html += `</tbody></table>`;
+            document.getElementById('targetInfoTable').innerHTML = html;
+        }
+
+        function renderVulnerabilityTable(info) {
+            if (!info) return;
+            let html = `<table>
+                <tr><th>SSID</th><th>BSSID</th><th>Encryption</th><th>Signal Strength</th><th>Risk Analysis</th></tr>
+                <tr>
+                    <td>${info.ssid}</td>
+                    <td>${info.bssid}</td>
+                    <td>${info.encryption}</td>
+                    <td>${info.signal}</td>
+                    <td style="white-space: pre-wrap;">${info.risk}</td>
+                </tr>
+            </table>`;
+            document.getElementById('vulnTable').innerHTML = html;
+        }
+
+        function renderDevices(devices) {
+            if (!devices || devices.length === 0) {
+                document.getElementById('deviceTable').innerHTML = "<p>No connected devices found.</p>";
+                return;
+            }
+
+            let html = `<table><tr><th>IP</th><th>MAC</th><th>Vendor</th><th>OS</th><th>Ports</th><th>Activity</th></tr>`;
+            devices.forEach(dev => {
+                html += `<tr>
+                    <td>${dev['IP Address']}</td>
+                    <td>${dev['MAC Address']}</td>
+                    <td>${dev['Vendor']}</td>
+                    <td>${dev['OS']}</td>
+                    <td>${dev['Open Ports']}</td>
+                    <td>${dev['Detected Activity']}</td>
+                </tr>`;
+            });
+            html += `</table>`;
+            document.getElementById('deviceTable').innerHTML = html;
+
+            fetch('/arp-flood', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('arpFloodOutput').innerHTML = `
+                    <h2>🛠️ ARP Replay Flood Vulnerability Report</h2>
+                    <pre>${data.output || '[✔] ARP Replay Flood executed.'}</pre>
+                `;
+            })
+            .catch(err => {
+                document.getElementById('arpFloodOutput').innerHTML = `
+                    <h2>🛠️ ARP Replay Flood Report</h2>
+                    <pre>[❌] Error running ARP flood: ${err}</pre>
+                `;
+            });
+
+            // Device Vulnerability Risk Table with Open Port Descriptions
+            let vulnHTML = `<h2>🔐 Device Vulnerability Summary</h2><table>
+                <tr><th>IP</th><th>MAC</th><th>Vendor</th><th>Risk Level</th><th>Reason</th></tr>`;
+
+            devices.forEach(dev => {
+                const ports = (dev['Open Ports'] || '').toLowerCase();
+                let risk = "✅ Low";
+                let reason = "No open ports detected";
+
+                if (ports.includes("23/tcp") || ports.includes("21/tcp")) {
+                    risk = "❌ Critical";
+                    reason = "Exposed Telnet or FTP services (unencrypted)";
+                } else if (
+                    ports.includes("80/tcp") && !ports.includes("443/tcp") ||
+                    ports.includes("unknown") ||
+                    ports.includes("9100") ||
+                    ports.includes("22/tcp") ||
+                    ports.includes("3306") ||
+                    ports.includes("8000") ||
+                    ports.includes("8080") ||
+                    ports.includes("9010") ||
+                    ports.includes("9020") ||
+                    ports.includes("50100")
+                ) {
+                    risk = "⚠️ Medium";
+                    reason = "HTTP/HTTPS, unencrypted or uncommon service ports (e.g., MySQL, proxy, SDR, Tambora)";
+                }
+
+                vulnHTML += `<tr>
+                    <td>${dev['IP Address']}</td>
+                    <td>${dev['MAC Address']}</td>
+                    <td>${dev['Vendor']}</td>
+                    <td>${risk}</td>
+                    <td>${reason}</td>
+                </tr>`;
+            });
+
+            vulnHTML += `</table>`;
+            document.getElementById('deviceVulnTable').innerHTML = vulnHTML;
+        }
+
+        function triggerAttack(type) {
+            fetch('/attack', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ type: type, target: data.bssid })
+            })
+            .then(res => res.json())
+            .then(response => {
+                const logMsg = response.status === 'launched' ? `[✔] ${type.toUpperCase()} attack launched successfully.` : `[✘] Failed to launch attack: ${response.message}`;
+                appendLog(logMsg);
+            })
+            .catch(error => appendLog(`[⚠️] Error: ${error}`));
+        }
+
+        function appendLog(text) {
+            const logElem = document.getElementById('logArea');
+            const timestamp = new Date().toLocaleTimeString();
+            logElem.textContent += `\n[${timestamp}] ${text}`;
+            logElem.scrollTop = logElem.scrollHeight;
+        }
+
+        renderTargetInfo(data.target_info);
+        renderVulnerabilityTable(data.vulnerability);
+        renderDevices(data.devices);
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+        fetch("/check-upnp")
+            .then(res => res.json())
+            .then(data => {
+                const upnpDiv = document.getElementById("upnpResult");
+                if (upnpDiv) {
+                    upnpDiv.innerHTML = data.result;  // ✅ Changed to innerHTML
+                }
+            })
+            .catch(err => {
+                console.error("UPnP scan failed:", err);
+                const upnpDiv = document.getElementById("upnpResult");
+                if (upnpDiv) {
+                    upnpDiv.innerText = "Error during UPnP scan.";
+                }
+            });
+        });
+        document.getElementById("routerAdminResult").innerHTML = "⏳ Running scan... Please wait.";
+
+        fetch("/check-router-admin")
+            .then(res => res.json())
+            .then(data => {
+                const adminDiv = document.getElementById("routerAdminResult");
+                if (adminDiv) {
+                    adminDiv.innerHTML = data.result;
+                }
+            })
+            .catch(err => {
+                document.getElementById("routerAdminResult").innerText = "❌ Scan failed. See console.";
+                console.error("Router Admin Scan Error:", err);
+            });
+
+
+
+
+
+    </script>
+</body>
+</html>
+

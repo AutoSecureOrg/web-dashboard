@@ -1,0 +1,58 @@
+<header class="header">
+    <div class="nav-container">
+        <nav class="navbar">
+            <a href="{{ url_for('home') }}" class="nav-logo">
+                <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="Logo" class="logo-image">
+                <span class="logo-text">AutoSecure</span>
+            </a>
+
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('home') }}" class="nav-link">Home</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a href="javascript:void(0);" class="nav-link dropdown-toggle"
+                        onclick="toggleDropdown(event)">Tools</a>
+                    <div id="toolsDropdown" class="dropdown-content">
+                        <a href="{{ url_for('network_scanner') }}" class="tool-card">
+                            <img src="{{ url_for('static', filename='images/port3.png') }}" alt="System Testing">
+                            <p>System Testing</p>
+                        </a>
+                        <a href="{{ url_for('website_scanner') }}" class="tool-card">
+                            <img src="{{ url_for('static', filename='images/port2.png') }}" alt="Website Testing">
+                            <p>Website Testing</p>
+                        </a>
+                        <a href="{{ url_for('wifi_page') }}" class="tool-card">
+                            <img src="{{ url_for('static', filename='images/live.png') }}" alt="Website Testing">
+                            <p>wifi Testing</p>
+                        </a>
+                        <a href="{{ url_for('mobile_landing') }}" class="tool-card mobile-testing">
+                            <img src="{{ url_for('static', filename='images/mobile.png') }}" alt="Mobile Security Testing">
+                            <p>Mobile Security</p>
+                        </a>                        
+                    </div>
+                </li>
+            </ul>
+
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </nav>
+    </div>
+</header>
+
+<style>
+    .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .nav-menu {
+        display: flex;
+        gap: 20px;
+        margin-left: auto;
+    }
+</style>

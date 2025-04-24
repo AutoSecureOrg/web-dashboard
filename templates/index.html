@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Scanner</title>
+</head>
+<body>
+    <h1>Network Scanner</h1>
+    <form id="scanner-form">
+        <label>
+            Scan Type:
+            <select name="scan_type" id="scan_type">
+                <option value="single">Single IP</option>
+                <option value="range">IP Range</option>
+            </select>
+        </label>
+        <div id="single-scan" style="display: block;">
+            <label>Target IP: <input type="text" name="target_ip" id="target_ip"></label>
+        </div>
+        <div id="range-scan" style="display: none;">
+            <label>Start IP: <input type="text" name="start_ip" id="start_ip"></label>
+            <label>End IP: <input type="text" name="end_ip" id="end_ip"></label>
+        </div>
+        <label>Start Port: <input type="number" name="start_port" id="start_port" value="1"></label>
+        <label>End Port: <input type="number" name="end_port" id="end_port" value="65535"></label>
+        <button type="submit">Scan</button>
+    </form>
+    <h2>Results:</h2>
+    <pre id="results"></pre>
+    <script>
+        const form = document.getElementById('scanner-form');
+        const scanType = document.getElementById('scan_type');
+        const singleScan = document.getElementById('single-scan');
+        const rangeScan = document.getElementById('range-scan');
+        const results = document.getElementById('results');
+
+        scanType.addEventListener('change', () => {
+            if (scanType.value === 'single') {
+                singleScan.style.display = 'block';
+                rangeScan.style.display = 'none';
+            } else {
+                singleScan.style.display = 'none';
+                rangeScan.style.display = 'block';
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const response = await fetch('/scan', {
+                method: 'POST',
+                body: formData,
+            });
+            const resultText = await response.json();
+            results.textContent = resultText.join('\n');
+        });
+    </script>
+</body>
+</html>

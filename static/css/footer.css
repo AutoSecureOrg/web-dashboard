@@ -1,0 +1,117 @@
+/* Footer Styles */
+footer {
+    background: linear-gradient(135deg, #1a1a1a, #2c2c2c);
+    color: #d9d9d9;
+    padding: 50px 20px;
+    font-family: "Roboto", Arial, sans-serif;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.5);
+}
+
+.footer-main {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: left;
+    border-top: 1px solid #333;
+    padding-top: 30px;
+}
+
+.footer-column {
+    flex: 1 1 220px;
+    margin: 10px;
+    padding: 0 10px;
+    position: relative;
+}
+
+.footer-column h3 {
+    font-size: 1.4em;
+    margin-bottom: 15px;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #1c354e;
+    display: inline-block;
+    padding-bottom: 5px;
+}
+
+.footer-column ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-column ul li {
+    margin-bottom: 12px;
+}
+
+.footer-column ul li a {
+    color: #b0b0b0;
+    text-decoration: none;
+    font-size: 0.95em;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.footer-column ul li a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 0;
+    height: 2px;
+    background: #1c354e;
+    transition: all 0.3s ease;
+}
+
+.footer-column ul li a:hover {
+    color: #063974;
+}
+
+.footer-column ul li a:hover::after {
+    width: 100%;
+}
+
+.footer-column ul li a::before {
+    content: "→";
+    margin-right: 8px;
+    color: #9397cd;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.footer-column ul li a:hover::before {
+    opacity: 1;
+}
+
+.footer-column:hover {
+    transform: translateY(-5px);
+    transition: transform 0.3s ease;
+}
+
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .footer-main {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .footer-column {
+        flex: 1 1 100%;
+        margin-bottom: 20px;
+    }
+}
+
+/* Subtle Footer Bottom */
+footer::after {
+    content: "© 2025 Your Company. All Rights Reserved.";
+    display: block;
+    text-align: center;
+    font-size: 0.85em;
+    color: #777;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #333;
+}

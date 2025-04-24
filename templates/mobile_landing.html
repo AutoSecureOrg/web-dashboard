@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Mobile Security Testing{% endblock %}
+
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mobile Security</title>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- Shared Styled Header -->
+  <header>
+    <div class="header-text">
+      <h2>Mobile Security Testing</h2>
+      <p>
+        <strong>Mobile Security Testing</strong> empowers you to scan Android apps and live mobile devices with deep insights. Perform APK analysis, detect insecure configurations, or map exposed IPs for critical vulnerabilities. It's portable, automated, and built for real-world assessment—perfect for securing mobile endpoints with zero guesswork.
+      </p>
+    </div>
+    <img class="header-image" src="{{ url_for('static', filename='images/mobile.png') }}" alt="Mobile Security" style="max-width: 250px;" />
+
+  </header>
+
+  <!-- APK Scanner -->
+   <!-- APK Scanner -->
+  <div class="input-card">
+    <h3>Mobile Security Assesment</h3>
+    <p>Upload Android apps and uncover what's lurking inside.</p>
+    <ul>
+      <li>🧠 Static code & config review</li>
+      <li>🔍 Permission, data, and API analysis</li>
+      <li>💣 Detect insecure or malicious code</li>
+      <li>📄 Generate full security reports</li>
+    </ul>
+    <form action="{{ url_for('scan_apk_and_redirect') }}" method="POST" enctype="multipart/form-data">
+      <input type="file" name="apk_file" required />
+      <button type="submit" style="margin-top: 15px;">Analyze APK</button>
+    </form>
+  </div>
+
+  <!-- Device Exposure Scanner -->
+  <div class="input-card">
+    <h3>Mobile Device Exposure</h3>
+    <form method="GET">
+      <p>Target a device and map its vulnerabilities like a pro.</p>
+      <ul>
+        <li>🌐 Scan device IP for open ports</li>
+        <li>🧪 Identify exposed services & versions</li>
+        <li>📦 Check for known CVEs</li>
+        <li>🔧 Get actionable vulnerability data</li>
+      </ul>
+      <button type="submit" style="margin-top: 15px;">Scan Device</button>
+    </form>
+  </div>
+
+</div>
+
+</body>
+</html>
+
+{% endblock %}
+
+

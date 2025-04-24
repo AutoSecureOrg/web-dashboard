@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+
+{% block title %}Penetration Testing Platform{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-content">
+        <h1>Get a hacker's perspective on your vulnerable port exploits, and web vulnerabilities</h1>
+        <p>Our platform helps security teams automate system and web testing, with ease and user-friendliness like never before.</p>
+        <ul class="feature-list">
+            <li>Automated scanning and exploitation of vulnerable ports</li>
+            <li>Automate detection of various web vulnerabilities</li>
+            <li>AI Powered insights to fixes</li>
+
+        </ul>
+    </div>
+    <link
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+  rel="stylesheet"
+/>
+
+    <div class="hero-image">
+        <img src="{{ url_for('static', filename='images/penetration.png') }}" alt="Dashboard Screenshot">
+    </div>
+</div>
+
+<div class="penetration-test-section">
+    <div class="penetration-content">
+        <img src="{{ url_for('static', filename='images/penetration_testing.png') }}" alt="Access Granted" class="penetration-image">
+        <div class="vertical-divider"></div>
+
+        <div class="penetration-text">
+            <h2>Penetration Testing</h2>
+            <p>
+                A <strong>penetration test</strong> simulates a real-world cyber attack to identify vulnerabilities in your IT systems that could be exploited by malicious actors.
+                Our experts help you uncover security weaknesses <em>before the hackers do</em>.
+            </p>
+            <p>
+                With cyberattacks growing more sophisticated and frequent, <strong>regular penetration testing</strong> is crucial to safeguarding your business and protecting sensitive data.
+                Stay ahead of evolving threats by ensuring your security measures are always up-to-date. With us, you're always one step ahead.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="pentest-title">
+    <h2>Penetration Testing Process</h2>
+    <div class="divider"></div>
+    <p>A comprehensive overview of the steps involved in a penetration test.</p>
+</div>
+
+<div class="penetration-testing-flow">
+    <div class="step-card" onclick="showModal('recon-modal')" title="Gather information about your target.">
+        <div class="step-icon">
+            <i class="fas fa-search"></i>
+        </div>
+        <p class="step-title">Reconnaissance</p>
+    </div>
+
+    <div class="arrow">
+        <i class="fas fa-chevron-right"></i>
+    </div>
+
+    <div class="step-card" onclick="showModal('scanning-modal')" title="Scan for vulnerabilities and open ports.">
+        <div class="step-icon">
+            <i class="fas fa-network-wired"></i>
+        </div>
+        <p class="step-title">Scanning</p>
+    </div>
+
+    <div class="arrow">
+        <i class="fas fa-chevron-right"></i>
+    </div>
+
+    <div class="step-card" onclick="showModal('gaining-access-modal')" title="Exploit vulnerabilities to gain access.">
+        <div class="step-icon">
+            <i class="fas fa-lock-open"></i>
+        </div>
+        <p class="step-title">Gaining Access</p>
+    </div>
+
+    <div class="arrow">
+        <i class="fas fa-chevron-right"></i>
+    </div>
+
+    <div class="step-card" onclick="showModal('maintaining-access-modal')" title="Ensure continued access without detection.">
+        <div class="step-icon">
+            <i class="fas fa-user-shield"></i>
+        </div>
+        <p class="step-title">Maintaining Access</p>
+    </div>
+
+    <div class="arrow">
+        <i class="fas fa-chevron-right"></i>
+    </div>
+
+    <div class="step-card" onclick="showModal('covering-tracks-modal')" title="Remove traces of your activity.">
+        <div class="step-icon">
+            <i class="fas fa-eraser"></i>
+        </div>
+        <p class="step-title">Covering Tracks</p>
+    </div>
+</div>
+
+<!-- Modals for Detailed Info -->
+<div class="modal" id="recon-modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('recon-modal')">&times;</span>
+        <h3>Reconnaissance</h3>
+        <p>Gather information about the target using both active and passive methods.</p>
+    </div>
+</div>
+
+<div class="modal" id="scanning-modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('scanning-modal')">&times;</span>
+        <h3>Scanning</h3>
+        <p>Scan for vulnerabilities, open ports, and misconfigurations using automated tools.</p>
+    </div>
+</div>
+
+<section class="penetration-benefits">
+    <div class="container">
+        <h2>Why do Penetration Tests?</h2>
+
+        <div class="benefits-grid">
+            <div class="benefit-card">
+                <div class="benefit-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3>Vulnerability identification</h3>
+                <p>Penetration testing uncovers security flaws in your IT infrastructure that could be exploited by cybercriminals.</p>
+            </div>
+            <div class="benefit-card">
+                <div class="benefit-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Data and system protection</h3>
+                <p>Penetration testing helps safeguard your data and systems from cyberattacks and potential breaches.</p>
+            </div>
+            <div class="benefit-card">
+                <div class="benefit-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <h3>Enhancing cyber security</h3>
+                <p>After a penetration test and the application of remediation measures, your cybersecurity will experience significant improvements.</p>
+            </div>
+            <div class="benefit-card">
+                <div class="benefit-icon">
+                    <i class="fas fa-balance-scale"></i>
+                </div>
+                <h3>Compliance with guidelines and regulations</h3>
+                <p>Ensures adherence to regulations like the Cybersecurity Act.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="about-autosecure">
+    <div class="content-container">
+      <h2>What you can do with AutoSecure</h2>
+      <p>
+     <strong>AutoSecure</strong> is designed to streamline essential steps in cybersecurity assessments, including reconnaissance, vulnerability scanning, exploitation, and reporting. With our suite of advanced tools, you can identify weaknesses, secure systems, and stay ahead of cyber threats.
+      </p>
+    </div>
+  </section>
+
+<div class="attack-surface-section reverse">
+    <div class="attack-surface-image">
+        <img src="{{ url_for('static', filename='images/vulnerability .png') }}" alt="Vulnerability Scanning Visualization">
+    </div>
+    <div class="attack-surface-content">
+        <h2 class="attack-title">Vulnerability Assessment</h2>
+        <div class="attack-subsection">
+            <h3>System Testing</h3>
+            <ul class="feature-list">
+                <li>
+                    <i class="fas fa-check-circle"></i>
+                    Uncover a wide range of infrastructure security issues with our <a href="{{ url_for('network_scanner') }}"
+                        class="link-highlight">System Testing</a>, a custom tool which finds open ports and services, automatically runs payloads and exploits and safely checks if they are exploitable.
+                </li>
+            </ul>
+        </div>
+        <div class="attack-subsection">
+            <h3>Web Application Testing</h3>
+            <ul class="feature-list">
+                <li>
+                    <i class="fas fa-check-circle"></i>
+                    Use our powerful, custom <a href="{{ url_for('website_scanner') }}" class="link-highlight">Website Vulnerability Testing</a> to accurately detect common vulnerabilities (e.g. XSS, SQLi, OS Command injection) in classic and modern web applications.
+                </li>
+            </ul>
+        </div>
+        <button class="explore-button">Explore scanning tools</button>
+    </div>
+</div>
+
+<div class="attack-surface-section">
+    <div class="attack-surface-content">
+        <h2>Exploitation Tools</h2>
+        <ul class="feature-list">
+            <li>Demonstrate business risks with safe vulnerability exploitation</li>
+            <li>Test real-world scenarios for unauthorized access</li>
+            <li>Generate detailed exploit reports with proof-of-concept</li>
+        </ul>
+        <button class="explore-button">Explore exploitation tools</button>
+    </div>
+    <div class="attack-surface-image">
+        <img src="{{ url_for('static', filename='images/exploit.png') }}" alt="Exploitation Tools Visualization">
+    </div>
+</div>
+
+<div class="attack-surface-section reverse">
+    <div class="attack-surface-image">
+        <img src="{{ url_for('static', filename='images/report11.png') }}" alt="Reporting Tools Visualization">
+    </div>
+    <div class="attack-surface-content">
+        <h2>Reporting</h2>
+        <ul class="feature-list">
+            <li>Create reports for analysis</li>
+            <li>Export results in multiple formats (TXT, PDF)</li>
+            <li>Get AI-Powered Insights on fixing detected security vulnerabilities</li>
+        </ul>
+    </div>
+</div>
+<div class="attack-surface-section">
+    <div class="attack-surface-content">
+        <h2>AI-Driven Vulnerability Analysis</h2>
+        <ul class="feature-list">
+            <li>Utilizes Llama 3.1 8b for in-depth log analysis and vulnerability detection</li>
+            <li>Provides actionable insights and remediation suggestions for identified vulnerabilities</li>
+            <li>Delivers real-time recommendations to improve system resilience</li>
+        </ul>
+    </div>
+    <div class="attack-surface-image">
+        <img src="{{ url_for('static', filename='images/llma.png') }}" alt="AI-Driven Vulnerability Analysis Visualization">
+    </div>
+</div>
+
+<div class="tool-card">
+    <a href="{{ url_for('mobile_landing') }}">
+        <img src="{{ url_for('static', filename='images/mobile.png') }}" alt="Mobile Security">
+        <h3>Mobile Security</h3>
+        <p>Analyze mobile apps and test device security</p>
+    </a>
+</div>
+
+{% include 'footer.html' %}
+{% endblock %}
