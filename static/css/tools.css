@@ -832,182 +832,7 @@ button:active {
     margin-top: 10px; /* Reduced margin above the cards */
     margin-bottom: 10px; /* Reduced margin below the cards */
     
-}
-
-.card {
-    position: relative;
-    background: linear-gradient(145deg, #6c3f3f,  #0d1b30);
-    border-radius: 20px;
-    padding: 20px;
-    margin-top: 5px; /* Reduced spacing above individual cards */
-    margin-bottom: 5px; /* Reduced spacing below individual cards */
-    text-align: center;
-    color: #6c3f3f;
-    box-shadow: 0 10px 30px rgba(81, 48, 48, 0.6);
-    overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.card:hover {
-    transform: translateY(-12px);
-    box-shadow: 0 20px 50px rgba(15, 14, 14, 0.8);
-}/* Card Icon */
-.card-icon {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 20px;
-    position: relative;
-}
-
-.card-icon img {
-    width: 120px; /* Keep the image size */
-    height: 120px;
-    border-radius: 0; /* Remove any rounding if applied */
-    object-fit: contain; /* Ensure the image maintains its aspect ratio */
-    transition: transform 0.4s ease, box-shadow 0.4s ease; /* Keep hover effects */
-}
-
-.card-icon img:hover {
-    transform: scale(1.2); /* Slight zoom effect on hover */
-    box-shadow: none; /* Remove hover shadow */
-}
-
-
-
-/* Card Content */
-.card-content h3 {
-    font-size: 2rem; /* Adjust title size for better proportion */
-    color: #ffffff;
-    margin-bottom: 20px; /* Increased spacing below title */
-}
-
-.card-content p {
-    font-size: 1.2rem; /* Slightly larger font for better readability */
-    color: #9ca9b7;
-    line-height: 1.8;
-}
-
-/* Card Overlay */
-.card-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    opacity: 0;
-    transition: opacity 0.4s ease;
-    border-radius: 20px;
-}
-
-.card:hover .card-overlay {
-    opacity: 1;
-}
-
-.expand-icon {
-    font-size: 3rem; /* Increased icon size for proportion */
-    color: #3c4e54;
-    cursor: pointer;
-    transition: transform 0.3s ease, color 0.3s ease;
-}
-
-.expand-icon:hover {
-    transform: scale(1.3);
-    color: #121e1d;
-}
-
-
-/* Modal Styling */
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.9);
-    z-index: 1000;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    box-sizing: border-box;
-}
-
-.modal-content {
-    background: linear-gradient(145deg, #6c3f3f,  #0d1b30);
-    padding: 40px;
-    border-radius: 20px;
-    width: 600px;
-    color: #dbe3ed;
-    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.9);
-    text-align: center;
-    position: relative;
-}
-
-.modal-content .close {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    font-size: 2rem;
-    color: #00c2ff;
-    cursor: pointer;
-    transition: color 0.3s ease;
-}
-
-.modal-content .close:hover {
-    color: #00e0d2;
-}
-
-.modal-content h3 {
-    margin-top: 0;
-    font-size: 2.2rem;
-    color: #d5dfe2;
-}
-
-.modal-content p {
-    font-size: 1.3rem;
-    line-height: 1.8;
-    color: #b4c7dc;
-}
-
-/* Responsive Design */
-@media (max-width: 1024px) {
-    .scanner-container {
-        flex-direction: column;
-    }
-
-    .scanner-cards {
-        grid-template-columns: 1fr;
-    }
-
-    .modal-content {
-        width: 90%;
-    }
-}
-
-@media (max-width: 768px) {
-    .card-icon img {
-        width: 60px;
-        height: 60px;
-    }
-
-    .card-content h3 {
-        font-size: 1.5rem;
-    }
-
-    .card-content p {
-        font-size: 1rem;
-    }
-}
-
-
-
-
-
+}start
 
 
 
@@ -1293,3 +1118,11 @@ button:active {
 
 
 
+
+
+
+
+
+
+
+  

@@ -138,12 +138,22 @@ a:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   border-radius: 0.5rem;
   z-index: 1000;
+  width: max-content; /* Ensure dropdown takes only necessary width */
+  grid-template-columns: repeat(2, 1fr); /* Two columns layout */
+  max-height: 80vh; /* Add max height */
+  overflow-y: auto; /* Enable vertical scrolling */
 }
 
 .dropdown-content.active {
-  display: block;
+  display: grid; /* Display as grid when active */
+  grid-template-columns: repeat(2, 1fr); /* Ensure grid template is applied */
 }
 
+/* Move Mobile App Testing to right side */
+.mobile-testing {
+  grid-column: 2; /* Place in second column */
+  justify-self: end; /* Align to the right */
+}
 
 /* Tool Card Styling */
 .tool-card {
@@ -238,6 +248,7 @@ a:hover {
 
 /* Responsive Design for Small Screens */
 @media (max-width: 768px) {
+  /* Card grid styles */
   .card-grid {
     grid-template-columns: 1fr; /* Single column for smaller screens */
     padding: 1rem;
@@ -258,5 +269,50 @@ a:hover {
 
   .tool-card p {
     font-size: 1.2rem;
+  }
+
+  /* Mobile navbar styles */
+  .hamburger {
+    display: block; /* Show hamburger menu */
+  }
+
+  .nav-menu {
+    position: fixed;
+    top: 60px; /* Adjust based on navbar height */
+    left: -100%;
+    flex-direction: column;
+    width: 100%;
+    background-color: rgba(34, 34, 34, 0.95);
+    backdrop-filter: blur(10px);
+    text-align: center;
+    transition: 0.3s;
+    padding: 2rem 0;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .nav-menu.active {
+    left: 0; /* Show menu when active */
+  }
+
+  .nav-item {
+    margin: 1.5rem 0;
+  }
+
+  /* Dropdown layout for mobile */
+  .dropdown-content {
+    position: relative;
+    left: 0;
+    width: 100%;
+    grid-template-columns: 1fr 1fr; /* Two column layout on mobile */
+    padding: 1rem;
+    gap: 1rem;
+    max-height: 70vh; /* Limit height on mobile to ensure scrollability */
+  }
+  
+  /* Mobile App Testing positioning for mobile */
+  .mobile-testing {
+    grid-column: 2;
+    grid-row: 1; /* Place at the top right */
+    justify-self: end;
   }
 }

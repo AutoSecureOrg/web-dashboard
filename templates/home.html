@@ -37,7 +37,7 @@
             </p>
             <p>
                 With cyberattacks growing more sophisticated and frequent, <strong>regular penetration testing</strong> is crucial to safeguarding your business and protecting sensitive data.
-                Stay ahead of evolving threats by ensuring your security measures are always up-to-date. With us, you’re always one step ahead.
+                Stay ahead of evolving threats by ensuring your security measures are always up-to-date. With us, you're always one step ahead.
             </p>
         </div>
     </div>
@@ -230,10 +230,19 @@
             <li>Provides actionable insights and remediation suggestions for identified vulnerabilities</li>
             <li>Delivers real-time recommendations to improve system resilience</li>
         </ul>
-#    </div>
+    </div>
     <div class="attack-surface-image">
         <img src="{{ url_for('static', filename='images/llma.png') }}" alt="AI-Driven Vulnerability Analysis Visualization">
     </div>
 </div>
+
+<div class="tool-card">
+    <a href="{{ url_for('mobile_landing') }}">
+        <img src="{{ url_for('static', filename='images/mobile.png') }}" alt="Mobile Security">
+        <h3>Mobile Security</h3>
+        <p>Analyze mobile apps and test device security</p>
+    </a>
+</div>
+
 {% include 'footer.html' %}
 {% endblock %}

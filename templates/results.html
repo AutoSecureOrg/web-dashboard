@@ -72,6 +72,8 @@
                         <th>Port</th>
                         <th>Service</th>
                         <th>Version</th>
+                        <th>Vulnerability</th>
+                        <th>AI Insight</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -80,6 +82,22 @@
                         <td>{{ result.port }}</td>
                         <td>{{ result.service }}</td>
                         <td>{{ result.version }}</td>
+                        <td style="white-space: pre-wrap;">{{ result.vuln }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info"
+                                onclick="getAiInsightSystem(this, '{{ result.service }}', '{{ result.version }}', `{{ result.vuln|escape }}`)">
+                                Fix With AI
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="ai-row" style="display: none;">
+                        <td colspan="5">
+                        <div class="ai-response-box p-2 bg-dark rounded">
+                            <strong>AI Insight:</strong>
+                            <div class="spinner-border spinner-border-sm text-light me-2" role="status"></div>
+                            <span class="ai-text">Thinking...</span>
+                        </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -127,3 +145,5 @@
 </body>
 
 </html>
+
+<script src="{{ url_for('static', filename='js/ai-insight.js') }}"></script>

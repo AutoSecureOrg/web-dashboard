@@ -40,7 +40,25 @@
                         <span class="negative">{{ result.status }}</span>
                         {% endif %}
                     </td>
-                    <td class="px-4 py-2 text-center">{{ result.payload }}</td>
+                    <td class="px-4 py-2 text-center">
+                        {{ result.payload }}
+                        
+                        {% if result.payload and ('SQL Injection:' in result.payload or 'Cross-Site Scripting' in result.payload or 'Command Injection:' in result.payload or 'HTML Injection:' in result.payload) %}
+                            <br/>
+                            <button class="btn btn-sm btn-info mt-2 ai-fix-btn" data-payload="{{ result.payload }}">
+                                <i class="fas fa-robot me-1"></i> AI Fixes
+                            </button>
+                            <div class="ai-box mt-3 p-3 rounded text-white" style="display:none; background-color: #1a1a2e; border: 1px solid #333356; max-width: 800px; margin: 0 auto;">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <div>
+                                        <div class="spinner-border spinner-border-sm text-light me-2" role="status" style="display: inline-block;"></div>
+                                    </div>
+                                </div>
+                                <div class="ai-response p-2" style="font-family: monospace; white-space: pre-wrap; font-size: 0.9rem; background-color: #0f0f1a; border-radius: 4px; padding: 10px;">Thinking...</div>
+                            </div>
+                        {% endif %}
+                    </td>
+                    
                 </tr>
                 {% endfor %}
             </tbody>
@@ -207,7 +225,31 @@
     .btn-red:hover {
         background-color: #b02a37;
     }
+    
+    /* AI Insight Box Styling */
+    .ai-box {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .ai-box .spinner-border {
+        width: 1rem;
+        height: 1rem;
+    }
+    
+    .ai-response {
+        line-height: 1.5;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .btn-sm {
+        padding: 5px 10px;
+        font-size: 0.875rem;
+    }
 </style>
+
+<script src="{{ url_for('static', filename='js/ai-insight.js') }}"></script>
 
 <script>
     // JavaScript to simulate progress bar and display results after completion
