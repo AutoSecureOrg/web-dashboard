@@ -11,15 +11,12 @@ from dotenv import load_dotenv
 from scripts.portExploit import nmap_scan, connect_to_metasploit, search_and_run_exploit, get_local_ip, port_exploit_report, query_nvd_api, clean_version_info, format_description
 from scripts.web_scanner import login_sql_injection, xss_only, command_only, html_only, complete_scan, sql_only
 from scripts.web_report import web_vuln_report
-from scripts.wifi_tool import auto_arp_replay_flood,scan_and_analyze 
 from scripts.wifi_tool import *
-from scripts.mobsf_handler import upload_apk_to_mobsf, get_static_analysis_url
 
 AI_HOST = '127.0.0.1'
 AI_PORT = 5005
 # Load environment variables from .env file
 load_dotenv()
-NVD_API_KEY = os.getenv("NVD_API_KEY")
 
 app = Flask(__name__)
 
@@ -123,7 +120,7 @@ def run_tests():
                     service_name = service["service"]
                     version = service.get("version", "Unknown")
                     port = service["port"]
-                    
+
                     if version == "-" or version.lower() == "unknown":
                         description = "No version data provided."
                     else:
@@ -233,13 +230,13 @@ def get_web_ai_insight():
         data = request.get_json(force=True)
         if not data:
             return jsonify({"No data provided"}), 400
-            
+
         payload = data.get('payload', '').strip()
         if not payload:
             return jsonify({"No vulnerability payload provided"}), 400
-            
+
         print(f"Web AI insight request received with payload: {payload[:100]}...")  # Log first 100 chars
-        
+
         prompt = (
             "Give compact technical buletted remediation steps for these web vulnerabilities:\n"
             f"{payload}\n\n"
@@ -370,7 +367,7 @@ def download_web_report(report_type):
     try:
         # Get the latest web vulnerability scan report
         latest_file = sorted(
-            [os.path.join(REPORTS_DIR, f) 
+            [os.path.join(REPORTS_DIR, f)
              for f in os.listdir(REPORTS_DIR) if f.startswith("web_scan") and f.endswith('.txt')],
             key=os.path.getmtime,
             reverse=True
@@ -405,7 +402,7 @@ def website_scanner():
             if scan_type == "all":
                 results = complete_scan(target_url)
             elif scan_type == "sql_login":
-                results = login_sql_injection(target_url, None)   
+                results = login_sql_injection(target_url, None)
             elif scan_type == "sql_injection":
                 results = sql_only(target_url)
             elif scan_type == "xss":
@@ -551,7 +548,7 @@ def wifi_analyze():
         "BSSID": selected_network["BSSID"],
         "Encryption Type": selected_network["Encryption Type"] + " (Mixed Mode)" if "WPA1" in selected_network["Encryption Type"] else selected_network["Encryption Type"],
         "Signal Strength": selected_network["Signal Strength"] + " (Very Strong)" if signal_val >= 75 else selected_network["Signal Strength"],
-        
+
         "Channel": get_channel_for_network(selected_network["SSID"], selected_network["BSSID"]),
 
         "Subnet": subnet,
@@ -595,7 +592,7 @@ def launch_attack():
         elif attack_type == "arp-flood":
             output = auto_arp_replay_flood(interface="wlan0", spoof_replies=True, randomize_mac=True)
             return jsonify({"status": "success", "output": output})
-            
+
 
         else:
             return jsonify({"status": "error", "message": f"Unknown attack type: {attack_type}"}), 400
@@ -622,47 +619,6 @@ def program_exists(program):
         return True
     except subprocess.CalledProcessError:
         return False
-    
-
-@app.route('/mobile', methods=['GET'])
-def mobile_landing():
-    """
-    Legacy mobile pentest route - redirects to new landing page
-    """
-    return render_template("mobile_landing.html")
-
-
-@app.route('/mobile/apk-scan', methods=['POST'])
-def scan_apk_and_redirect():
-    apk_file = request.files.get("apk_file")
-
-    if not apk_file:
-        return "No file uploaded", 400
-
-    # Force save to disk with correct extension
-    filename = apk_file.filename
-    if not filename.endswith(".apk"):
-        return "Only .apk files are supported", 400
-
-    upload_dir = "./uploads"
-    os.makedirs(upload_dir, exist_ok=True)
-    apk_path = os.path.join(upload_dir, filename)
-
-    apk_file.save(apk_path)
-
-    # Extra: confirm file was saved and not 0 bytes
-    if not os.path.isfile(apk_path) or os.path.getsize(apk_path) < 10000:
-        return "Uploaded file is too small or corrupt", 400
-
-    try:
-        print(f"[+] Uploading: {apk_path} ({os.path.getsize(apk_path)} bytes)")
-        result = upload_apk_to_mobsf(apk_path)
-        md5_hash = result.get("hash")
-        redirect_url = get_static_analysis_url(md5_hash)
-        return redirect(redirect_url)
-
-    except Exception as e:
-        return f"Upload failed: {str(e)}", 500
 
 
 if __name__ == '__main__':
