@@ -133,11 +133,52 @@
         {% endfor %}
         {% endif %}
 
+        {# --- Custom Exploit Results Section --- #}
+        {% if custom_exploit_results %}
+        <div class="ip-section">
+            <h3 class="ip-title">Custom Exploit Results</h3>
+            <p><strong>Script:</strong> <code>{{ custom_exploit_results.get('script_path', 'N/A') }}</code></p>
+            {% if custom_exploit_results.get('error') %}
+            <div class="alert alert-warning" role="alert">
+                <strong>Note:</strong> {{ custom_exploit_results.get('error') }}
+            </div>
+            {% endif %}
+
+            {% if custom_exploit_results.get('targets') %}
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Target IP</th>
+                        <th>Status</th>
+                        <th>Output (stdout)</th>
+                        <th>Output (stderr)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ip, result in custom_exploit_results.get('targets', {}).items() %}
+                    <tr>
+                        <td>{{ ip }}</td>
+                        <td>{{ result.status }}</td>
+                        <td><pre>{{ result.stdout if result.stdout else '-' }}</pre></td>
+                        <td><pre>{{ result.stderr if result.stderr else '-' }}</pre></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No targets were processed by the custom exploit.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+        {# --- End Custom Exploit Results Section --- #}
+
         <div class="text-center mt-5">
             <a href="{{ url_for('home') }}" class="btn home-button">Return to Home</a>
-            <a href="{{ url_for('download_report', report_type='text') }}" class="btn btn-primary">Download Text
-                Report</a>
-            <a href="{{ url_for('download_report', report_type='pdf') }}" class="btn pdf-button">Download PDF Report</a>
+            {# Only show report download if metasploit results exist #}
+            {% if exploitation_results %}
+            <a href="{{ url_for('download_report', report_type='text') }}" class="btn btn-primary">Download Metasploit Text Report</a>
+            <a href="{{ url_for('download_report', report_type='pdf') }}" class="btn pdf-button">Download Metasploit PDF Report</a>
+            {% endif %}
         </div>
 
         <br />
