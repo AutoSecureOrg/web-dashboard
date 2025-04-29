@@ -17,6 +17,7 @@ AI_HOST = '127.0.0.1'
 AI_PORT = 5005
 # Load environment variables from .env file
 load_dotenv()
+NVD_API_KEY = os.getenv("NVD_API_KEY")
 
 app = Flask(__name__)
 
@@ -93,28 +94,37 @@ def run_tests():
     exploitation_results = {}
 
     selected_services = json.loads(request.form.get('services'))  # Convert JSON string to list of objects
+    testing_mode = request.form.get('testing_mode', 'Lite') # Get testing mode, default to Lite
 
     if not selected_services:
         return jsonify({"error": "No services selected"}), 400
 
     # Run tests in a background thread
-    def perform_tests():
-        #global test_status, nmap_results, exploitation_results
+    def perform_tests(mode):
+        print(f"INFO: Starting perform_tests thread (Mode: {mode})")
         try:
+            print("INFO: Attempting to connect to Metasploit...")
             client = connect_to_metasploit()
             if not client:
+                print("ERROR: Failed to connect to Metasploit. Aborting tests.")
                 raise Exception("Failed to connect to Metasploit.")
+            print("INFO: Connected to Metasploit.")
 
             local_ip = get_local_ip()
+            print(f"INFO: Local IP detected: {local_ip}")
 
             # Iterate over each IP and perform tests
+            print(f"INFO: Starting tests for targets: {targets}")
             for target_ip in targets:
+                print(f"INFO: Processing target IP: {target_ip}")
                 results = []
 
                 if target_ip not in services_found:
+                    print(f"WARN: No services found for {target_ip}. Skipping.")
                     continue  # Skip if no services were found for this IP
 
                 # Populate Nmap results for each IP
+                print(f"INFO: Populating Nmap results for {target_ip}...")
                 nmap_results[target_ip] = []
                 for service in services_found[target_ip]:
                     service_name = service["service"]
@@ -136,31 +146,69 @@ def run_tests():
                         "vuln": description
                     })
 
+                print(f"INFO: Finished Nmap results population for {target_ip}.")
+
                 # Run exploits for each service
+                print(f"INFO: Starting exploit runs for {target_ip} (Mode: {mode})...")
                 for service_info in services_found[target_ip]:
-                    if any(service_info['service'].lower() == entry['service'].lower() for entry in selected_services):
-                        module_name, success = search_and_run_exploit(
-                            client, service_info['service'], target_ip, service_info['port'], local_ip
+                    # Check if the current service is in the selected list by matching service name and IP
+                    is_selected = any(
+                        service_info['service'].lower() == entry['service'].lower() and target_ip == entry['ip']
+                        for entry in selected_services
+                    )
+
+                    if is_selected:
+                        print(f"INFO: Running exploits for service {service_info['service']} on port {service_info['port']} for {target_ip}...")
+                        exploit_run_results = search_and_run_exploit(
+                            client,
+                            service_info['service'],
+                            target_ip,
+                            service_info['port'],
+                            local_ip,
+                            mode # Pass testing mode
                         )
-                        results.append({
-                            "service": service_info['service'],
-                            "port": service_info['port'],
-                            "exploit": module_name if module_name else "No exploit found",
-                            "status": "Succeeded" if success else "Failed"
-                        })
+                        print(f"INFO: Finished running exploits for service {service_info['service']} on port {service_info['port']}. Results count: {len(exploit_run_results)}")
+                        # Ensure results is a list
+                        if not isinstance(exploit_run_results, list):
+                           exploit_run_results = [exploit_run_results] # Wrap single result in a list
+
+                        # Append results
+                        for module_name, success in exploit_run_results:
+                            results.append({
+                                "service": service_info['service'],
+                                "port": service_info['port'],
+                                "exploit": module_name if module_name else "No exploit found/run",
+                                "status": "Succeeded" if success else "Failed/Not Run"
+                            })
 
                 # Store results per IP
                 exploitation_results[target_ip] = results
+                print(f"INFO: Stored exploitation results for {target_ip}.")
 
-                # Generate a report for each IP
-                port_exploit_report(REPORTS_DIR, targets, nmap_results, exploitation_results, api_key=NVD_API_KEY)
+                # Generate a report for each IP (consider if report needs mode info)
+                print(f"INFO: Generating report for {target_ip}...")
+                api_key_for_report = os.getenv("NVD_API_KEY") # Get key again for report
+                port_exploit_report(REPORTS_DIR, targets, nmap_results, exploitation_results, api_key=api_key_for_report)
+                print(f"INFO: Finished generating report for {target_ip}.")
+                print(f"INFO: Finished processing target IP: {target_ip}")
+
+            print(f"INFO: Finished processing all target IPs.")
 
         except Exception as e:
-            print(f"Error during tests: {e}")
+            print(f"ERROR: Exception during tests in perform_tests: {e}")
+            # Optionally update status to reflect error
+            test_status["error"] = str(e)
         finally:
+            print("INFO: Setting test_status['complete'] = True")
             test_status["complete"] = True
+            # Clear potential error state if tests finished (even with errors)
+            if "error" in test_status:
+                 del test_status["error"]
 
-    threading.Thread(target=perform_tests).start()
+    # Start the thread, passing the testing_mode
+    print(f"INFO: Creating and starting perform_tests thread (Mode: {testing_mode})")
+    thread = threading.Thread(target=perform_tests, args=(testing_mode,))
+    thread.start()
     return jsonify({"status": "Tests started"}), 200
 
 

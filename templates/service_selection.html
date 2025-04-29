@@ -67,6 +67,21 @@
         <h1 class="text-center">Select Services to Run Tests</h1>
         <form method="POST" action="/run-tests" id="service-form">
 
+            <!-- Add Testing Mode Selection -->
+            <div class="text-center mt-4">
+                <h5>Select Testing Mode:</h5>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="testing_mode" id="lite-mode" value="Lite" checked>
+                    <label class="form-check-label" for="lite-mode">Lite Testing</label>
+                    <small class="form-text text-muted">(Fast - Runs one exploit per service)</small>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="testing_mode" id="deep-mode" value="Deep">
+                    <label class="form-check-label" for="deep-mode">Deep Testing</label>
+                    <small class="form-text text-muted">(Thorough - Runs all available exploits)</small>
+                </div>
+            </div>
+
             <div class="mt-4 mb-3 text-center">
                 <button type="button" id="select-all-button" class="all-button">Select All</button>
             </div>
@@ -108,6 +123,8 @@
         const loadingSpinner = document.getElementById('loading-spinner');
         const progressLog = document.getElementById('progress-log');
         let selectAllState = false;
+        // Add testing mode radios
+        const testingModeRadios = document.querySelectorAll('input[name="testing_mode"]');
 
         const funFacts = [
             "Cybersecurity is a $150 billion industry.",
@@ -161,6 +178,9 @@
             loadingSpinner.style.display = 'block';
 
             const formData = new FormData(e.target);
+            // Append selected testing mode
+            const selectedMode = document.querySelector('input[name="testing_mode"]:checked').value;
+            formData.append('testing_mode', selectedMode);
 
             fetch('/run-tests', {
                 method: 'POST',
