@@ -12,13 +12,26 @@ from scripts.portExploit import nmap_scan, connect_to_metasploit, search_and_run
 from scripts.web_scanner import login_sql_injection, xss_only, command_only, html_only, complete_scan, sql_only
 from scripts.web_report import web_vuln_report
 from scripts.wifi_tool import *
+from werkzeug.utils import secure_filename
+import uuid
 
 AI_HOST = '127.0.0.1'
 AI_PORT = 5005
 # Load environment variables from .env file
 load_dotenv()
+NVD_API_KEY = os.getenv("NVD_API_KEY")
 
 app = Flask(__name__)
+
+# --- Configuration for file uploads and session ---
+# It's crucial to set a proper secret key for sessions
+# Use a strong, random key in a real application, possibly from env vars
+app.secret_key = os.getenv("FLASK_SECRET_KEY", os.urandom(24))
+UPLOAD_FOLDER = '/home/autosecure/FYP/exploits/uploaded'
+ALLOWED_EXTENSIONS = {'py'} # Only allow Python scripts for now
+os.makedirs(UPLOAD_FOLDER, exist_ok=True) # Ensure upload folder exists
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# --- End Configuration ---
 
 # Ensure the reports directory exists
 REPORTS_DIR = "/home/autosecure/FYP/reports/"
@@ -27,9 +40,15 @@ os.makedirs(REPORTS_DIR, exist_ok=True)
 # Global variables to hold scan and test results
 services_found = {}
 targets = []
-nmap_results = []
-exploitation_results = []
+nmap_results = {}
+exploitation_results = {}
 test_status = {"complete": False}
+custom_exploit_results = {} # New global for custom results
+
+# Helper function for allowed file extensions
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @app.route('/')
@@ -39,12 +58,17 @@ def home():
 
 @app.route('/network-scanner', methods=['GET', 'POST'])
 def network_scanner():
-    global services_found
-    global targets
-    # init variables to avoid overlap with previous test runs
+    global services_found, targets, nmap_results, exploitation_results
+    # Reset globals and session data relevant to a new scan
     targets = []
+    services_found = {}
     nmap_results = {}
     exploitation_results = {}
+    session.pop('custom_exploit_path', None)
+    # Also clear results from previous runs stored in globals
+    global custom_exploit_results
+    custom_exploit_results = {}
+
     if request.method == 'POST':
         start_ip = request.form.get('start_ip')
         end_ip = request.form.get('end_ip')
@@ -52,132 +76,234 @@ def network_scanner():
         start_port = request.form.get('start_port', type=int)
         end_port = request.form.get('end_port', type=int)
 
+        # --- Handle Custom Exploit Upload ---
+        custom_exploit_path = None
+        if 'custom_exploit' in request.files:
+            file = request.files['custom_exploit']
+            if file and file.filename != '' and allowed_file(file.filename):
+                try:
+                    filename = secure_filename(file.filename)
+                    unique_filename = f"{uuid.uuid4().hex}_{filename}"
+                    saved_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                    file.save(saved_path)
+                    custom_exploit_path = saved_path
+                    print(f"INFO: Custom exploit saved to: {custom_exploit_path}")
+                    session['custom_exploit_path'] = custom_exploit_path # Store path in session
+                except Exception as e:
+                    print(f"ERROR: Failed to save uploaded exploit: {e}")
+                    # Consider returning an error message to the user
+                    # return jsonify({"error": f"Failed to save exploit: {e}"}), 500
+            elif file and file.filename != '':
+                 print(f"WARN: Custom exploit file type not allowed: {file.filename}")
+                 # Consider returning an error message
+                 # return jsonify({"error": "Invalid file type for custom exploit. Only .py allowed."}), 400
+
+        # --- Target IP Processing --- (No changes needed here)
+        # ...
         if start_ip and end_ip and not target_ip:
+            # ... range logic ...
             end_num = end_ip.split(".")[-1]
             start_num = start_ip.split(".")[-1]
-            prefix = start_ip.split(".", 3)
-            prefix = prefix[0] + '.' + prefix[1] + '.' + prefix[2] + '.'
-
+            prefix = start_ip.rsplit('.', 1)[0] + '.'
             for i in range(int(start_num), int(end_num) +1):
                 targets.append(prefix + str(i))
         elif target_ip:
             targets.append(target_ip)
 
-        if (len(targets) < 1):
+        if not targets:
             return jsonify({"error": "Target IP is required"}), 400
 
+        # --- Nmap Scan --- (No changes needed here)
         try:
-            for target_ip in targets:
-                # Pass start_port and end_port to the nmap_scan function
-                open_ports = nmap_scan(target_ip, start_port=start_port, end_port=end_port)
-                services_found[target_ip] = [
-                    {"service": port_info["service"],
-                     "port": port_info["port"],
-                     "version": port_info.get("version", "Unknown")
-                    }
-                    for port_info in open_ports
+            for target_ip_scan in targets: # Use a different variable name to avoid clash
+                open_ports = nmap_scan(target_ip_scan, start_port=start_port, end_port=end_port)
+                services_found[target_ip_scan] = [
+                    {"service": p["service"], "port": p["port"], "version": p.get("version", "Unknown")}
+                    for p in open_ports
                 ]
-
+            # Pass necessary info (just services) to service selection
             return render_template('service_selection.html', services=services_found)
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            print(f"ERROR during Nmap scan: {e}")
+            return jsonify({"error": f"Nmap scan failed: {e}"}), 500
 
     return render_template('network_scanner.html')
 
 
 @app.route('/run-tests', methods=['POST'])
 def run_tests():
-    global test_status, nmap_results, exploitation_results
+    global test_status, nmap_results, exploitation_results, custom_exploit_results
     test_status["complete"] = False
+    test_status.pop("error", None)
+    test_status.pop("custom_error", None)
     nmap_results = {}
     exploitation_results = {}
+    custom_exploit_results = {}
 
-    selected_services = json.loads(request.form.get('services'))  # Convert JSON string to list of objects
+    selected_services = json.loads(request.form.get('services', '[]'))
+    testing_mode = request.form.get('testing_mode', 'Lite')
+    custom_exploit_path = session.get('custom_exploit_path', None)
 
-    if not selected_services:
-        return jsonify({"error": "No services selected"}), 400
+    if not selected_services and not custom_exploit_path:
+        return jsonify({"error": "No services selected or custom exploit provided"}), 400
 
-    # Run tests in a background thread
-    def perform_tests():
-        #global test_status, nmap_results, exploitation_results
-        try:
-            client = connect_to_metasploit()
-            if not client:
-                raise Exception("Failed to connect to Metasploit.")
+    def perform_tests(mode, uploaded_exploit):
+        global custom_exploit_results
+        print(f"INFO: Starting test thread (Mode: {mode}, Custom Exploit: {uploaded_exploit})")
+        local_ip = get_local_ip()
+        if not local_ip:
+             print("ERROR: Could not determine local IP address. Cannot proceed.")
+             test_status["error"] = "Could not determine local IP"
+             test_status["complete"] = True
+             return
 
-            local_ip = get_local_ip()
+        # --- Run Metasploit tests if services were selected ---
+        if selected_services:
+            print("INFO: Proceeding with selected Metasploit tests...")
+            try:
+                client = connect_to_metasploit()
+                if not client:
+                    print("ERROR: Failed to connect to Metasploit. Aborting Metasploit tests.")
+                    raise Exception("Failed to connect to Metasploit.")
+                print("INFO: Connected to Metasploit.")
 
-            # Iterate over each IP and perform tests
-            for target_ip in targets:
-                results = []
+                for target_ip in targets:
+                    print(f"INFO: Processing target IP for Metasploit: {target_ip}")
+                    if target_ip not in exploitation_results:
+                        exploitation_results[target_ip] = []
+                    if target_ip not in nmap_results: # Check if Nmap results already exist for this IP
+                        print(f"WARN: Nmap results missing for {target_ip} in run-tests. Populating now.")
+                        # This suggests Nmap results might not be consistently stored or retrieved.
+                        # For simplicity, we re-populate here if missing, but review data flow.
+                        nmap_results[target_ip] = []
+                        for service in services_found.get(target_ip, []):
+                            # ... (Nmap result population logic as before) ...
+                            service_name = service["service"]
+                            version = service.get("version", "Unknown")
+                            port = service["port"]
+                            if version == "-" or version.lower() == "unknown":
+                                description = "No version data provided."
+                            else:
+                                keyword = clean_version_info(service_name, version)
+                                keyword = keyword if service_name.lower() == "ftp" else f"{service_name} {keyword}"
+                                nvd_data = query_nvd_api(keyword, api_key=NVD_API_KEY)
+                                description = format_description(nvd_data) if nvd_data else "No CVEs found."
+                            nmap_results[target_ip].append({
+                                "port": port, "service": service_name, "version": version, "vuln": description
+                            })
 
-                if target_ip not in services_found:
-                    continue  # Skip if no services were found for this IP
-
-                # Populate Nmap results for each IP
-                nmap_results[target_ip] = []
-                for service in services_found[target_ip]:
-                    service_name = service["service"]
-                    version = service.get("version", "Unknown")
-                    port = service["port"]
-
-                    if version == "-" or version.lower() == "unknown":
-                        description = "No version data provided."
-                    else:
-                        keyword = clean_version_info(service_name, version)
-                        keyword = keyword if service_name.lower() == "ftp" else f"{service_name} {keyword}"
-                        nvd_data = query_nvd_api(keyword, api_key=NVD_API_KEY)
-                        description = format_description(nvd_data) if nvd_data else "No CVEs found."
-
-                    nmap_results[target_ip].append({
-                        "port": port,
-                        "service": service_name,
-                        "version": version,
-                        "vuln": description
-                    })
-
-                # Run exploits for each service
-                for service_info in services_found[target_ip]:
-                    if any(service_info['service'].lower() == entry['service'].lower() for entry in selected_services):
-                        module_name, success = search_and_run_exploit(
-                            client, service_info['service'], target_ip, service_info['port'], local_ip
+                    print(f"INFO: Starting Metasploit exploit runs for {target_ip} (Mode: {mode})...")
+                    for service_info in services_found.get(target_ip, []):
+                        is_selected = any(
+                            entry['ip'] == target_ip and service_info['service'].lower() == entry['service'].lower()
+                            for entry in selected_services
                         )
-                        results.append({
-                            "service": service_info['service'],
-                            "port": service_info['port'],
-                            "exploit": module_name if module_name else "No exploit found",
-                            "status": "Succeeded" if success else "Failed"
-                        })
+                        if is_selected:
+                            print(f"INFO: Running Metasploit exploits for {service_info['service']}@{target_ip}:{service_info['port']}...")
+                            exploit_run_results = search_and_run_exploit(
+                                client, service_info['service'], target_ip, service_info['port'], local_ip, mode
+                            )
+                            if not isinstance(exploit_run_results, list): exploit_run_results = [exploit_run_results]
+                            for module_name, success in exploit_run_results:
+                                exploitation_results[target_ip].append({
+                                    "service": service_info['service'], "port": service_info['port'],
+                                    "exploit": module_name if module_name else "No exploit found/run",
+                                    "status": "Succeeded" if success else "Failed/Not Run"
+                                })
 
-                # Store results per IP
-                exploitation_results[target_ip] = results
+                    if exploitation_results.get(target_ip):
+                        print(f"INFO: Generating report for Metasploit results on {target_ip}...")
+                        api_key_for_report = os.getenv("NVD_API_KEY")
+                        # Pass only current IP's results to report function
+                        port_exploit_report(REPORTS_DIR, [target_ip], {target_ip: nmap_results.get(target_ip, [])}, {target_ip: exploitation_results[target_ip]}, api_key=api_key_for_report)
+            except Exception as e:
+                print(f"ERROR: Exception during Metasploit tests: {e}")
+                test_status["error"] = f"Metasploit Error: {e}"
+        else:
+            print("INFO: No services selected for Metasploit testing.")
 
-                # Generate a report for each IP
-                port_exploit_report(REPORTS_DIR, targets, nmap_results, exploitation_results, api_key=NVD_API_KEY)
+        # --- Run Custom Exploit Script if provided --- (Logic remains largely the same)
+        if uploaded_exploit and os.path.exists(uploaded_exploit):
+            print(f"INFO: Attempting to run custom exploit script: {uploaded_exploit}")
+            custom_exploit_results['script_path'] = uploaded_exploit
+            custom_exploit_results['targets'] = {}
+            for target_ip in targets:
+                print(f"INFO: Running custom exploit against target: {target_ip}")
+                try:
+                    cmd = ["python3", uploaded_exploit, target_ip]
+                    print(f"Executing: {' '.join(cmd)}")
+                    timeout_seconds = 180
+                    process = subprocess.run(
+                        cmd, capture_output=True, text=True,
+                        check=False, timeout=timeout_seconds
+                    )
+                    status = "Completed" if process.returncode == 0 else f"Exited with code {process.returncode}"
+                    if process.returncode != 0:
+                        print(f"WARN: Custom exploit script exited with code {process.returncode} for {target_ip}")
+                    custom_exploit_results['targets'][target_ip] = {
+                        "status": status,
+                        "stdout": process.stdout.strip(),
+                        "stderr": process.stderr.strip()
+                    }
+                    print(f"INFO: Custom exploit finished for {target_ip}. Status: {status}")
+                except FileNotFoundError:
+                    error_msg = "ERROR: 'python3' command not found or script invalid."
+                    print(error_msg)
+                    custom_exploit_results['targets'][target_ip] = {"status": "Execution Failed", "stderr": error_msg}
+                    test_status["custom_error"] = error_msg # Store error globally
+                except subprocess.TimeoutExpired:
+                    error_msg = f"ERROR: Custom exploit timed out ({timeout_seconds}s) for {target_ip}."
+                    print(error_msg)
+                    custom_exploit_results['targets'][target_ip] = {"status": "Timeout", "stderr": error_msg}
+                    test_status["custom_error"] = error_msg # Store error globally
+                except Exception as e:
+                    error_msg = f"ERROR: Exception running custom exploit for {target_ip}: {e}"
+                    print(error_msg)
+                    custom_exploit_results['targets'][target_ip] = {"status": "Exception", "stderr": error_msg}
+                    test_status["custom_error"] = error_msg # Store error globally
+        elif uploaded_exploit:
+            print(f"WARN: Custom exploit file path found in session but file does not exist: {uploaded_exploit}")
+            custom_exploit_results['error'] = "Uploaded exploit file not found on server."
+            test_status["custom_error"] = "Uploaded exploit file not found"
+        else:
+             print("INFO: No custom exploit script provided.")
 
-        except Exception as e:
-            print(f"Error during tests: {e}")
-        finally:
-            test_status["complete"] = True
+        # --- Finalization ---
+        print("INFO: Test thread finished. Setting test_status['complete'] = True")
+        test_status["complete"] = True
 
-    threading.Thread(target=perform_tests).start()
+    # Start the thread
+    print(f"INFO: Creating test thread (Mode: {testing_mode}, Custom: {custom_exploit_path})")
+    thread = threading.Thread(target=perform_tests, args=(testing_mode, custom_exploit_path))
+    thread.daemon = True
+    thread.start()
     return jsonify({"status": "Tests started"}), 200
 
 
 @app.route('/check-status', methods=['GET'])
 def check_status():
-    return jsonify(test_status)
+    # Return the current status, potentially including custom results summary if needed
+    status_data = test_status.copy()
+    # if custom_exploit_results: status_data['custom_running'] = True # Example
+    return jsonify(status_data)
 
 
 @app.route('/results')
 def results():
-    """
-    Displays results stored in global variables.
-    """
+    """ Displays results stored in global variables. """
+    metasploit_error = test_status.get("error")
+    custom_error = test_status.get("custom_error")
+
+    # Combine errors for display if needed
+    overall_error = metasploit_error or custom_error
+
     return render_template(
         'results.html',
         nmap_results=nmap_results,
-        exploitation_results=exploitation_results
+        exploitation_results=exploitation_results,
+        custom_exploit_results=custom_exploit_results,
+        metasploit_error=metasploit_error,
+        custom_exploit_error=custom_error
     )
 
 
@@ -622,4 +748,7 @@ def program_exists(program):
 
 
 if __name__ == '__main__':
+    if not app.secret_key or app.secret_key == 'temporary_secret_key_for_testing':
+        print("Warning: Using default/temporary FLASK_SECRET_KEY. Set a strong secret key in your environment.")
+        app.secret_key = os.urandom(24) # Ensure a key is set for session
     app.run(host='0.0.0.0', port=5556, debug=True)
