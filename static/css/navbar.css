@@ -1,4 +1,3 @@
-/* General Reset */
 * {
   margin: 0;
   padding: 0;
@@ -6,10 +5,10 @@
 }
 
 html {
-  font-size: 62.5%; /* 1rem = 10px */
+  font-size: 62.5%;
   font-family: 'Roboto', sans-serif;
-  background-color: #0d1117; /* Dark background */
-  color: #c9d1d9; /* Default text color */
+  background-color: #0d1117;
+  color: #c9d1d9;
 }
 
 li {
@@ -18,12 +17,12 @@ li {
 
 a {
   text-decoration: none;
-  color: #1e7180; /* Blue links */
+  color: #1e7180;
   transition: color 0.3s ease;
 }
 
 a:hover {
-  color: #0e6467; /* Darker blue on hover */
+  color: #0e6467;
 }
 
 /* Header Styling */
@@ -33,48 +32,45 @@ a:hover {
   left: 0;
   right: 0;
   z-index: 1000;
-  background-color: rgba(34, 34, 34, 0.8); /* Transparent dark background */
+  background-color: rgba(34, 34, 34, 0.8);
   backdrop-filter: blur(5px); /* Blur effect */
-  border-bottom: 1px solid #3e6392; /* Navbar border */
+  border-bottom: 1px solid #3e6392;
   transition: backdrop-filter 0.3s ease, background-color 0.3s ease;
 }
 
 .navbar {
   display: flex;
-  justify-content: flex-start; /* Align everything to the left */
   align-items: center;
+  justify-content: space-between;
   padding: 1rem 2rem;
 }
 
 .nav-logo {
   display: flex;
   align-items: center;
-  gap: 50px; /* Increased space between the logo and text */
-  text-decoration: none; /* Remove underline from link */
+  text-decoration: none;
   cursor: pointer;
 }
 
 
 .logo-text {
-  font-size: 1.8rem; /* Adjust text size */
-  color: #48879a; /* Blue color for the text */
+  font-size: 1.8rem;
+  color: #f0f6fc;
   font-weight: bold;
   font-family: Arial, sans-serif;
-  text-transform: uppercase; /* Optional: Makes text uppercase */
-  margin-left: 10px; /* Move text closer to the left */
+  margin-left: 10px;
 }
 
 .logo-image {
-  max-width: 50px; /* Adjust logo size */
-  height: auto;
+  top: 1rem;
+  left: 2rem;
+  height: 7rem;
+  width: auto;
 }
-
-
 
 /* Nav Menu */
 .nav-menu {
   display: flex;
-  justify-content: flex-end;
   align-items: center;
   gap: 3rem;
 }
@@ -86,12 +82,12 @@ a:hover {
 .nav-link {
   font-size: 2rem;
   font-weight: 400;
-  color: #f0f6fc; /* Light text */
+  color: #f0f6fc;
   transition: color 0.3s ease;
 }
 
 .nav-link:hover {
-  color: #48879a; /* Highlighted blue */
+  color: #48879a;
 }
 
 /* Hamburger Menu */
@@ -133,15 +129,15 @@ a:hover {
   position: absolute;
   top: 100%;
   left: 0;
-  background-color: #161b22; /* Dark dropdown background */
+  background-color: #161b22;
   padding: 1rem;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   border-radius: 0.5rem;
   z-index: 1000;
-  width: max-content; /* Ensure dropdown takes only necessary width */
-  grid-template-columns: repeat(2, 1fr); /* Two columns layout */
-  max-height: 80vh; /* Add max height */
-  overflow-y: auto; /* Enable vertical scrolling */
+  width: max-content;
+  grid-template-columns: repeat(2, 1fr);
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 .dropdown-content.active {
@@ -157,9 +153,9 @@ a:hover {
 
 /* Tool Card Styling */
 .tool-card {
-  background: linear-gradient(145deg, #1e2328, #161b22); /* Dark gradient background */
-  border: 1px solid #3e6392; /* Border matching the theme */
-  border-radius: 1rem; /* Rounded corners */
+  background: linear-gradient(145deg, #1e2328, #161b22);
+  border: 1px solid #3e6392;
+  border-radius: 1rem;
   margin: 1.5rem;
   text-align: center;
   display: flex;
@@ -171,45 +167,45 @@ a:hover {
 }
 
 .tool-card img {
-  width: 120px; /* Slightly larger image */
+  width: 120px;
   height: 120px;
   object-fit: cover;
   margin-bottom: 1rem;
   border-radius: 5%; /* Circular image */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Image shadow */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s ease;
 }
 
 .tool-card h3 {
   font-size: 1.8rem;
-  color: #f0f6fc; /* Light text for headings */
+  color: #f0f6fc;
   margin-bottom: 1rem;
   font-weight: 500;
 }
 
 .tool-card p {
   font-size: 1.4rem;
-  color: #8b949e; /* Softer gray for paragraph text */
+  color: #8b949e;
   margin-bottom: 1rem;
   line-height: 1.6;
 }
 
 .tool-card a {
   font-size: 1.4rem;
-  color: #58f4ff; /* Bright blue links */
+  color: #58f4ff;
   text-decoration: none;
   margin-top: 1rem;
   transition: color 0.3s ease;
 }
 
 .tool-card a:hover {
-  color: #1256a3; /* Darker blue on hover */
+  color: #1256a3;
 }
 
 .tool-card:hover {
-  transform: translateY(-10px); /* Slight lift effect */
-  background-color: #2a3036; /* Slightly lighter background on hover */
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6); /* Stronger shadow */
+  transform: translateY(-10px);
+  background-color: #2a3036;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
 }
 
 .tool-card img:hover {
@@ -226,24 +222,23 @@ a:hover {
   max-width: 1200px; /* Centered and responsive */
 }
 
-/* Additional Styling for Visual Hierarchy */
 .tool-card h3::after {
   content: "";
   display: block;
   width: 50%;
   height: 3px;
-  background: #58a6ff; /* Blue underline */
+  background: #58a6ff;
   margin: 1rem auto;
   border-radius: 5px;
 }
 
 /* Hover Effects */
 .tool-card:hover h3 {
-  color: #256b71; /* Blue highlight on heading */
+  color: #256b71;
 }
 
 .tool-card:hover p {
-  color: #c9d1d9; /* Brighter text on hover */
+  color: #c9d1d9;
 }
 
 /* Responsive Design for Small Screens */
@@ -278,7 +273,7 @@ a:hover {
 
   .nav-menu {
     position: fixed;
-    top: 60px; /* Adjust based on navbar height */
+    top: 60px;
     left: -100%;
     flex-direction: column;
     width: 100%;
@@ -303,16 +298,16 @@ a:hover {
     position: relative;
     left: 0;
     width: 100%;
-    grid-template-columns: 1fr 1fr; /* Two column layout on mobile */
+    grid-template-columns: 1fr 1fr;
     padding: 1rem;
     gap: 1rem;
-    max-height: 70vh; /* Limit height on mobile to ensure scrollability */
+    max-height: 70vh;
   }
-  
+
   /* Mobile App Testing positioning for mobile */
   .mobile-testing {
     grid-column: 2;
-    grid-row: 1; /* Place at the top right */
+    grid-row: 1;
     justify-self: end;
   }
 }

@@ -2,7 +2,7 @@
     <div class="nav-container">
         <nav class="navbar">
             <a href="{{ url_for('home') }}" class="nav-logo">
-                <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="Logo" class="logo-image">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="logo-image">
                 <span class="logo-text">AutoSecure</span>
             </a>
 
@@ -38,17 +38,3 @@
         </nav>
     </div>
 </header>
-
-<style>
-    .navbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .nav-menu {
-        display: flex;
-        gap: 20px;
-        margin-left: auto;
-    }
-</style>
