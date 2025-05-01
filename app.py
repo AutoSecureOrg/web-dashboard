@@ -58,18 +58,17 @@ def home():
 
 @app.route('/network-scanner', methods=['GET', 'POST'])
 def network_scanner():
-    global services_found, targets, nmap_results, exploitation_results
-    # Reset globals and session data relevant to a new scan
-    targets = []
-    services_found = {}
-    nmap_results = {}
-    exploitation_results = {}
-    session.pop('custom_exploit_path', None)
-    # Also clear results from previous runs stored in globals
-    global custom_exploit_results
-    custom_exploit_results = {}
-
+    global services_found, targets, nmap_results, exploitation_results, test_status, custom_exploit_results
     if request.method == 'POST':
+        # Clear all global variables at the start of a new scan
+        services_found = {}
+        targets = []
+        nmap_results = {}
+        exploitation_results = {}
+        custom_exploit_results = {}
+        test_status = {"complete": False}
+        session.pop('custom_exploit_path', None)
+
         start_ip = request.form.get('start_ip')
         end_ip = request.form.get('end_ip')
         target_ip = request.form.get('target_ip')
@@ -98,10 +97,8 @@ def network_scanner():
                  # Consider returning an error message
                  # return jsonify({"error": "Invalid file type for custom exploit. Only .py allowed."}), 400
 
-        # --- Target IP Processing --- (No changes needed here)
-        # ...
+        # --- Target IP Processing ---
         if start_ip and end_ip and not target_ip:
-            # ... range logic ...
             end_num = end_ip.split(".")[-1]
             start_num = start_ip.split(".")[-1]
             prefix = start_ip.rsplit('.', 1)[0] + '.'
@@ -113,9 +110,9 @@ def network_scanner():
         if not targets:
             return jsonify({"error": "Target IP is required"}), 400
 
-        # --- Nmap Scan --- (No changes needed here)
+        # --- Nmap Scan ---
         try:
-            for target_ip_scan in targets: # Use a different variable name to avoid clash
+            for target_ip_scan in targets:
                 open_ports = nmap_scan(target_ip_scan, start_port=start_port, end_port=end_port)
                 services_found[target_ip_scan] = [
                     {"service": p["service"], "port": p["port"], "version": p.get("version", "Unknown")}
@@ -133,7 +130,8 @@ def network_scanner():
 @app.route('/run-tests', methods=['POST'])
 def run_tests():
     global test_status, nmap_results, exploitation_results, custom_exploit_results
-    test_status["complete"] = False
+    # Reset all test-related globals at the start of new tests
+    test_status = {"complete": False}
     test_status.pop("error", None)
     test_status.pop("custom_error", None)
     nmap_results = {}
@@ -514,69 +512,62 @@ def download_web_report(report_type):
         return jsonify({"error": "No web vulnerability reports found."}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-  
-  @app.route('/website_scanner', methods=['GET', 'POST'])
+
+
+@app.route('/website_scanner', methods=['GET', 'POST'])
 def website_scanner():
     if request.method == 'POST':
-        urls = request.form.getlist('urls')  # <-- Get all URLs
+        target_url = request.form['target_url']
         scan_type = request.form['scan_type']
-        all_results = []
-        combined_results = ""
 
-        for target_url in urls:
-            if not target_url.strip():
-                continue
+        results = ""
 
-            try:
-                if scan_type == "all":
-                    results = complete_scan(target_url)
-                elif scan_type == "sql_login":
-                    results = login_sql_injection(target_url, None)
-                elif scan_type == "sql_injection":
-                    results = sql_only(target_url)
-                elif scan_type == "xss":
-                    results = xss_only(target_url)
-                elif scan_type == "html_injection":
-                    results = html_only(target_url)
-                elif scan_type == "command_injection":
-                    results = command_only(target_url)
-                else:
-                    results = ["[-] Invalid scan type selected."]
-            except Exception as e:
-                results = [f"[-] Error while scanning {target_url}: {str(e)}"]
+        try:
+            if scan_type == "all":
+                results = complete_scan(target_url)
+            elif scan_type == "sql_login":
+                results = login_sql_injection(target_url, None)
+            elif scan_type == "sql_injection":
+                results = sql_only(target_url)
+            elif scan_type == "xss":
+                results = xss_only(target_url)
+            elif scan_type == "html_injection":
+                results = html_only(target_url)
+            elif scan_type == "command_injection":
+                results = command_only(target_url)
+            else:
+                results = "Invalid scan type selected."
 
-            # Add this header only to text report
-            combined_results += f"\n=== Results for {target_url} ===\n" + "\n".join(results) + "\n"
+        except Exception as e:
+            results = f"An error occurred: {str(e)}"
 
-            # Add header separately in output list (for UI), then all result lines
-            all_results.append({
-                "type": "Header",
-                "status": "Target URL",
-                "payload": f"=== Results for {target_url} ==="
-            })
-
-            for line in results:
+        # Format results into a list of dictionaries
+        results_list = []
+        if isinstance(results, str):  # Convert strings to list of dictionaries
+            for line in results.split("\n"):
                 if line.strip():
-                    all_results.append({
-                        "type": "General",
-                        "status": "Info",
-                        "payload": line
+                    results_list.append({"type": "General", "status": "Info", "payload": line})
+        elif isinstance(results, list):  # Use provided list format
+            for res in results:
+                if isinstance(res, dict):
+                    results_list.append({
+                        "type": res.get("type", "Unknown"),
+                        "status": res.get("status", "Unknown"),
+                        "payload": res.get("payload", "N/A")
                     })
+                else:
+                    results_list.append({"type": "General", "status": "Info", "payload": str(res)})
 
-        # If no results were added, show default message
-        if not all_results:
-            all_results = [{"type": "No vulnerabilities found", "status": "Safe", "payload": "N/A"}]
+        # Display all results (including General) in the dashboard
+        display_results = results_list if results_list else [{"type": "No vulnerabilities found", "status": "Safe", "payload": "N/A"}]
 
-        # Generate one report file combining all URLs
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        report_path = os.path.join(REPORTS_DIR, f"web_scan_{timestamp}.txt")
-        with open(report_path, 'w') as f:
-            f.write(combined_results)
+        # Generate a report
+        report_path = web_vuln_report(REPORTS_DIR, target_url, results_list)
 
         return render_template(
             'report.html',
-            output=all_results,
-            target_url="Multiple Targets",
+            output=display_results,
+            target_url=target_url,
             report_path=report_path
         )
 
@@ -695,7 +686,7 @@ def wifi_analyze():
         "subnet": subnet,
         "devices": fp_df.to_dict(orient="records"),
         "vulnerability": vulnerability_info,
-        "target_info": target_info
+        "target_info": target_info  # ✅ properly added here
     })
 
 
