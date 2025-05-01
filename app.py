@@ -295,57 +295,65 @@ def download_web_report(report_type):
 @app.route('/website_scanner', methods=['GET', 'POST'])
 def website_scanner():
     if request.method == 'POST':
-        target_url = request.form['target_url']
+        urls = request.form.getlist('urls')  # <-- Get all URLs
         scan_type = request.form['scan_type']
+        all_results = []
+        combined_results = ""
 
-        results = ""
+        for target_url in urls:
+            if not target_url.strip():
+                continue
 
-        try:
-            if scan_type == "all":
-                results = complete_scan(target_url)
-            elif scan_type == "sql_login":
-                results = login_sql_injection(target_url, None)   
-            elif scan_type == "sql_injection":
-                results = sql_only(target_url)
-            elif scan_type == "xss":
-                results = xss_only(target_url)
-            elif scan_type == "html_injection":
-                results = html_only(target_url)
-            elif scan_type == "command_injection":
-                results = command_only(target_url)
-            else:
-                results = "Invalid scan type selected."
-
-        except Exception as e:
-            results = f"An error occurred: {str(e)}"
-
-        # Format results into a list of dictionaries
-        results_list = []
-        if isinstance(results, str):  # Convert strings to list of dictionaries
-            for line in results.split("\n"):
-                if line.strip():
-                    results_list.append({"type": "General", "status": "Info", "payload": line})
-        elif isinstance(results, list):  # Use provided list format
-            for res in results:
-                if isinstance(res, dict):
-                    results_list.append({
-                        "type": res.get("type", "Unknown"),
-                        "status": res.get("status", "Unknown"),
-                        "payload": res.get("payload", "N/A")
-                    })
+            try:
+                if scan_type == "all":
+                    results = complete_scan(target_url)
+                elif scan_type == "sql_login":
+                    results = login_sql_injection(target_url, None)
+                elif scan_type == "sql_injection":
+                    results = sql_only(target_url)
+                elif scan_type == "xss":
+                    results = xss_only(target_url)
+                elif scan_type == "html_injection":
+                    results = html_only(target_url)
+                elif scan_type == "command_injection":
+                    results = command_only(target_url)
                 else:
-                    results_list.append({"type": "General", "status": "Info", "payload": str(res)})
+                    results = ["[-] Invalid scan type selected."]
+            except Exception as e:
+                results = [f"[-] Error while scanning {target_url}: {str(e)}"]
 
-        # Display all results (including General) in the dashboard
-        display_results = results_list if results_list else [{"type": "No vulnerabilities found", "status": "Safe", "payload": "N/A"}]
+            # Add this header only to text report
+            combined_results += f"\n=== Results for {target_url} ===\n" + "\n".join(results) + "\n"
 
-        # Generate a report
-        report_path = web_vuln_report(REPORTS_DIR, target_url, results_list)
+            # Add header separately in output list (for UI), then all result lines
+            all_results.append({
+                "type": "Header",
+                "status": "Target URL",
+                "payload": f"=== Results for {target_url} ==="
+            })
+
+            for line in results:
+                if line.strip():
+                    all_results.append({
+                        "type": "General",
+                        "status": "Info",
+                        "payload": line
+                    })
+
+        # If no results were added, show default message
+        if not all_results:
+            all_results = [{"type": "No vulnerabilities found", "status": "Safe", "payload": "N/A"}]
+
+        # Generate one report file combining all URLs
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        report_path = os.path.join(REPORTS_DIR, f"web_scan_{timestamp}.txt")
+        with open(report_path, 'w') as f:
+            f.write(combined_results)
 
         return render_template(
             'report.html',
-            output=display_results,
-            target_url=target_url,
+            output=all_results,
+            target_url="Multiple Targets",
             report_path=report_path
         )
 
