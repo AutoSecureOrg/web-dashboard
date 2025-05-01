@@ -58,18 +58,17 @@ def home():
 
 @app.route('/network-scanner', methods=['GET', 'POST'])
 def network_scanner():
-    global services_found, targets, nmap_results, exploitation_results
-    # Reset globals and session data relevant to a new scan
-    targets = []
-    services_found = {}
-    nmap_results = {}
-    exploitation_results = {}
-    session.pop('custom_exploit_path', None)
-    # Also clear results from previous runs stored in globals
-    global custom_exploit_results
-    custom_exploit_results = {}
-
+    global services_found, targets, nmap_results, exploitation_results, test_status, custom_exploit_results
     if request.method == 'POST':
+        # Clear all global variables at the start of a new scan
+        services_found = {}
+        targets = []
+        nmap_results = {}
+        exploitation_results = {}
+        custom_exploit_results = {}
+        test_status = {"complete": False}
+        session.pop('custom_exploit_path', None)
+
         start_ip = request.form.get('start_ip')
         end_ip = request.form.get('end_ip')
         target_ip = request.form.get('target_ip')
@@ -98,10 +97,8 @@ def network_scanner():
                  # Consider returning an error message
                  # return jsonify({"error": "Invalid file type for custom exploit. Only .py allowed."}), 400
 
-        # --- Target IP Processing --- (No changes needed here)
-        # ...
+        # --- Target IP Processing ---
         if start_ip and end_ip and not target_ip:
-            # ... range logic ...
             end_num = end_ip.split(".")[-1]
             start_num = start_ip.split(".")[-1]
             prefix = start_ip.rsplit('.', 1)[0] + '.'
@@ -113,9 +110,9 @@ def network_scanner():
         if not targets:
             return jsonify({"error": "Target IP is required"}), 400
 
-        # --- Nmap Scan --- (No changes needed here)
+        # --- Nmap Scan ---
         try:
-            for target_ip_scan in targets: # Use a different variable name to avoid clash
+            for target_ip_scan in targets:
                 open_ports = nmap_scan(target_ip_scan, start_port=start_port, end_port=end_port)
                 services_found[target_ip_scan] = [
                     {"service": p["service"], "port": p["port"], "version": p.get("version", "Unknown")}
@@ -133,7 +130,8 @@ def network_scanner():
 @app.route('/run-tests', methods=['POST'])
 def run_tests():
     global test_status, nmap_results, exploitation_results, custom_exploit_results
-    test_status["complete"] = False
+    # Reset all test-related globals at the start of new tests
+    test_status = {"complete": False}
     test_status.pop("error", None)
     test_status.pop("custom_error", None)
     nmap_results = {}
