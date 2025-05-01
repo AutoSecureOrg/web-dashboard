@@ -19,7 +19,10 @@ function closeMenu() {
 }
 
 // Function to toggle dropdown menu visibility
-function toggleDropdown() {
+function toggleDropdown(event) {
+    if (event) {
+        event.preventDefault();
+    }
     const dropdown = document.getElementById("toolsDropdown");
     dropdown.classList.toggle("active"); // Toggle the active class for the dropdown
 }

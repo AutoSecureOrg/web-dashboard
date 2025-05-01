@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Website Vulnerability Scanner{% endblock %}
+{% block title %}Website Vulnerability Testing{% endblock %}
 
 {% block content %}
 <!DOCTYPE html>
@@ -14,8 +14,7 @@
     <div class="container">
         <header>
             <div class="header-text">
-                <h2>Website vulnerability Testing</h2>
-                <p><strong>The Website Vulnerability Testing</strong> is a cutting-edge security solution, rigorously tested in real-world penetration testing scenarios. It swiftly identifies <strong>XSS, SQL Injection, Command Injection, XXE,</strong> and other <strong>critical vulnerabilities</strong>, ensuring precise detection with <strong>automated validation to eliminate false positives</strong>. Designed for efficiency and reliability, it streamlines the process of detecting and addressing security flaws with confidence.</p>
+              <h2>Website Vulnerability Testing</h2>
             </div>
             <img class="header-image" src="{{ url_for('static', filename='images/web.png') }}" alt="Authenticated Scanning">
         </header>
@@ -31,7 +30,7 @@
                 <button type="button" onclick="addURLField()">➕ Add Another URL</button>
 
                 <hr style="margin: 20px 0;">
-                <label>Select Scan Type:</label>
+                <label>Select Test Type:</label>
                 <select name="scan_type">
                     <option value="all">All Scans</option>
                     <option value="sql_login">SQL Login</option>

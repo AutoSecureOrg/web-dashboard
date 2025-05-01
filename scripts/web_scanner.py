@@ -3,8 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import platform
 import os
-
-
+import re
 
 
 def create_session():
@@ -53,8 +52,6 @@ def parse_input_fields(url, session):
         print(f"[-] Error while parsing input fields: {e}")
         return []
 
-import os
-
 def load_payloads(vulnerability_type, payload_dir="payload_texts"):
     """Loads payloads from external text files based on the vulnerability type."""
     
@@ -80,11 +77,6 @@ def load_payloads(vulnerability_type, payload_dir="payload_texts"):
 
     print(f"[DEBUG] Loaded {len(payloads)} payload(s) from {payload_file}")
     return payloads
-
-
-# Example usage in web_scanner.py
-#command_payloads = load_payloads("command_injection")
-
 
 def login_sql_injection(base_url, session):
     results=[]
@@ -275,9 +267,6 @@ def test_xss(base_url, session):
 
     return results
 
-
-import platform
-
 def test_command_injection(base_url, session):
     results = []
     results.append(" ")
@@ -343,11 +332,6 @@ def test_command_injection(base_url, session):
 
     return results
 
-
-
-
-import os
-
 def test_html_injection(base_url, session):
     results = []
     results.append(" ")
@@ -405,7 +389,6 @@ def test_html_injection(base_url, session):
 
     return results
 
-
 def xss_only(target_url):
     results = []
     session = create_session()
@@ -421,7 +404,6 @@ def xss_only(target_url):
 
         results.extend(test_xss(target_url,session))
     return results
-
 
 def command_only(target_url):
     results = []
@@ -512,10 +494,6 @@ def complete_scan(target_url):
 
     return results
 
-import re
-
-import re
-
 def inject_column_placeholders(payload, num_cols):
     """
     Replaces <<cols>> or <<cols:N>> with the exact number of NULLs needed to
@@ -564,6 +542,3 @@ def inject_column_placeholders(payload, num_cols):
     # Replace with correct number of NULLs
     nulls = ", ".join(["NULL"] * null_count)
     return payload.replace(placeholder, nulls)
-
-
-
