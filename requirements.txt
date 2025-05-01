@@ -39,3 +39,12 @@ tzdata
 urllib3
 wcwidth
 Werkzeug
+flask-wtf
+wtforms
+watchdog
+pymongo
+redis
+passlib
+bcrypt
+celery[redis]
+mobsfscan

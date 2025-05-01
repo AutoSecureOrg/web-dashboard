@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Mobile Source Code Scan{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Mobile Source Code Security Scan (mobsfscan)</h2>
+    <p>Upload a ZIP file containing the source code of your Android (Java/Kotlin) or iOS (Swift/Objective-C) application.</p>
+
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('mobile_scan') }}">
+        <div class="mb-3">
+            <label for="source_code_zip" class="form-label">Source Code ZIP File</label>
+            <input class="form-control" type="file" id="source_code_zip" name="source_code_zip" accept=".zip" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Scan Source Code</button>
+    </form>
+
+    {% if error %}
+    <div class="alert alert-danger mt-4" role="alert">
+        <strong>Error:</strong> {{ error }}
+    </div>
+    {% endif %}
+
+    {# Display raw output if available #}
+    {% if results and results.get('raw_output') is defined %}
+        <h3 class="mt-5">Scan Output</h3>
+
+        {# Add Download Buttons if report was likely generated #}
+        {% if not error or (error and results.get('raw_output')) %}
+            <div class="mb-3">
+                <a href="{{ url_for('home') }}" class="btn btn-gray">Return to Home</a>
+                <a href="{{ url_for('download_mobile_report', report_type='text') }}" class="btn btn-blue">Download Text Report</a>
+                <a href="{{ url_for('download_mobile_report', report_type='pdf') }}" class="btn btn-red">Download PDF Report</a>
+            </div>
+        {% endif %}
+
+        <pre class="bg-light p-3 rounded border"><code>{{ results.get('raw_output', 'No output captured.') }}</code></pre>
+    {% elif results and not error %}
+        {# Fallback if raw_output is missing but no error was explicitly passed #}
+         <div class="alert alert-warning mt-4" role="alert">
+            <strong>Scan completed, but no output was captured.</strong>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

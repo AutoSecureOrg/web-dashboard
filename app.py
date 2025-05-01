@@ -14,6 +14,9 @@ from scripts.web_report import web_vuln_report
 from scripts.wifi_tool import *
 from werkzeug.utils import secure_filename
 import uuid
+import zipfile
+import tempfile
+import shutil
 
 AI_HOST = '127.0.0.1'
 AI_PORT = 5005
@@ -28,10 +31,17 @@ app = Flask(__name__)
 # Use a strong, random key in a real application, possibly from env vars
 app.secret_key = os.getenv("FLASK_SECRET_KEY", os.urandom(24))
 UPLOAD_FOLDER = '/home/autosecure/FYP/exploits/uploaded'
-ALLOWED_EXTENSIONS = {'py'} # Only allow Python scripts for now
+ALLOWED_EXTENSIONS = {'py', 'zip'}
 os.makedirs(UPLOAD_FOLDER, exist_ok=True) # Ensure upload folder exists
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # --- End Configuration ---
+
+# --- Added Configuration for Mobile Scan ---
+MOBSFSCAN_OUTPUT_DIR = "/home/autosecure/FYP/mobtest_results" # Directory to store mobsfscan JSON results
+MOBTEST_DIR = "/home/autosecure/FYP/mobtest" # Fixed directory for extracting/scanning
+os.makedirs(MOBSFSCAN_OUTPUT_DIR, exist_ok=True)
+os.makedirs(MOBTEST_DIR, exist_ok=True) # Ensure the mobtest directory exists
+# --- End Mobile Scan Config ---
 
 # Ensure the reports directory exists
 REPORTS_DIR = "/home/autosecure/FYP/reports/"
@@ -44,6 +54,7 @@ nmap_results = {}
 exploitation_results = {}
 test_status = {"complete": False}
 custom_exploit_results = {} # New global for custom results
+mobile_scan_results = {} # Global for mobile scan results
 
 # Helper function for allowed file extensions
 def allowed_file(filename):
@@ -745,8 +756,242 @@ def program_exists(program):
         return False
 
 
+@app.route('/mobile_scan', methods=['GET', 'POST'])
+def mobile_scan():
+    global mobile_scan_results
+    if request.method == 'POST':
+        if 'source_code_zip' not in request.files:
+            return jsonify({"error": "No file part"}), 400
+        file = request.files['source_code_zip']
+        if file.filename == '':
+            return jsonify({"error": "No selected file"}), 400
+
+        if file and allowed_file(file.filename) and file.filename.endswith('.zip'):
+            scan_results = {}
+            error_message = None
+            try:
+                # --- Clear the MOBTEST_DIR before extracting ---
+                print(f"INFO: Clearing contents of {MOBTEST_DIR}...")
+                for item in os.listdir(MOBTEST_DIR):
+                    item_path = os.path.join(MOBTEST_DIR, item)
+                    try:
+                        if os.path.isdir(item_path):
+                            shutil.rmtree(item_path)
+                        else:
+                            os.remove(item_path)
+                    except Exception as e:
+                        print(f"WARN: Failed to remove item {item_path}: {e}")
+                print(f"INFO: Finished clearing {MOBTEST_DIR}.")
+                # ---------------------------------------------
+
+                # Save the zip temporarily to extract it (can't extract directly from stream)
+                # Using a temporary file within MOBTEST_DIR or UPLOAD_FOLDER might be okay too
+                # Let's use a known temporary file location for clarity
+                temp_zip_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(f"{uuid.uuid4().hex}_{file.filename}"))
+                file.save(temp_zip_path)
+                print(f"INFO: Saved uploaded zip temporarily to: {temp_zip_path}")
+
+                # Extract the zip file safely into MOBTEST_DIR
+                extract_path = MOBTEST_DIR
+                with zipfile.ZipFile(temp_zip_path, 'r') as zip_ref:
+                    zip_ref.extractall(extract_path)
+                print(f"INFO: Extracted zip to: {extract_path}")
+
+                # Clean up the temporary zip file
+                try:
+                    os.remove(temp_zip_path)
+                    print(f"INFO: Removed temporary zip file: {temp_zip_path}")
+                except Exception as e:
+                    print(f"WARN: Failed to remove temporary zip file {temp_zip_path}: {e}")
+
+                # Run mobsfscan on MOBTEST_DIR
+                # --- Updated command to scan MOBTEST_DIR without JSON/output flags ---
+                cmd = ["mobsfscan", MOBTEST_DIR]
+                # ---------------------------------------------
+                print(f"INFO: Running mobsfscan command: {' '.join(cmd)}")
+
+                timeout_seconds = 300 # 5 minutes timeout
+                process = None # Initialize process variable
+                try:
+                    process = subprocess.run(
+                        cmd,
+                        capture_output=True, text=True,
+                        check=False, # We check returncode manually
+                        timeout=timeout_seconds
+                    )
+                    print(f"INFO: mobsfscan completed with return code: {process.returncode}")
+                    print(f"INFO: mobsfscan stdout:\n{process.stdout}")
+                    print(f"INFO: mobsfscan stderr:\n{process.stderr}")
+
+                except FileNotFoundError:
+                    error_message = f"ERROR: 'mobsfscan' command not found. Is it installed and in PATH?"
+                    print(error_message)
+                    scan_results = {"error": error_message}
+                except subprocess.TimeoutExpired:
+                    error_message = f"mobsfscan timed out after {timeout_seconds} seconds."
+                    print(f"ERROR: {error_message}")
+                    scan_results = {"error": error_message}
+                except Exception as e:
+                    # Catch any other exception during subprocess execution
+                    error_message = f"ERROR: Exception during mobsfscan execution: {e}"
+                    print(error_message)
+                    scan_results = {"error": error_message}
+
+                # --- Process results based on stdout/stderr ---
+                if process is not None:
+                    # Combine stdout and stderr
+                    # Prefer stderr if stdout is empty, as mobsfscan often prints results there
+                    combined_output = process.stderr if process.stderr else process.stdout
+                    combined_output = combined_output.strip()
+
+                    # --- Filter out progress bar and header ---
+                    filtered_lines = []
+                    lines = combined_output.splitlines()
+                    results_started = False
+                    for line in lines:
+                        # Check for the start of the results table (using box-drawing chars)
+                        if line.strip().startswith(("╒", "|", "├──", "└──", "+-")):
+                            results_started = True
+                        if results_started:
+                            filtered_lines.append(line)
+
+                    if not filtered_lines and combined_output: # Fallback if filter removed everything
+                        print("WARN: mobsfscan output filtering removed all lines or start pattern not found. Using raw output.")
+                        filtered_raw_output = combined_output
+                    else:
+                        filtered_raw_output = "\n".join(filtered_lines)
+                    # ------------------------------------------
+
+                    scan_results = {"raw_output": filtered_raw_output} # Use filtered output
+
+                    # --- Save the FILTERED raw output to a report file ---
+                    report_filename = None
+                    if filtered_raw_output: # Only save if there is output
+                        try:
+                            timestamp = datetime.now().strftime("%d_%m_%y-%H_%M")
+                            report_filename = f"mobile_scan_{timestamp}.txt"
+                            report_filepath = os.path.join(REPORTS_DIR, report_filename)
+                            with open(report_filepath, "w", encoding="utf-8") as f:
+                                f.write(filtered_raw_output)
+                            scan_results['report_filename'] = report_filename # Store filename for download link
+                            print(f"INFO: Mobile scan report saved to {report_filepath}")
+                        except Exception as e:
+                            print(f"ERROR: Failed to save mobile scan report: {e}")
+                            # Don't necessarily set error_message here, just log it
+                    # ---------------------------------------------
+
+                # If an exception occurred before process could be set
+                elif not scan_results: # Check if scan_results was set by an exception block
+                    scan_results = {"error": error_message or "An unknown error occurred before mobsfscan could run."}
+
+            except zipfile.BadZipFile:
+                print("ERROR: Uploaded file is not a valid zip file.")
+                error_message = "Invalid zip file uploaded."
+                scan_results = {"error": error_message, "raw_output": ""}
+            except Exception as e:
+                 error_message = f"An unexpected error occurred during mobile scan setup/extraction: {e}"
+                 print(f"ERROR: {error_message}")
+                 scan_results = {"error": error_message, "raw_output": ""}
+
+            mobile_scan_results = scan_results # Store results globally/session if needed later
+            # Render the same page but include results
+            # Pass the error message separately as well for the dedicated error alert
+            return render_template('mobile_scan.html', results=scan_results, error=scan_results.get('error'))
+
+        else:
+            return jsonify({"error": "Invalid file type. Please upload a .zip file."}), 400
+
+    # GET request: just show the upload page
+    mobile_scan_results = {} # Clear results on GET
+    return render_template('mobile_scan.html', results=None, error=None)
+
+
+@app.route('/download_mobile_report/<report_type>')
+def download_mobile_report(report_type):
+    try:
+        # Corrected file finding logic
+        latest_file = sorted(
+            [os.path.join(REPORTS_DIR, f)
+             for f in os.listdir(REPORTS_DIR) if f.startswith('mobile_scan_') and f.endswith('.txt')],
+            key=os.path.getmtime,
+            reverse=True
+        )[0]
+
+        if report_type == "text":
+            return send_file(latest_file, as_attachment=True)
+
+        elif report_type == "pdf":
+            pdf_path = os.path.splitext(latest_file)[0] + ".pdf"
+            # Use the specialized mobile scan PDF converter
+            convert_mobile_scan_to_pdf(latest_file, pdf_path)
+            return send_file(pdf_path, as_attachment=True)
+
+        else:
+            return jsonify({"error": "Invalid report type. Use 'text' or 'pdf'."}), 400
+
+    except IndexError:
+        return jsonify({"error": "No mobile scan reports found."}), 404
+    except Exception as e:
+        print(f"ERROR in download_mobile_report: {e}")
+        return jsonify({"error": f"Failed to generate or send report: {e}"}), 500
+
+
+def convert_mobile_scan_to_pdf(text_file, pdf_file):
+    """Convert mobile scan report to PDF as plain text."""
+    try:
+        pdf = PDF() # Use the base FPDF class setup in the main file
+        pdf.set_auto_page_break(auto=True, margin=15)
+        pdf.set_margins(15, 15, 15)
+        pdf.add_page()
+        pdf.set_font('Courier', '', 8) # Monospaced font, reasonable size
+
+        # Replacements for special chars and color codes
+        replacements = {
+            '[0m': '', '[31m': '', '[33m': '', '[36m': '', # Color codes
+            '├': '+', '─': '-', '┤': '+', '┌': '+', '┐': '+', '└': '+', '┘': '+', '│': '|',
+            '┬': '+', '┴': '+', '┼': '+',
+            '╒': '+', '╕': '+', '╘': '+', '╛': '+', '╔': '+', '╗': '+', '╚': '+', '╝': '+',
+            '═': '=', '║': '|', '╠': '+', '╣': '+', '╦': '+', '╩': '+', '╬': '+',
+            '╤': '+', '╧': '+', '╪': '+', '╫': '+',
+        }
+
+        # Calculate usable page width
+        page_width = pdf.w - 2 * pdf.l_margin
+        line_height = 4 # Adjust line height for readability
+
+        with open(text_file, "r", encoding="utf-8") as file:
+            lines = file.readlines()
+
+        # Process lines: replace chars
+        processed_lines = []
+        for line in lines:
+            original_line = line.rstrip() # Keep trailing spaces if any? No, rstrip is fine.
+            processed_line = original_line
+            for old, new in replacements.items():
+                processed_line = processed_line.replace(old, new)
+            # Keep all lines, including potentially empty ones from original formatting
+            processed_lines.append(processed_line)
+
+        # --- Simple Rendering Logic ---
+        for line in processed_lines:
+            # Check for page break before rendering line
+            # Estimate height simply based on line count (multi_cell handles wrapping)
+            if pdf.get_y() + line_height > pdf.h - pdf.b_margin:
+                pdf.add_page()
+                pdf.set_font('Courier', '', 8) # Reset font on new page
+
+            # Render the entire processed line using multi_cell
+            pdf.multi_cell(page_width, line_height, line)
+            # multi_cell automatically adds a line break
+
+        pdf.output(pdf_file)
+        print(f"✅ Mobile scan PDF (plain text) successfully created: {pdf_file}")
+    except Exception as e:
+        print(f"❌ Error creating mobile scan PDF (plain text): {e}")
+        raise
+
+
 if __name__ == '__main__':
     if not app.secret_key or app.secret_key == 'temporary_secret_key_for_testing':
-        print("Warning: Using default/temporary FLASK_SECRET_KEY. Set a strong secret key in your environment.")
         app.secret_key = os.urandom(24) # Ensure a key is set for session
     app.run(host='0.0.0.0', port=5556, debug=True)
