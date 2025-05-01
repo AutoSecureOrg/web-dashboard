@@ -1,0 +1,6 @@
+& net user,Administrator
+& ver,Microsoft Windows
+& tasklist,svchost.exe
+& ipconfig /all,Windows IP Configuration
+& whoami && hostname,\\
+& dir,Directory
