@@ -1,0 +1,5 @@
+; uname -a,Linux
+; ps aux,PID
+; ifconfig -a,inet
+; whoami && hostname,kali
+; ls,.db

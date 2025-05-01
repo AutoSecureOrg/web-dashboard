@@ -1,0 +1,11 @@
+& net user
+& ver
+& tasklist
+& ipconfig /all
+& whoami && hostname
+& dir
+; uname -a
+; ps aux
+; ifconfig -a
+; whoami && hostname
+; ls
