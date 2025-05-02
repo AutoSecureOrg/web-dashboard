@@ -48,3 +48,4 @@ passlib
 bcrypt
 celery[redis]
 mobsfscan
+quark-engine

@@ -1,19 +1,45 @@
 {% extends 'base.html' %}
 
-{% block title %}Mobile Source Code Scan{% endblock %}
+{% block title %}Mobile App Scan{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h2>Mobile Source Code Security Scan (mobsfscan)</h2>
-    <p>Upload a ZIP file containing the source code of your Android (Java/Kotlin) or iOS (Swift/Objective-C) application.</p>
+    <h2>Mobile App Security Scan</h2>
+    <p>Upload a ZIP file (source code) for mobsfscan or an APK file for quark-engine scan.</p>
 
-    <form method="POST" enctype="multipart/form-data" action="{{ url_for('mobile_scan') }}">
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('mobile_scan') }}" id="mobileScanForm">
         <div class="mb-3">
-            <label for="source_code_zip" class="form-label">Source Code ZIP File</label>
-            <input class="form-control" type="file" id="source_code_zip" name="source_code_zip" accept=".zip" required>
+            <label class="form-label">Select Scan Type:</label>
+            <div>
+                <input type="radio" class="btn-check" name="scan_type" id="scan_type_zip" value="zip" autocomplete="off" checked>
+                <label class="btn btn-outline-secondary" for="scan_type_zip">Source Code (ZIP)</label>
+
+                <input type="radio" class="btn-check" name="scan_type" id="scan_type_apk" value="apk" autocomplete="off">
+                <label class="btn btn-outline-secondary" for="scan_type_apk">APK File</label>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary">Scan Source Code</button>
+
+        <div class="mb-3">
+            <label for="app_file" class="form-label">Application File</label>
+            <input class="form-control" type="file" id="app_file" name="app_file" accept=".zip" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Scan Application</button>
     </form>
+
+    {# JavaScript to change file input 'accept' based on radio button #}
+    <script>
+        document.querySelectorAll('input[name="scan_type"]').forEach((elem) => {
+            elem.addEventListener("change", function(event) {
+                var item = event.target.value;
+                var fileInput = document.getElementById('app_file');
+                if (item === "zip") {
+                    fileInput.accept = ".zip";
+                } else if (item === "apk") {
+                    fileInput.accept = ".apk";
+                }
+            });
+        });
+    </script>
 
     {% if error %}
     <div class="alert alert-danger mt-4" role="alert">
@@ -21,25 +47,30 @@
     </div>
     {% endif %}
 
-    {# Display raw output if available #}
-    {% if results and results.get('raw_output') is defined %}
+    {# Display results #}
+    {% if results %}
         <h3 class="mt-5">Scan Output</h3>
 
-        {# Add Download Buttons if report was likely generated #}
-        {% if not error or (error and results.get('raw_output')) %}
+        {# Add Download Buttons #}
+        {% if results.get('report_filename_base') %}
             <div class="mb-3">
-                <a href="{{ url_for('home') }}" class="btn btn-gray">Return to Home</a>
-                <a href="{{ url_for('download_mobile_report', report_type='text') }}" class="btn btn-blue">Download Text Report</a>
-                <a href="{{ url_for('download_mobile_report', report_type='pdf') }}" class="btn btn-red">Download PDF Report</a>
+                <a href="{{ url_for('home') }}" class="btn btn-secondary">Return to Home</a>
+                {# Use specific download route based on scan type and pass base filename #}
+                <a href="{{ url_for('download_mobile_report', report_type='text', scan_type=results.get('scan_type'), base_filename=results.get('report_filename_base')) }}" class="btn btn-info">Download Text Report</a>
+                {# Conditionally show JSON download for APK scans #}
+                {% if results.get('scan_type') == 'apk' %}
+                    <a href="{{ url_for('download_mobile_report', report_type='json', scan_type=results.get('scan_type'), base_filename=results.get('report_filename_base')) }}" class="btn btn-success">Download JSON Report</a>
+                {% endif %}
+                <a href="{{ url_for('download_mobile_report', report_type='pdf', scan_type=results.get('scan_type'), base_filename=results.get('report_filename_base')) }}" class="btn btn-danger">Download PDF Report</a>
+            </div>
+        {% elif not error %}
+             <div class="alert alert-warning mt-4" role="alert">
+                Scan may have completed, but no report file was generated. Check output below.
             </div>
         {% endif %}
 
-        <pre class="bg-light p-3 rounded border"><code>{{ results.get('raw_output', 'No output captured.') }}</code></pre>
-    {% elif results and not error %}
-        {# Fallback if raw_output is missing but no error was explicitly passed #}
-         <div class="alert alert-warning mt-4" role="alert">
-            <strong>Scan completed, but no output was captured.</strong>
-        </div>
+        <pre class="bg-light p-3 rounded border"><code>{{ results.get('output_data', 'No output captured.') }}</code></pre>
+
     {% endif %}
 
 </div>

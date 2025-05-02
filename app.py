@@ -43,6 +43,11 @@ os.makedirs(MOBSFSCAN_OUTPUT_DIR, exist_ok=True)
 os.makedirs(MOBTEST_DIR, exist_ok=True) # Ensure the mobtest directory exists
 # --- End Mobile Scan Config ---
 
+# --- Added Configuration for Quark Scan ---
+QUARK_OUTPUT_DIR = "/home/autosecure/FYP/quark_results"
+os.makedirs(QUARK_OUTPUT_DIR, exist_ok=True)
+# --- End Quark Scan Config ---
+
 # Ensure the reports directory exists
 REPORTS_DIR = "/home/autosecure/FYP/reports/"
 os.makedirs(REPORTS_DIR, exist_ok=True)
@@ -760,146 +765,268 @@ def program_exists(program):
 def mobile_scan():
     global mobile_scan_results
     if request.method == 'POST':
-        if 'source_code_zip' not in request.files:
+        scan_type = request.form.get('scan_type', 'zip') # Default to zip if not provided
+        if 'app_file' not in request.files:
             return jsonify({"error": "No file part"}), 400
-        file = request.files['source_code_zip']
+        file = request.files['app_file']
         if file.filename == '':
             return jsonify({"error": "No selected file"}), 400
 
-        if file and allowed_file(file.filename) and file.filename.endswith('.zip'):
-            scan_results = {}
-            error_message = None
-            try:
-                # --- Clear the MOBTEST_DIR before extracting ---
-                print(f"INFO: Clearing contents of {MOBTEST_DIR}...")
-                for item in os.listdir(MOBTEST_DIR):
-                    item_path = os.path.join(MOBTEST_DIR, item)
-                    try:
-                        if os.path.isdir(item_path):
-                            shutil.rmtree(item_path)
-                        else:
-                            os.remove(item_path)
-                    except Exception as e:
-                        print(f"WARN: Failed to remove item {item_path}: {e}")
-                print(f"INFO: Finished clearing {MOBTEST_DIR}.")
-                # ---------------------------------------------
+        # --- File Type Validation based on scan_type ---
+        allowed_extensions_for_type = {'zip'} if scan_type == 'zip' else {'apk'}
+        file_ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
+        if not file_ext in allowed_extensions_for_type:
+            return jsonify({"error": f"Invalid file type for {scan_type.upper()} scan. Expected .{list(allowed_extensions_for_type)[0]}"}), 400
+        # --------------------------------------------
 
-                # Save the zip temporarily to extract it (can't extract directly from stream)
-                # Using a temporary file within MOBTEST_DIR or UPLOAD_FOLDER might be okay too
-                # Let's use a known temporary file location for clarity
+        scan_results = {'scan_type': scan_type} # Store scan type in results
+        error_message = None
+        output_data = ""
+        report_filename = None
+
+        try:
+            # --- Clear the MOBTEST_DIR before placing new file --- (Common for both scans)
+            print(f"INFO: Clearing contents of {MOBTEST_DIR}...")
+            for item in os.listdir(MOBTEST_DIR):
+                item_path = os.path.join(MOBTEST_DIR, item)
+                try:
+                    if os.path.isdir(item_path):
+                        shutil.rmtree(item_path)
+                    else:
+                        os.remove(item_path)
+                except Exception as e:
+                    print(f"WARN: Failed to remove item {item_path}: {e}")
+            print(f"INFO: Finished clearing {MOBTEST_DIR}.")
+            # ---------------------------------------------
+
+            if scan_type == 'zip':
+                # --- Handle ZIP upload for mobsfscan --- (Existing Logic slightly adapted)
+                print("INFO: Handling ZIP file for mobsfscan")
                 temp_zip_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(f"{uuid.uuid4().hex}_{file.filename}"))
                 file.save(temp_zip_path)
                 print(f"INFO: Saved uploaded zip temporarily to: {temp_zip_path}")
 
-                # Extract the zip file safely into MOBTEST_DIR
                 extract_path = MOBTEST_DIR
                 with zipfile.ZipFile(temp_zip_path, 'r') as zip_ref:
                     zip_ref.extractall(extract_path)
                 print(f"INFO: Extracted zip to: {extract_path}")
 
-                # Clean up the temporary zip file
                 try:
                     os.remove(temp_zip_path)
                     print(f"INFO: Removed temporary zip file: {temp_zip_path}")
                 except Exception as e:
                     print(f"WARN: Failed to remove temporary zip file {temp_zip_path}: {e}")
 
-                # Run mobsfscan on MOBTEST_DIR
-                # --- Updated command to scan MOBTEST_DIR without JSON/output flags ---
                 cmd = ["mobsfscan", MOBTEST_DIR]
-                # ---------------------------------------------
                 print(f"INFO: Running mobsfscan command: {' '.join(cmd)}")
-
-                timeout_seconds = 300 # 5 minutes timeout
-                process = None # Initialize process variable
+                timeout_seconds = 300
+                process = None
                 try:
-                    process = subprocess.run(
-                        cmd,
-                        capture_output=True, text=True,
-                        check=False, # We check returncode manually
-                        timeout=timeout_seconds
-                    )
+                    process = subprocess.run(cmd, capture_output=True, text=True, check=False, timeout=timeout_seconds)
                     print(f"INFO: mobsfscan completed with return code: {process.returncode}")
-                    print(f"INFO: mobsfscan stdout:\n{process.stdout}")
-                    print(f"INFO: mobsfscan stderr:\n{process.stderr}")
+                    #print(f"INFO: mobsfscan stdout:\n{process.stdout}")
+                    #print(f"INFO: mobsfscan stderr:\n{process.stderr}")
 
-                except FileNotFoundError:
-                    error_message = f"ERROR: 'mobsfscan' command not found. Is it installed and in PATH?"
-                    print(error_message)
-                    scan_results = {"error": error_message}
-                except subprocess.TimeoutExpired:
-                    error_message = f"mobsfscan timed out after {timeout_seconds} seconds."
-                    print(f"ERROR: {error_message}")
-                    scan_results = {"error": error_message}
-                except Exception as e:
-                    # Catch any other exception during subprocess execution
-                    error_message = f"ERROR: Exception during mobsfscan execution: {e}"
-                    print(error_message)
-                    scan_results = {"error": error_message}
-
-                # --- Process results based on stdout/stderr ---
-                if process is not None:
-                    # Combine stdout and stderr
-                    # Prefer stderr if stdout is empty, as mobsfscan often prints results there
+                    # Process mobsfscan results (stderr preferred)
                     combined_output = process.stderr if process.stderr else process.stdout
                     combined_output = combined_output.strip()
 
-                    # --- Filter out progress bar and header ---
                     filtered_lines = []
                     lines = combined_output.splitlines()
                     results_started = False
                     for line in lines:
-                        # Check for the start of the results table (using box-drawing chars)
                         if line.strip().startswith(("╒", "|", "├──", "└──", "+-")):
                             results_started = True
                         if results_started:
                             filtered_lines.append(line)
 
-                    if not filtered_lines and combined_output: # Fallback if filter removed everything
+                    if not filtered_lines and combined_output:
                         print("WARN: mobsfscan output filtering removed all lines or start pattern not found. Using raw output.")
-                        filtered_raw_output = combined_output
+                        output_data = combined_output
                     else:
-                        filtered_raw_output = "\n".join(filtered_lines)
-                    # ------------------------------------------
+                        output_data = "\n".join(filtered_lines)
 
-                    scan_results = {"raw_output": filtered_raw_output} # Use filtered output
+                except FileNotFoundError:
+                    error_message = "ERROR: 'mobsfscan' command not found. Is it installed and in PATH?"
+                    print(error_message)
+                except subprocess.TimeoutExpired:
+                    error_message = f"mobsfscan timed out after {timeout_seconds} seconds."
+                    print(f"ERROR: {error_message}")
+                except Exception as e:
+                    error_message = f"ERROR: Exception during mobsfscan execution: {e}"
+                    print(error_message)
 
-                    # --- Save the FILTERED raw output to a report file ---
-                    report_filename = None
-                    if filtered_raw_output: # Only save if there is output
+                # --- Save mobsfscan Report --- (If output exists)
+                if output_data and not error_message:
+                    try:
+                        timestamp = datetime.now().strftime("%d_%m_%y-%H_%M")
+                        report_filename = f"mobile_scan_{timestamp}.txt"
+                        report_filepath = os.path.join(REPORTS_DIR, report_filename)
+                        with open(report_filepath, "w", encoding="utf-8") as f:
+                            f.write(output_data)
+                        print(f"INFO: Mobile scan (mobsfscan) report saved to {report_filepath}")
+                    except Exception as e:
+                        print(f"ERROR: Failed to save mobsfscan report: {e}")
+                        error_message = error_message or "Failed to save report file."
+
+            elif scan_type == 'apk':
+                # --- Handle APK upload for quark-engine ---
+                print("INFO: Handling APK file for quark-engine")
+                apk_filename = secure_filename(file.filename)
+                apk_path = os.path.join(MOBTEST_DIR, apk_filename)
+                file.save(apk_path)
+                print(f"INFO: Saved uploaded APK to: {apk_path}")
+
+                # --- Check and Setup Quark Rules ---
+                quark_rules_path = os.path.expanduser("~/.quark-engine/quark-rules/rules")
+                if not os.path.exists(quark_rules_path):
+                    print(f"INFO: Quark rules not found at {quark_rules_path}. Attempting to set up.")
+                    try:
+                        subprocess.run(["git", "clone", "https://github.com/quark-engine/quark-rules.git", quark_rules_path], check=True)
+                        print("INFO: Quark rules successfully cloned.")
+                    except subprocess.CalledProcessError as e:
+                        error_message = "Failed to set up Quark rules automatically. Please ensure git is installed and rules can be cloned."
+                        print(f"ERROR: {error_message} {e}")
+                        # Return error immediately if rules setup fails
+                        scan_results['error'] = error_message
+                        mobile_scan_results = scan_results
+                        return render_template('mobile_scan.html', results=scan_results, error=error_message)
+                    except FileNotFoundError:
+                        error_message = "Failed to set up Quark rules: 'git' command not found. Please install git."
+                        print(f"ERROR: {error_message}")
+                        scan_results['error'] = error_message
+                        mobile_scan_results = scan_results
+                        return render_template('mobile_scan.html', results=scan_results, error=error_message)
+                else:
+                    print("INFO: Quark rules found.")
+
+                # --- Define Quark JSON output path ---
+                quark_report_basename = f"quark_report_{os.path.splitext(apk_filename)[0]}.json"
+                quark_json_output_path = os.path.join(QUARK_OUTPUT_DIR, quark_report_basename)
+                print(f"INFO: Quark JSON report target path: {quark_json_output_path}")
+
+                # Ensure QUARK_OUTPUT_DIR exists
+                os.makedirs(QUARK_OUTPUT_DIR, exist_ok=True)
+
+                # --- Run Quark command (output to JSON) ---
+                cmd = ["quark", "-a", apk_path, "-o", quark_json_output_path]
+                print(f"INFO: Running APK analysis command: {' '.join(cmd)}")
+                timeout_seconds = 300
+                process = None
+                try:
+                    process = subprocess.run(cmd, capture_output=True, text=True, check=False, timeout=timeout_seconds)
+                    print(f"INFO: APK analysis completed with return code: {process.returncode}")
+                    # print(f"DEBUG: quark stdout:\n{process.stdout}")
+                    # print(f"DEBUG: quark stderr:\n{process.stderr}")
+
+                    # --- Process Quark Results ---
+                    if os.path.exists(quark_json_output_path):
+                        print(f"INFO: Quark JSON report found at {quark_json_output_path}")
+                        # Read JSON content for display in HTML and for the text report
+                        with open(quark_json_output_path, 'r', encoding='utf-8') as f_json:
+                           output_data = f_json.read() # Display raw JSON
+
+                        # Save a text report containing the JSON data
                         try:
                             timestamp = datetime.now().strftime("%d_%m_%y-%H_%M")
-                            report_filename = f"mobile_scan_{timestamp}.txt"
-                            report_filepath = os.path.join(REPORTS_DIR, report_filename)
-                            with open(report_filepath, "w", encoding="utf-8") as f:
-                                f.write(filtered_raw_output)
-                            scan_results['report_filename'] = report_filename # Store filename for download link
-                            print(f"INFO: Mobile scan report saved to {report_filepath}")
+                            # Use a consistent prefix for easier finding later
+                            report_filename_base = f"apk_scan_{timestamp}"
+                            text_report_filename = f"{report_filename_base}.txt"
+                            json_report_filename_for_download = f"{report_filename_base}.json" # For direct JSON download link
+
+                            report_filepath = os.path.join(REPORTS_DIR, text_report_filename)
+
+                            # Copy the generated JSON to the reports dir for direct download
+                            json_download_path = os.path.join(REPORTS_DIR, json_report_filename_for_download)
+                            shutil.copy2(quark_json_output_path, json_download_path)
+                            print(f"INFO: Copied Quark JSON report to {json_download_path} for download.")
+
+                            # Write the text report (including JSON content)
+                            with open(report_filepath, "w", encoding="utf-8") as f_txt:
+                                f_txt.write(f"APK Scan Report (Quark Engine) for: {apk_filename}\\n")
+                                f_txt.write(f"Generated: {timestamp}\\n")
+                                f_txt.write(f"Raw JSON report also available.\\n\\n")
+                                f_txt.write("--- JSON Report Content ---\\n")
+                                f_txt.write(output_data)
+                            print(f"INFO: APK scan text report saved to {report_filepath}")
+                            # Store the base name for download links
+                            scan_results['report_filename_base'] = report_filename_base
+
                         except Exception as e:
-                            print(f"ERROR: Failed to save mobile scan report: {e}")
-                            # Don't necessarily set error_message here, just log it
-                    # ---------------------------------------------
+                            print(f"ERROR: Failed to save APK scan text report or copy JSON: {e}")
+                            error_message = error_message or "Failed to save report files."
+                            report_filename_base = None # Clear base name if saving failed
+                            scan_results.pop('report_filename_base', None)
 
-                # If an exception occurred before process could be set
-                elif not scan_results: # Check if scan_results was set by an exception block
-                    scan_results = {"error": error_message or "An unknown error occurred before mobsfscan could run."}
+                    else:
+                        # JSON file was NOT created
+                        error_message = "APK analysis ran but did not produce the expected report file."
+                        print(f"ERROR: {error_message} Expected at: {quark_json_output_path}")
+                        # Include command output in error message if helpful
+                        if process.stderr:
+                            error_message += f"\nDetails: {process.stderr.strip()}"
+                        elif process.stdout:
+                             error_message += f"\nDetails: {process.stdout.strip()}"
+                        output_data = process.stdout + "\n" + process.stderr # Show command output as fallback in HTML
 
-            except zipfile.BadZipFile:
-                print("ERROR: Uploaded file is not a valid zip file.")
-                error_message = "Invalid zip file uploaded."
-                scan_results = {"error": error_message, "raw_output": ""}
-            except Exception as e:
-                 error_message = f"An unexpected error occurred during mobile scan setup/extraction: {e}"
-                 print(f"ERROR: {error_message}")
-                 scan_results = {"error": error_message, "raw_output": ""}
+                    # Handle non-zero exit codes if the report wasn't generated
+                    if process.returncode != 0 and not os.path.exists(quark_json_output_path):
+                         error_message = error_message or f"APK analysis failed with exit code {process.returncode}."
+                         output_data = output_data or process.stdout + "\n" + process.stderr # Show command output
 
-            mobile_scan_results = scan_results # Store results globally/session if needed later
-            # Render the same page but include results
-            # Pass the error message separately as well for the dedicated error alert
-            return render_template('mobile_scan.html', results=scan_results, error=scan_results.get('error'))
+                except FileNotFoundError:
+                    error_message = "ERROR: Analysis command ('quark') not found. Is the tool installed and in PATH?"
+                    print(error_message)
+                    output_data = error_message
+                except subprocess.TimeoutExpired:
+                    error_message = f"APK analysis timed out after {timeout_seconds} seconds."
+                    print(f"ERROR: {error_message}")
+                    output_data = error_message
+                except Exception as e:
+                    error_message = f"ERROR: Exception during APK analysis execution: {e}"
+                    print(error_message)
+                    output_data = error_message
 
-        else:
-            return jsonify({"error": "Invalid file type. Please upload a .zip file."}), 400
+            else: # Handle zip scan type (mobsfscan)
+                # --- Handle ZIP upload for mobsfscan --- (Existing Logic adapted)
+                print("INFO: Handling ZIP file for mobsfscan")
+                # ... (rest of mobsfscan logic remains the same)
+                # ... ensure it sets scan_results['report_filename_base'] too
+                # --- Save mobsfscan Report --- (If output exists)
+                if output_data and not error_message:
+                    try:
+                        timestamp = datetime.now().strftime("%d_%m_%y-%H_%M")
+                        report_filename_base = f"mobile_scan_{timestamp}" # Base name for mobsfscan
+                        text_report_filename = f"{report_filename_base}.txt"
+                        report_filepath = os.path.join(REPORTS_DIR, text_report_filename)
+                        with open(report_filepath, "w", encoding="utf-8") as f:
+                            f.write(output_data)
+                        print(f"INFO: Mobile scan (mobsfscan) report saved to {report_filepath}")
+                        scan_results['report_filename_base'] = report_filename_base # Store base name
+                    except Exception as e:
+                        print(f"ERROR: Failed to save mobsfscan report: {e}")
+                        error_message = error_message or "Failed to save report file."
+                        scan_results.pop('report_filename_base', None)
+
+        except zipfile.BadZipFile: # Keep this for the zip path
+            print("ERROR: Uploaded file is not a valid zip file.")
+            error_message = "Invalid zip file uploaded."
+            output_data = ""
+        except Exception as e:
+             error_message = f"An unexpected error occurred during mobile scan setup: {e}"
+             print(f"ERROR: {error_message}")
+             output_data = ""
+
+        scan_results['output_data'] = output_data
+        # No longer using report_filename directly, using report_filename_base
+        # scan_results['report_filename'] = report_filename
+        if error_message:
+            scan_results['error'] = error_message # Store specific error
+
+        mobile_scan_results = scan_results # Store results globally (consider session)
+
+        # Render the template with results and potential error
+        return render_template('mobile_scan.html', results=scan_results, error=scan_results.get('error'))
 
     # GET request: just show the upload page
     mobile_scan_results = {} # Clear results on GET
@@ -908,29 +1035,73 @@ def mobile_scan():
 
 @app.route('/download_mobile_report/<report_type>')
 def download_mobile_report(report_type):
-    try:
-        # Corrected file finding logic
-        latest_file = sorted(
-            [os.path.join(REPORTS_DIR, f)
-             for f in os.listdir(REPORTS_DIR) if f.startswith('mobile_scan_') and f.endswith('.txt')],
-            key=os.path.getmtime,
-            reverse=True
-        )[0]
+    scan_type = request.args.get('scan_type', None) # Get scan type from query param
+    base_filename = request.args.get('base_filename', None) # Get base filename if provided
 
+    print(f"INFO: Download request for type '{report_type}', scan_type='{scan_type}', base_filename='{base_filename}'")
+
+    if not base_filename:
+        # Fallback: Try to find the latest based on prefix if base_filename isn't provided
+        # (This might happen if user navigates directly or session is lost)
+        print("WARN: Base filename not provided in download request. Attempting to find latest.")
+        if not scan_type:
+            return jsonify({"error": "Scan type is required to find the latest report without a base filename."}), 400
+        try:
+            prefix = 'mobile_scan_' if scan_type == 'zip' else 'apk_scan_' # Match base name structure
+            report_files_base = sorted(
+                [f.replace('.txt','').replace('.json','') # Get base name
+                 for f in os.listdir(REPORTS_DIR) if f.startswith(prefix) and (f.endswith('.txt') or f.endswith('.json'))],
+                key=lambda f: os.path.getmtime(os.path.join(REPORTS_DIR, f + ('.txt' if os.path.exists(os.path.join(REPORTS_DIR, f + '.txt')) else '.json'))),
+                reverse=True
+            )
+            if not report_files_base:
+                raise IndexError(f"No reports found with prefix '{prefix}'.")
+            base_filename = report_files_base[0]
+            print(f"INFO: Found latest report base filename: {base_filename}")
+        except IndexError as e:
+            type_name = "Source Code (ZIP)" if scan_type == 'zip' else "APK"
+            print(f"ERROR: No reports found for scan type '{scan_type}' prefix '{prefix}'. {e}")
+            return jsonify({"error": f"No {type_name} scan reports found."}), 404
+        except Exception as e:
+             print(f"ERROR finding latest report: {e}")
+             return jsonify({"error": f"Failed to find latest report: {e}"}), 500
+
+    # Construct file paths based on the base filename
+    text_report_path = os.path.join(REPORTS_DIR, f"{base_filename}.txt")
+    json_report_path = os.path.join(REPORTS_DIR, f"{base_filename}.json")
+    pdf_report_path = os.path.join(REPORTS_DIR, f"{base_filename}.pdf")
+
+    try:
         if report_type == "text":
-            return send_file(latest_file, as_attachment=True)
+            if os.path.exists(text_report_path):
+                return send_file(text_report_path, as_attachment=True)
+            else:
+                 raise FileNotFoundError(f"Text report not found: {text_report_path}")
+
+        elif report_type == "json":
+            # Only applicable for APK scans that generated a JSON
+            if os.path.exists(json_report_path):
+                return send_file(json_report_path, as_attachment=True, mimetype='application/json')
+            else:
+                # Provide a more specific error if JSON is requested but doesn't exist
+                # (e.g., for mobsfscan or if quark failed to save JSON)
+                return jsonify({"error": "JSON report format not available for this scan or it failed to generate."}), 404
 
         elif report_type == "pdf":
-            pdf_path = os.path.splitext(latest_file)[0] + ".pdf"
-            # Use the specialized mobile scan PDF converter
-            convert_mobile_scan_to_pdf(latest_file, pdf_path)
-            return send_file(pdf_path, as_attachment=True)
+            # Generate PDF from the TEXT report (which contains mobsfscan output or quark JSON)
+            if os.path.exists(text_report_path):
+                convert_mobile_scan_to_pdf(text_report_path, pdf_report_path)
+                print(f"INFO: Converted {text_report_path} to PDF at {pdf_report_path}")
+                return send_file(pdf_report_path, as_attachment=True)
+            else:
+                raise FileNotFoundError(f"Cannot generate PDF: Source text report not found: {text_report_path}")
 
         else:
-            return jsonify({"error": "Invalid report type. Use 'text' or 'pdf'."}), 400
+            return jsonify({"error": "Invalid report type requested. Use 'text', 'json', or 'pdf'."}), 400
 
-    except IndexError:
-        return jsonify({"error": "No mobile scan reports found."}), 404
+    except FileNotFoundError as e:
+        print(f"ERROR: Report file not found. {e}")
+        return jsonify({"error": f"Requested report file not found."}), 404
     except Exception as e:
         print(f"ERROR in download_mobile_report: {e}")
         return jsonify({"error": f"Failed to generate or send report: {e}"}), 500
