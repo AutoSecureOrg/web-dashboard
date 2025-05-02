@@ -43,43 +43,13 @@ if (networkScannerForm) {
 
 
     // Handle form submission
-    networkScannerForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (scanningIcon) scanningIcon.classList.remove('hidden'); // Show scanning icon
-        if (resultsContent) resultsContent.innerHTML = "<pre>Scanning...</pre>"; // Update pre element
-        if (toggleResults) toggleResults.classList.add('hidden'); // Hide toggle button
+    networkScannerForm.addEventListener('submit', (e) => {
+        console.log("Network Scanner form submitted. Allowing standard navigation..."); // Log: Entry
 
-        const formData = new FormData(networkScannerForm);
-        try {
-            const response = await fetch(networkScannerForm.action, {
-                method: networkScannerForm.method,
-                body: formData,
-            });
-
-            if (scanningIcon) scanningIcon.classList.add('hidden'); // Hide scanning icon
-
-            const data = await response.json(); // Try parsing JSON regardless of status
-
-            if (response.ok) {
-                 if (resultsContent) {
-                    resultsContent.innerHTML = `
-                        <pre>${data.output || 'No output received.'}</pre>
-                        ${data.pdf_link ? `<p><a href="${data.pdf_link}" target="_blank">Download PDF Report</a></p>` : ''}
-                        ${data.word_link ? `<p><a href="${data.word_link}" target="_blank">Download Word Report</a></p>` : ''}
-                    `;
-                 }
-                if (toggleResults) toggleResults.classList.remove('hidden'); // Show toggle button
-            } else {
-                if (resultsContent) {
-                    resultsContent.innerHTML = `
-                        <pre>Error: ${data.error || 'Unknown error occurred.'}</pre>
-                    `;
-                }
-            }
-        } catch (error) {
-            console.error("Fetch error:", error);
-            if (scanningIcon) scanningIcon.classList.add('hidden');
-            if (resultsContent) resultsContent.innerHTML = `<pre>An error occurred during scanning. Check console for details.</pre>`;
+        // Show scanning icon briefly before navigation
+        const scanningIcon = document.getElementById('scanning-icon');
+        if (scanningIcon) {
+            scanningIcon.classList.remove('hidden');
         }
     });
 
@@ -97,7 +67,6 @@ if (networkScannerForm) {
     }
 }
 
-// REMOVED duplicate function
 function redirectToTool(toolPage) {
     window.location.href = toolPage;
 }
@@ -361,15 +330,19 @@ document.addEventListener('DOMContentLoaded', () => {
             initGrainedTexture();
         }, 250);
     });
+
+    // Generic handler for buttons with data-url attribute
+    document.querySelectorAll('button[data-url]').forEach(button => {
+        console.log("Attaching redirect listener to button:", button);
+        const targetUrl = button.dataset.url;
+        if (targetUrl) {
+            button.addEventListener('click', () => {
+                console.log(`Button with data-url clicked. Redirecting to: ${targetUrl}`);
+                window.location.href = targetUrl;
+            });
+        } else {
+            console.warn("Button found with data-url attribute, but the attribute is empty:", button);
+        }
+    });
+
 });
-
-
-
-
-
-
-
-
-
-
-

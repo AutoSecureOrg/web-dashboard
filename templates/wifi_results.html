@@ -1,255 +1,241 @@
-{% extends 'base.html' %}
-{% block title %}Wi-Fi Scan Results{% endblock %}
-{% block content %}
-<!-- wifi_result.html -->
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wi-Fi Scan Results</title>
+    {# Common Head Elements #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tools.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    {# Favicons #}
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='assets/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='assets/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='assets/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='assets/site.webmanifest') }}">
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1e1e1e;
-            color: #fff;
-            margin: 0; padding: 0;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: auto;
-            padding: 40px 20px;
-        }
-
-        h1, h2, h3 {
-            color: #fff;
-        }
-
-        .section {
-            background: #2c2c2c;
-            border-radius: 12px;
-            padding: 20px 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-
-        button {
-            padding: 10px 20px;
-            background: #1b3958;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background-color: #4d545c;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
+        /* Minimal specific styles */
+        #loading {
+            color: var(--accent-color, orange);
+            font-weight: bold;
             margin-top: 15px;
         }
-
-        th, td {
-            border: 1px solid #555;
-            padding: 10px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #333;
-        }
-
-        pre {
-            background-color: #111;
-            color: #0f0;
-            padding: 15px;
-            border-radius: 10px;
-            overflow-x: auto;
-            max-height: 400px;
-        }
-
         #overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 0.85);
             color: #fff;
-            display: none;
+            display: none; /* Initially hidden */
             justify-content: center;
             align-items: center;
-            font-size: 20px;
+            font-size: 1.2rem;
             z-index: 1000;
+            backdrop-filter: blur(5px);
         }
-        /* ✅ Responsive Design */
-    @media (max-width: 768px) {
-        .container {
-            padding: 20px 15px;
+        .tool-container h2 {
+            color: var(--text-color, #fff);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color, #333);
+            font-size: clamp(1.5rem, 4vw, 2rem);
         }
-
-        h1 {
-            font-size: 24px;
+         .tool-container h3 {
+            color: var(--text-color, #fff);
+            margin-top: 20px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border-color-light, #444);
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
         }
-
-        h2 {
-            font-size: 20px;
-        }
-
-        h3 {
-            font-size: 18px;
-        }
-
-        button {
-            width: 100%;
-            font-size: 15px;
-        }
-
-        th, td {
-            font-size: 13px;
-            padding: 8px;
-        }
-
+         .tool-container h1 {
+             font-size: clamp(2rem, 5vw, 2.5rem);
+             text-align: center;
+             margin-bottom: 30px;
+             color: var(--text-color, #fff);
+             padding-bottom: 15px;
+             border-bottom: 1px solid var(--border-color, #333);
+         }
         pre {
-            font-size: 13px;
-        }
-    }
-
-    @media (max-width: 480px) {
-        h1 {
-            font-size: 20px;
-        }
-
-        h2 {
-            font-size: 18px;
-        }
-
-        h3 {
-            font-size: 16px;
+            /* Relying on tools.css, but might need tweaks */
+            background-color: rgba(0,0,0,0.5);
+            color: #f1f1f1;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color, #444);
+            overflow-x: auto;
+            max-height: 400px; /* Limit height */
+            font-family: Consolas, Monaco, monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
         }
 
-        .section {
-            padding: 16px 20px;
-        }
-
-        pre {
-            font-size: 12px;
-        }
-    } 
     </style>
 </head>
-<body onload="scanWifi()">
-    <div class="container">
-        <div class="container" style="padding-top: 100px;"></div>
-        <h1>🛡️ Wi-Fi Scan Results</h1>
+<body>
+    {% include '_top_bar.html' %}
 
-        <div class="section">
-            <h>📶 Available Wi-Fi Networks</h>
-            <div id="loading" style="color: orange;">⏳ Scanning...</div>
-            <div id="networkTable"></div>
+    <div class="container tool-container">
+        <h1><i class="fas fa-wifi" style="margin-right: 10px;"></i>Wi-Fi Scan Results</h1>
+
+        <div class="results-section"> {# Reuse class #}
+            <h2><i class="fas fa-broadcast-tower" style="margin-right: 8px;"></i>Available Wi-Fi Networks</h2>
+            <div id="loading">⏳ Scanning... Please Wait</div>
+            <div id="networkTable"><p>Waiting for scan results...</p></div>
         </div>
 
-        <div class="section">
-            <h>🚨 Rogue Access Point Detection</h>
-            <div id="rogueSummaryTable"></div>
-        </div>
-
-        <div class="section">
-            <h3>📜 Detailed Rogue Detection Report</h3>
-            <pre id="rogueDetailedLog"></pre>
+        <div class="results-section">
+            <h2><i class="fas fa-user-secret" style="margin-right: 8px;"></i>Rogue Access Point Detection</h2>
+            <div id="rogueSummaryTable"><p>Waiting for scan results...</p></div>
+            <h3><i class="fas fa-file-alt" style="margin-right: 8px;"></i>Detailed Rogue Detection Report</h3>
+            <pre id="rogueDetailedLog">Waiting for scan results...</pre>
         </div>
     </div>
 
     <div id="overlay">Analyzing Network... Please wait <span id="dot">.</span></div>
 
+    {# Scripts #}
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            scanWifi(); // Start scan on page load
+        });
+
         function scanWifi() {
-            document.getElementById('loading').style.display = 'block';
-            fetch('/wifi-scan', { method: 'POST' })
-                .then(res => res.json())
+            const loadingDiv = document.getElementById('loading');
+            const networkTableDiv = document.getElementById('networkTable');
+            const rogueSummaryDiv = document.getElementById('rogueSummaryTable');
+            const rogueLogPre = document.getElementById('rogueDetailedLog');
+
+            if(loadingDiv) loadingDiv.style.display = 'block';
+            if(networkTableDiv) networkTableDiv.innerHTML = '<p>Scanning...</p>'; // Clear previous/default content
+            if(rogueSummaryDiv) rogueSummaryDiv.innerHTML = '<p>Scanning...</p>';
+            if(rogueLogPre) rogueLogPre.textContent = 'Scanning...';
+
+            fetch("{{ url_for('wifi_scan') }}", { method: 'POST' })
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! Status: ${res.status}`);
+                    }
+                    return res.json();
+                })
                 .then(data => {
-                    renderNetworks(data.networks);
-                    renderRogue(data.rogue);
-                    document.getElementById('loading').style.display = 'none';
+                    if (loadingDiv) loadingDiv.style.display = 'none';
+                    renderNetworks(data.networks || []);
+                    renderRogue(data.rogue_report || { summary: [], detailed_log: "No rogue AP data found." }); // Adjusted structure based on potential Python output
+                })
+                .catch(error => {
+                    console.error('WiFi Scan Error:', error);
+                    if (loadingDiv) loadingDiv.textContent = '❌ Error during scan.';
+                     if(networkTableDiv) networkTableDiv.innerHTML = '<p class="error-message">Failed to load network data.</p>';
+                     if(rogueSummaryDiv) rogueSummaryDiv.innerHTML = '<p class="error-message">Failed to load rogue AP data.</p>';
+                     if(rogueLogPre) rogueLogPre.textContent = 'Error fetching rogue AP report.';
                 });
         }
 
         function renderNetworks(networks) {
-            let html = `<table>
-                <tr><th>SSID</th><th>BSSID</th><th>Signal</th><th>Encryption</th><th>Action</th></tr>`;
+            const container = document.getElementById('networkTable');
+            if (!container) return;
+            if (networks.length === 0) {
+                container.innerHTML = "<p>No Wi-Fi networks detected.</p>";
+                return;
+            }
+            // Use .results-table class from tools.css
+            let html = `<table class="results-table">
+                <thead><tr><th>SSID</th><th>BSSID</th><th>Signal</th><th>Encryption</th><th>Action</th></tr></thead><tbody>`;
             networks.forEach(net => {
                 html += `<tr>
-                    <td>${net['SSID']}</td>
-                    <td>${net['BSSID']}</td>
-                    <td>${net['Signal Strength']}</td>
-                    <td>${net['Encryption Type']}</td>
-                    <td><button onclick="analyzeNetwork('${net['SSID']}', '${net['BSSID']}')">Select</button></td>
+                    <td>${net['SSID'] || 'N/A'}</td>
+                    <td>${net['BSSID'] || 'N/A'}</td>
+                    <td>${net['Signal Strength'] || 'N/A'}</td>
+                    <td>${net['Encryption Type'] || 'Unknown'}</td>
+                    {# Use data-type button #}
+                    <td><button data-type="info" onclick="analyzeNetwork('${net['SSID']}', '${net['BSSID']}')">Analyze</button></td>
                 </tr>`;
             });
-            html += `</table>`;
-            document.getElementById('networkTable').innerHTML = html;
+            html += `</tbody></table>`;
+            container.innerHTML = html;
         }
 
-        function renderRogue(rogueData) {
-            if (!rogueData || rogueData.length === 0) {
-                document.getElementById('rogueSummaryTable').innerHTML = "<p>✅ No rogue access points detected.</p>";
-                document.getElementById('rogueDetailedLog').textContent = "";
+        function renderRogue(rogueReport) {
+            const summaryContainer = document.getElementById('rogueSummaryTable');
+            const logContainer = document.getElementById('rogueDetailedLog');
+            if (!summaryContainer || !logContainer) return;
+
+            const rogueSummary = rogueReport.summary || [];
+            const detailedLog = rogueReport.detailed_log || "No detailed logs available.";
+
+            if (rogueSummary.length === 0) {
+                summaryContainer.innerHTML = "<p>✅ No potential rogue access points detected.</p>";
+                logContainer.textContent = detailedLog; // Show empty or default message
                 return;
             }
 
-            let table = `<table>
-                <tr><th>SSID</th><th>Status</th><th>Severity</th><th>Indicators</th></tr>`;
-            rogueData.forEach(row => {
+            // Use .results-table class
+            let table = `<table class="results-table">
+                <thead><tr><th>SSID</th><th>Status</th><th>Severity</th><th>Indicators</th></tr></thead><tbody>`;
+            rogueSummary.forEach(row => {
                 table += `<tr>
-                    <td>${row.SSID}</td>
-                    <td>${row.Status}</td>
-                    <td>${row.Severity}</td>
-                    <td>${row['Rogue Indicators']}</td>
+                    <td>${row.SSID || 'N/A'}</td>
+                    <td>${row.Status || 'Unknown'}</td>
+                    <td>${row.Severity || 'Info'}</td>
+                    <td>${row['Rogue Indicators'] || 'None'}</td>
                 </tr>`;
             });
-            table += `</table>`;
-            document.getElementById('rogueSummaryTable').innerHTML = table;
-
-            let fullLogs = "";
-            rogueData.forEach(row => {
-                fullLogs += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-                fullLogs += `🔍 SSID: ${row.SSID}\n\n`;
-                row.BSSIDs.forEach(bssid => {
-                    fullLogs += `    ➤ BSSID: ${bssid}\n`;
-                });
-                fullLogs += `\nStatus: ${row.Status}\nSeverity: ${row.Severity}\nIndicators: ${row['Rogue Indicators']}\n`;
-                fullLogs += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-            });
-
-            document.getElementById('rogueDetailedLog').textContent = fullLogs;
+            table += `</tbody></table>`;
+            summaryContainer.innerHTML = table;
+            logContainer.textContent = detailedLog; // Display the detailed log text
         }
 
         function analyzeNetwork(ssid, bssid) {
-            document.getElementById('overlay').style.display = 'flex';
-            animateDots();
-            fetch('/wifi-analyze', {
+            const overlay = document.getElementById('overlay');
+            if(overlay) overlay.style.display = 'flex';
+            animateDots(); // Start dot animation
+
+            fetch("{{ url_for('wifi_analyze') }}", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ssid: ssid, bssid: bssid })
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) {
+                     throw new Error(`HTTP error! Status: ${res.status}`);
+                }
+                return res.json();
+            })
             .then(data => {
+                // Store the received data in localStorage
                 localStorage.setItem('analyze_data', JSON.stringify(data));
-                window.location.href = '/wifi-analyze-page';
+                // Redirect to the analysis page
+                window.location.href = "{{ url_for('wifi_analyze_page') }}";
+            })
+            .catch(error => {
+                 console.error('Analyze Network Error:', error);
+                 if(overlay) overlay.innerHTML = `❌ Error starting analysis: ${error.message}. <button onclick="this.parentElement.style.display='none'">Close</button>`;
+                 // Stop animation or hide overlay after a delay?
             });
         }
 
+        let dotInterval = null;
         function animateDots() {
             let dotElem = document.getElementById('dot');
+            if (!dotElem) return;
             let count = 0;
-            setInterval(() => {
+            // Clear any existing interval before starting a new one
+            if (dotInterval) clearInterval(dotInterval);
+            dotInterval = setInterval(() => {
                 count = (count + 1) % 4;
                 dotElem.textContent = '.'.repeat(count);
             }, 500);
         }
+
+        // Ensure dots stop animating if the overlay is hidden or encounters an error
+        // (Could add this logic within the fetch catch or if overlay is manually closed)
+
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+
 </body>
 </html>
-
-{% endblock %}

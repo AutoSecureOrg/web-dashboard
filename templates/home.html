@@ -25,7 +25,9 @@
 
     <div class="top-bar">
         <div class="logo">
-            <img src="{{ url_for('static', filename='assets/autosecure-logo-white.png') }}" alt="AutoSecure Logo">
+            <a href="{{ url_for('home') }}">
+                <img src="{{ url_for('static', filename='assets/autosecure-logo-white.png') }}" alt="AutoSecure Logo">
+            </a>
         </div>
         <div class="top-title" id="title-trigger">AutoSecure
             <div class="info-card">

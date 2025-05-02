@@ -1,207 +1,38 @@
-{% extends 'base.html' %}
-
-{% block title %}Website Vulnerability Scanner{% endblock %}
-
-{% block content %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Network Security & Wireless Threat Analyzer</title>
-
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tools.css') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='assets/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='assets/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='assets/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='assets/site.webmanifest') }}">
 </head>
 <body>
-    <div class="container">
+    {% include '_top_bar.html' %}
+
+    <div class="container tool-container">
         <header>
             <div class="header-text">
-                <h2>Network Security & Wireless Threat Analyze </h2>
-                <p style="line-height: 1.8; font-size: 15px; color: #c8c8d4;">
-                    This advanced toolkit performs comprehensive Wi-Fi and network vulnerability assessments. It scans nearby Wi-Fi networks for 
-                    <span style="color:#ffd369;"><strong>weak encryption</strong></span> (WEP/Open/WPA1), 
-                    <span style="color:#ffd369;"><strong>default SSIDs</strong></span>, and detects 
-                    <span style="color:#ff6b6b;"><strong>rogue access points</strong></span> using signal anomalies and mixed encryption patterns.
-                </p>
-                <p style="line-height: 1.8; font-size: 15px; color: #c8c8d4;">
-                    Devices connected to the local subnet are fingerprinted with 
-                    <span style="color:#29d2e4;"><strong>smart OS detection</strong></span>, 
-                    <span style="color:#29d2e4;"><strong>open port scanning</strong></span>, 
-                    <span style="color:#29d2e4;"><strong>vendor identification</strong></span>, and 
-                    <span style="color:#29d2e4;"><strong>real-time app usage inference</strong></span>. The analyzer flags potentially vulnerable endpoints and builds a detailed device activity map.
-                </p>
-                <p style="line-height: 1.8; font-size: 15px; color: #c8c8d4;">
-                    It simulates Layer 2 compromise with an 
-                    <span style="color:#ff9f43;"><strong>ARP Replay Flood</strong></span> to expose endpoints susceptible to spoofing, impersonation, and traffic redirection attacks. 
-                    Additionally, the integrated 
-                    <span style="color:#ff9f43;"><strong>Man-in-the-Middle (MITM) sniffing module</strong></span> captures HTTP credentials and visited domains to highlight real-time risks — all without requiring monitor mode.
-                </p>
-                
+                <h2>Network Security & Wireless Threat Analyzer</h2>
             </div>
             <img class="header-image" src="{{ url_for('static', filename='images/vulnerability-assessment.png') }}" alt="Authenticated Scanning">
         </header>
 
         <div class="input-card">
                 <h3>🛡️ Wi-Fi Security Scanner</h3>
-                <button onclick="location.href='/wifi_results.html'"><h1> Scan</h1></button>
+                <button id="start-wifi-scan-btn" data-url="{{ url_for('wifi_scan') }}" class="scan-button">Start Scan</button>
             </div>
         </div>
-        <section class="web-vulnerability-section">
-            <div class="vulnerability-content">
-              <h2>Find exploitable web vulnerabilities with documented evidence</h2>
-              <p>
-                Our proprietary Website Vulnerability Scanner gives security pros and appsec teams what they need:
-                highly <span class="highlight">accurate, validated findings</span> and actionable evidence - not just a long list of possible exposure points.
-              </p>
-              <p>
-                Unlike generic scanners that flag potential issues without context, our tool uses <span class="highlight">out-of-band detection</span> to minimize false positives and ensure reliable results, collecting proof along the way.
-              </p>
-              <p>
-                Perform unauthenticated recon, deep authenticated testing, or automated compliance scans - all with a powerful, easy-to-use tool that blends into your workflow.
-              </p>
-            </div>
-            <div class="vulnerability-image">
-              <img src="{{ url_for('static', filename='images/web4.png') }}" alt="Website Vulnerability Scanner Report" />
-            </div>
-          </section>
-<div class="horizontal-section">
-    <div class="horizontal-icon">
-        <img src="{{ url_for('static', filename='images/web5.png') }}" alt="Web Security Illustration">
-    </div>
-    <div class="vertical-divider"></div>
-    <div class="horizontal-content">
-        <h2>Why Use AutoSecure's for Web Vulnerability Testing?</h2>
-        <p>
-            AutoSecure's Web Vulnerability Testing provides a robust, accurate, and automated solution for securing your web applications.
-            It simplifies vulnerability detection with comprehensive scanning and actionable insights, empowering your team to fortify web security effectively.
-        </p>
-    </div>
 </div>
 
-<div class="horizontal-section reverse">
-    <div class="horizontal-icon">
-        <img src="{{ url_for('static', filename='images/security-testing.png') }}" alt="Comprehensive Technology Illustration">
-    </div>
-    <div class="vertical-divider"></div>
-    <div class="horizontal-content">
-        <h2>Comprehensive Vulnerability Detection</h2>
-        <p>
-            AutoSecure scans your web applications to detect a wide range of vulnerabilities, including SQL Injection, Cross-Site Scripting (XSS),
-            Command Injection, HTML Injection, and more. Our tool ensures that no critical gap in security goes unnoticed.
-        </p>
-    </div>
-</div>
-
-<div class="horizontal-section">
-    <div class="horizontal-icon">
-        <img src="{{ url_for('static', filename='images/web-security.png') }}" alt="Evidence Illustration">
-    </div>
-    <div class="vertical-divider"></div>
-    <div class="horizontal-content">
-        <h2>Findings Confirmed by Solid Evidence</h2>
-        <p>
-            Unlike generic scanners, AutoSecure uses advanced detection techniques to minimize false positives and provide reliable results.
-            Each finding is validated and accompanied by actionable evidence, such as proof-of-concept exploits and risk-level scores.
-        </p>
-    </div>
-</div>
-
-<div class="horizontal-section reverse">
-    <div class="horizontal-icon">
-        <img src="{{ url_for('static', filename='images/bug.png') }}" alt="Validated Findings Illustration">
-    </div>
-    <div class="vertical-divider"></div>
-    <div class="horizontal-content">
-        <h2>Automatically Validated Findings</h2>
-        <p>
-            AutoSecure incorporates an automated validation system to ensure accuracy. It dynamically interprets scan results, configures exploit
-            parameters, and confirms vulnerabilities by analyzing real-time responses. Each validated issue is tagged as "Confirmed" with detailed insights.
-        </p>
-    </div>
-</div>
-
-<div class="horizontal-section">
-    <div class="horizontal-icon">
-        <img src="{{ url_for('static', filename='images/reseach.png') }}" alt="Reports Illustration">
-    </div>
-    <div class="vertical-divider"></div>
-    <div class="horizontal-content">
-        <h2>Comprehensive Reports</h2>
-        <p>
-            The tool generates detailed reports that summarize vulnerabilities, exploit attempts, and remediation suggestions. These professional
-            reports make it easier for security teams to communicate risks effectively and prioritize actions.
-        </p>
-    </div>
-</div>
-
-<div class="easy-scan-section">
-    <div class="scan-container">
-        <div class="scan-text">
-            <h2>How Does the Web Vulnerability Testing Work?</h2>
-        </div>
-        <div class="scan-features">
-            <div class="feature">
-                <div class="feature-text">
-                    <h3>Set Up the Raspberry Pi</h3>
-                    <p>
-                        Power on your Raspberry Pi, connect it to your network, and access it remotely via SSH or VNC. The lightweight and portable setup ensures that
-                        you can initiate web vulnerability testing from any location with ease.
-                    </p>
-                </div>
-                <div class="feature-icon">
-                    <img src="{{ url_for('static', filename='images/raspberry.png') }}" alt="Raspberry Pi Setup">
-                </div>
-            </div>
-            <div class="feature">
-                <div class="feature-text">
-                    <h3>Scan for Vulnerabilities</h3>
-                    <p>
-                        Enter the target web application's URL to start the scan. AutoSecure maps the application, identifies endpoints, and uses advanced techniques to detect vulnerabilities like SQL Injection, XSS, Command Injection, and more.
-                    </p>
-                </div>
-                <div class="feature-icon">
-                    <img src="{{ url_for('static', filename='images/vulnerability-assessment.png') }}" alt="Scan for Vulnerabilities">
-                </div>
-            </div>
-            <div class="feature">
-                <div class="feature-text">
-                    <h3>Validate Exploits</h3>
-                    <p>
-                        Leverage the Metasploit framework integrated into AutoSecure to validate detected vulnerabilities. It dynamically executes payloads and confirms exploits, providing proof-of-concept evidence.
-                    </p>
-                </div>
-                <div class="feature-icon">
-                    <img src="{{ url_for('static', filename='images/exploit1.png') }}" alt="Validate Exploits">
-                </div>
-            </div>
-            <div class="feature">
-                <div class="feature-text">
-                    <h3>Mobile-Friendly Dashboard</h3>
-                    <p>
-                        Monitor and control all scanning activities via the AutoSecure dashboard, accessible on any device. Whether using a PC, tablet, or smartphone, you can start scans, view results, and download reports on the go.
-                    </p>
-                </div>
-                <div class="feature-icon">
-                    <img src="{{ url_for('static', filename='images/mobile.png') }}" alt="Mobile-Friendly Dashboard">
-                </div>
-            </div>
-            <div class="feature">
-                <div class="feature-text">
-                    <h3>Generate Reports</h3>
-                    <p>
-                        Automatically generate detailed reports, including vulnerabilities, validated exploits, and remediation steps. The professional-grade reports integrate seamlessly into your security workflow, ensuring effective risk management.
-                    </p>
-                </div>
-                <div class="feature-icon">
-                    <img src="{{ url_for('static', filename='images/document.png') }}" alt="Generate Reports">
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </body>
 </html>
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
-{% include 'footer.html' %}
-
-{% endblock %}

@@ -4,75 +4,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Results</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+    <title>Scan Results</title>
+    {# Common Head Elements #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tools.css') }}">
+    {# Favicons #}
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='assets/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='assets/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='assets/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='assets/site.webmanifest') }}">
+
+    {# Custom styles for results page #}
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        .tool-container h1 {
+            color: var(--text-color, #fff);
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+
+        .results-section {
+            background-color: rgba(17, 17, 17, 0.8);
+            padding: 20px 25px;
+            border: 1px solid var(--border-color, #333);
+            border-radius: 10px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .results-section h3 {
+            color: var(--accent-color, #00ffff);
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            font-weight: 600;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color, #333);
+            padding-bottom: 10px;
+        }
+
+        table.results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            color: var(--text-color, #fff);
+        }
+
+        .results-table th,
+        .results-table td {
+            border: 1px solid var(--border-color, #444);
+            padding: 8px 10px;
+            text-align: left;
+            vertical-align: top; /* Align content top */
+            font-size: 0.9rem;
+        }
+
+        .results-table th {
+            background-color: rgba(0, 0, 0, 0.3);
+            font-weight: 600;
+            white-space: nowrap; /* Prevent header text wrapping */
+        }
+
+        .results-table td pre {
             margin: 0;
             padding: 0;
-            background-color: #0c1b37;
-            color: #f0f0f0;
+            background: none;
+            border: none;
+            white-space: pre-wrap; /* Wrap long text/output */
+            word-break: break-all; /* Break long words */
+            font-size: 0.85rem;
+            color: inherit;
         }
 
-        tbody {
-            color: #f0f0f0;
+        /* AI Insight Specific */
+        .results-table button.ai-button {
+             /* Use default button styles + modifications */
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            background-color: #007bff; /* info blue */
+            color: #fff;
+            width: auto; /* Override form button width */
+            margin: 0;
+        }
+        .results-table button.ai-button:hover {
+            background-color: #0056b3;
         }
 
-        th {
-            font-weight: bold;
-            color: #f0f0f0;
+        tr.ai-row td {
+            padding: 0; /* Remove padding for the full-width box */
+            border: none; /* Maybe remove border or just top? */
+            border-top: 1px solid var(--border-color, #444);
+        }
+        .ai-response-box {
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            font-size: 0.85rem;
+        }
+        .ai-response-box strong {
+             color: var(--accent-color, #00ffff);
+             display: block;
+             margin-bottom: 5px;
+        }
+        .ai-response-box .spinner {
+            /* Use spinner from tools.css, maybe smaller */
+            width: 16px;
+            height: 16px;
+            border-width: 2px;
+            display: inline-block; /* Align with text */
+            vertical-align: middle;
+            margin: 0 8px 0 0;
+        }
+        .ai-text {
+             white-space: pre-wrap;
+             display: block; /* Ensures pre-wrap works */
+             margin-top: 5px;
+             font-family: Consolas, Monaco, monospace;
+             line-height: 1.6;
         }
 
-        .pdf-button {
-            background-color: red;
-            color: #f0f0f0 !important;
-        }
-
-        .pdf-button:hover {
-            background-color: #f0f0f0;
-            color: red;
-        }
-
-        .home-button {
-            background-color: #f0f0f0;
-            color: #0c1b37;
-        }
-
-        .home-button:hover {
-            border: #f0f0f0;
-        }
-
-        .ip-section {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #12264d;
-            border-radius: 8px;
-        }
-
-        .ip-title {
-            font-weight: bold;
-            font-size: 18px;
-            margin-bottom: 10px;
+        /* Buttons at bottom */
+        .action-buttons {
             text-align: center;
+            margin-top: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
         }
+        .action-buttons a {
+             text-decoration: none;
+        }
+
+        /* Alert styles from tools.css */
     </style>
 </head>
 
 <body>
-    <div class="container mt-5">
-        <h1 class="text-center">Scan and Exploit Results</h1>
+    {% include '_top_bar.html' %}
 
-        {% for ip, scan_results in nmap_results.items() %}
-        <div class="ip-section">
-            <h3 class="ip-title">Scan Results for IP: {{ ip }}</h3>
-            <table class="table table-bordered">
+    <div class="container tool-container">
+        <h1>Scan Results</h1>
+
+        {# Metasploit/Nmap Scan Results #}
+        {% if nmap_results or exploitation_results or metasploit_error %}
+        <div class="results-section">
+            <h3>System Scan & Exploitation</h3>
+            {% if metasploit_error %}
+                 <div class="alert error">
+                    <strong>Metasploit Error:</strong> {{ metasploit_error }}
+                </div>
+            {% endif %}
+
+            {% for ip, scan_results in nmap_results.items() %}
+            <h4>Scan Results for IP: {{ ip }}</h4>
+            <table class="results-table">
                 <thead>
                     <tr>
                         <th>Port</th>
                         <th>Service</th>
                         <th>Version</th>
-                        <th>Vulnerability</th>
+                        <th>Vulnerability Info (NVD)</th>
                         <th>AI Insight</th>
                     </tr>
                 </thead>
@@ -82,70 +177,79 @@
                         <td>{{ result.port }}</td>
                         <td>{{ result.service }}</td>
                         <td>{{ result.version }}</td>
-                        <td style="white-space: pre-wrap;">{{ result.vuln }}</td>
+                        <td><pre>{{ result.vuln }}</pre></td>
                         <td>
-                            <button class="btn btn-sm btn-info"
-                                onclick="getAiInsightSystem(this, '{{ result.service }}', '{{ result.version }}', `{{ result.vuln|escape }}`)">
+                            <button class="ai-button ai-insight-btn-system"
+                                data-service="{{ result.service }}"
+                                data-version="{{ result.version }}"
+                                data-vuln="{{ result.vuln }}">
                                 Fix With AI
                             </button>
                         </td>
                     </tr>
                     <tr class="ai-row" style="display: none;">
                         <td colspan="5">
-                        <div class="ai-response-box p-2 bg-dark rounded">
-                            <strong>AI Insight:</strong>
-                            <div class="spinner-border spinner-border-sm text-light me-2" role="status"></div>
-                            <span class="ai-text">Thinking...</span>
-                        </div>
+                            <div class="ai-response-box">
+                                <strong>AI Insight:</strong>
+                                <div class="spinner" role="status"></div> {# Spinner from tools.css #}
+                                <span class="ai-text">Thinking...</span>
+                            </div>
                         </td>
                     </tr>
+                    {% else %}
+                     <tr><td colspan="5">No Nmap scan results found for this IP.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
-        {% endfor %}
 
-        {% if exploitation_results %}
-        {% for ip, exploit_results in exploitation_results.items() %}
-        <div class="ip-section">
-            <h3 class="ip-title">Exploitation Results for IP: {{ ip }}</h3>
-            <table class="table table-bordered">
+            {% if exploitation_results and ip in exploitation_results %}
+            <h4 style="margin-top: 20px;">Exploitation Results for IP: {{ ip }}</h4>
+            <table class="results-table">
                 <thead>
                     <tr>
                         <th>Service</th>
                         <th>Port</th>
-                        <th>Exploit</th>
+                        <th>Exploit Tried</th>
                         <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for result in exploit_results %}
+                    {% for result in exploitation_results[ip] %}
                     <tr>
                         <td>{{ result.service }}</td>
                         <td>{{ result.port }}</td>
                         <td>{{ result.exploit }}</td>
                         <td>{{ result.status }}</td>
                     </tr>
+                     {% else %}
+                     <tr><td colspan="4">No exploitation attempts recorded for this IP.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
+            {% endif %}
+            {% endfor %}
         </div>
-        {% endfor %}
         {% endif %}
+        {# --- End Nmap/Metasploit --- #}
+
 
         {# --- Custom Exploit Results Section --- #}
         {% if custom_exploit_results %}
-        <div class="ip-section">
-            <h3 class="ip-title">Custom Exploit Results</h3>
-            <p><strong>Script:</strong> <code>{{ custom_exploit_results.get('script_path', 'N/A') }}</code></p>
-            {% if custom_exploit_results.get('error') %}
-            <div class="alert alert-warning" role="alert">
-                <strong>Note:</strong> {{ custom_exploit_results.get('error') }}
+        <div class="results-section">
+            <h3>Custom Exploit Results</h3>
+             <p style="font-size: 0.9rem; color: var(--secondary-text, #a0a0a0);"><strong>Script:</strong> <code>{{ custom_exploit_results.get('script_path', 'N/A') }}</code></p>
+            {% if custom_exploit_error %}
+            <div class="alert error">
+                <strong>Custom Exploit Error:</strong> {{ custom_exploit_error }}
             </div>
+            {% elif custom_exploit_results.get('error') %}
+             <div class="alert warning">
+                 <strong>Note:</strong> {{ custom_exploit_results.get('error') }}
+             </div>
             {% endif %}
 
             {% if custom_exploit_results.get('targets') %}
-            <table class="table table-bordered">
+            <table class="results-table">
                 <thead>
                     <tr>
                         <th>Target IP</th>
@@ -165,26 +269,30 @@
                     {% endfor %}
                 </tbody>
             </table>
-            {% else %}
+            {% elif not custom_exploit_error and not custom_exploit_results.get('error') %}
             <p>No targets were processed by the custom exploit.</p>
             {% endif %}
         </div>
         {% endif %}
         {# --- End Custom Exploit Results Section --- #}
 
-        <div class="text-center mt-5">
-            <a href="{{ url_for('home') }}" class="btn home-button">Return to Home</a>
-            {# Only show report download if metasploit results exist #}
-            {% if exploitation_results %}
-            <a href="{{ url_for('download_report', report_type='text') }}" class="btn btn-primary">Download Metasploit Text Report</a>
-            <a href="{{ url_for('download_report', report_type='pdf') }}" class="btn pdf-button">Download Metasploit PDF Report</a>
+        {# Action Buttons #}
+        <div class="action-buttons">
+             <a href="{{ url_for('home') }}"><button type="button" data-type="secondary">Return to Home</button></a>
+            {# Only show report download if metasploit results exist to download #}
+            {% if exploitation_results or nmap_results %}
+                <a href="{{ url_for('download_report', report_type='text') }}"><button type="button" data-type="info">Download Text Report</button></a>
+                <a href="{{ url_for('download_report', report_type='pdf') }}"><button type="button" data-type="danger">Download PDF Report</button></a>
+            {% else %}
+                 <p style="color: var(--secondary-text, #a0a0a0); width: 100%;">No Metasploit/Nmap results available to generate a report.</p>
             {% endif %}
         </div>
 
-        <br />
     </div>
+
+    {# Scripts #}
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ai-insight.js') }}"></script>
 </body>
 
 </html>
-
-<script src="{{ url_for('static', filename='js/ai-insight.js') }}"></script>
