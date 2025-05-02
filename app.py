@@ -447,6 +447,80 @@ class PDF(FPDF):
         self.cell(col_widths[1], 6, col2, border=1, fill=True)
         self.multi_cell(col_widths[2], 6, col3, border=1, fill=True)
 
+    def add_quark_table_row(self, cols, col_widths, row_fill):
+        """Helper function to format quark table rows."""
+        self.set_fill_color(230, 230, 230) if row_fill else self.set_fill_color(255, 255, 255)
+        self.set_text_color(0, 0, 0) # Ensure text remains black
+        # Use multi_cell for potentially long crime descriptions
+        current_y = self.get_y()
+        current_x = self.get_x()
+
+        # Calculate height needed for each cell without drawing yet (fpdf doesn't have dry_run)
+        # Instead, draw and calculate height, then reposition for next cell
+
+        self.multi_cell(col_widths[0], 5, cols[0], border=1, fill=True) # Rule ID
+        col1_height = self.get_y() - current_y
+        self.set_xy(current_x + col_widths[0], current_y) # Reset position for next cell
+
+        self.multi_cell(col_widths[1], 5, cols[1], border=1, fill=True) # Crime
+        col2_height = self.get_y() - current_y
+        self.set_xy(current_x + col_widths[0] + col_widths[1], current_y)
+
+        self.multi_cell(col_widths[2], 5, cols[2], border=1, fill=True) # Confidence
+        col3_height = self.get_y() - current_y
+        self.set_xy(current_x + col_widths[0] + col_widths[1] + col_widths[2], current_y)
+
+        self.multi_cell(col_widths[3], 5, cols[3], border=1, fill=True) # Score
+        col4_height = self.get_y() - current_y
+        self.set_xy(current_x + col_widths[0] + col_widths[1] + col_widths[2] + col_widths[3], current_y)
+
+        self.multi_cell(col_widths[4], 5, cols[4], border=1, fill=True) # Labels
+        col5_height = self.get_y() - current_y
+
+        # Move down by the maximum height used by any cell in this row
+        max_height = max(col1_height, col2_height, col3_height, col4_height, col5_height)
+        self.set_xy(current_x, current_y + max_height) # Set position for the start of the next row
+
+
+def format_quark_report_text(quark_data):
+    """Formats parsed Quark JSON data into a structured text report."""
+    lines = []
+    lines.append("=======================================")
+    lines.append("      Quark Engine Scan Report         ")
+    lines.append("=======================================")
+    lines.append(f"APK Filename: {quark_data.get('apk_filename', 'N/A')}")
+    lines.append(f"MD5 Hash:     {quark_data.get('md5', 'N/A')}")
+    lines.append(f"Size (Bytes): {quark_data.get('size_bytes', 'N/A')}")
+    lines.append(f"Threat Level: {quark_data.get('threat_level', 'N/A')}")
+    lines.append(f"Total Score:  {quark_data.get('total_score', 'N/A')}")
+    lines.append("\n")
+    lines.append("Detected Findings (Crimes):")
+    lines.append("---------------------------")
+
+    if not quark_data.get('crimes'):
+        lines.append("No specific findings reported.")
+        return "\n".join(lines)
+
+    # Basic text table formatting
+    lines.append("{:<12} {:<12} {:<8} {:<60} {:<30}".format(
+        "Rule ID", "Confidence", "Score", "Crime Description", "Labels"
+    ))
+    lines.append("{:<12} {:<12} {:<8} {:<60} {:<30}".format(
+        "---------", "----------", "-----", "-----------------", "------"
+    ))
+
+    for crime in quark_data.get('crimes', []):
+        rule_id = crime.get('rule', 'N/A').replace('.json', '')
+        confidence = crime.get('confidence', 'N/A')
+        score = str(crime.get('score', 'N/A'))
+        description = crime.get('crime', 'N/A')
+        labels = ", ".join(crime.get('label', []))
+        lines.append("{:<12} {:<12} {:<8} {:<60} {:<30}".format(
+            rule_id, confidence, score, description[:58] + (".." if len(description) > 58 else ""), labels[:28] + (".." if len(labels) > 28 else "")
+        ))
+
+    return "\n".join(lines)
+
 
 def convert_text_to_pdf(text_file, pdf_file):
     """Convert structured ASCII vulnerability scan report into a well-formatted PDF."""
@@ -500,6 +574,92 @@ def convert_text_to_pdf(text_file, pdf_file):
 
     except Exception as e:
         print(f"❌ Error: {e}")
+        raise # Re-raise exception
+
+
+def convert_quark_report_to_pdf(json_file, pdf_file):
+    """Converts a Quark Engine JSON report into a formatted PDF with tables."""
+    try:
+        with open(json_file, 'r', encoding='utf-8') as f:
+            quark_data = json.load(f)
+
+        pdf = PDF()
+        pdf.set_auto_page_break(auto=True, margin=15)
+        pdf.set_margins(10, 10, 10)
+        pdf.add_page()
+
+        # Title and General Info
+        pdf.set_font("Courier", "B", 12)
+        pdf.cell(0, 10, "Quark Engine Scan Report", ln=True, align="C")
+        pdf.set_font("Courier", size=8)
+        pdf.cell(0, 5, f"APK Filename: {quark_data.get('apk_filename', 'N/A')}", ln=True)
+        pdf.cell(0, 5, f"MD5 Hash:     {quark_data.get('md5', 'N/A')}", ln=True)
+        pdf.cell(0, 5, f"Size (Bytes): {quark_data.get('size_bytes', 'N/A')}", ln=True)
+        pdf.cell(0, 5, f"Threat Level: {quark_data.get('threat_level', 'N/A')}", ln=True)
+        pdf.cell(0, 5, f"Total Score:  {quark_data.get('total_score', 'N/A')}", ln=True)
+        pdf.ln(8)
+
+        # Findings Table
+        pdf.set_font("Courier", "B", 9)
+        pdf.cell(0, 6, "Detected Findings (Crimes):", ln=True)
+        pdf.set_font("Courier", size=7)
+
+        if not quark_data.get('crimes'):
+            pdf.cell(0, 5, "No specific findings reported.", ln=True)
+            pdf.output(pdf_file)
+            print(f"✅ Quark PDF report created (no findings): {pdf_file}")
+            return
+
+        page_width = pdf.w - 2 * pdf.l_margin
+        # Rule ID, Crime Description, Confidence, Score, Labels
+        col_widths = [page_width * 0.10, page_width * 0.45, page_width * 0.12, page_width * 0.08, page_width * 0.25]
+
+        # Table Header
+        pdf.set_font("Courier", "B", 7)
+        pdf.set_fill_color(200, 200, 200)
+        pdf.set_text_color(0, 0, 0)
+        pdf.cell(col_widths[0], 6, "Rule ID", border=1, fill=True)
+        pdf.cell(col_widths[1], 6, "Crime Description", border=1, fill=True)
+        pdf.cell(col_widths[2], 6, "Confidence", border=1, fill=True)
+        pdf.cell(col_widths[3], 6, "Score", border=1, fill=True)
+        pdf.cell(col_widths[4], 6, "Labels", border=1, fill=True, ln=True)
+
+        # Table Rows
+        pdf.set_font("Courier", size=6) # Smaller font for rows
+        row_fill = False
+        for crime in quark_data.get('crimes', []):
+            if pdf.get_y() + 10 > pdf.h - pdf.b_margin: # Estimate space needed, add page if low
+                pdf.add_page()
+                # Re-add header on new page
+                pdf.set_font("Courier", "B", 7)
+                pdf.set_fill_color(200, 200, 200)
+                pdf.cell(col_widths[0], 6, "Rule ID", border=1, fill=True)
+                pdf.cell(col_widths[1], 6, "Crime Description", border=1, fill=True)
+                pdf.cell(col_widths[2], 6, "Confidence", border=1, fill=True)
+                pdf.cell(col_widths[3], 6, "Score", border=1, fill=True)
+                pdf.cell(col_widths[4], 6, "Labels", border=1, fill=True, ln=True)
+                pdf.set_font("Courier", size=6)
+                row_fill = False # Reset row fill on new page if needed
+
+            rule_id = crime.get('rule', 'N/A').replace('.json', '')
+            description = crime.get('crime', 'N/A')
+            confidence = crime.get('confidence', 'N/A')
+            score = str(crime.get('score', 'N/A'))
+            labels = ", ".join(crime.get('label', []))
+
+            cols_data = [rule_id, description, confidence, score, labels]
+            pdf.add_quark_table_row(cols_data, col_widths, row_fill)
+            row_fill = not row_fill
+
+        pdf.output(pdf_file)
+        print(f"✅ Quark PDF report successfully created: {pdf_file}")
+
+    except json.JSONDecodeError as e:
+        print(f"❌ Error decoding Quark JSON file {json_file}: {e}")
+        raise # Re-raise exception
+    except Exception as e:
+        print(f"❌ Error creating Quark PDF report: {e}")
+        raise # Re-raise exception
 
 
 @app.route('/download-web-report/<report_type>')
@@ -922,41 +1082,58 @@ def mobile_scan():
                     # --- Process Quark Results ---
                     if os.path.exists(quark_json_output_path):
                         print(f"INFO: Quark JSON report found at {quark_json_output_path}")
-                        # Read JSON content for display in HTML and for the text report
-                        with open(quark_json_output_path, 'r', encoding='utf-8') as f_json:
-                           output_data = f_json.read() # Display raw JSON
-
-                        # Save a text report containing the JSON data
+                        raw_json_data = ""
+                        parsed_quark_data = None
                         try:
-                            timestamp = datetime.now().strftime("%d_%m_%y-%H_%M")
-                            # Use a consistent prefix for easier finding later
-                            report_filename_base = f"apk_scan_{timestamp}"
-                            text_report_filename = f"{report_filename_base}.txt"
-                            json_report_filename_for_download = f"{report_filename_base}.json" # For direct JSON download link
-
-                            report_filepath = os.path.join(REPORTS_DIR, text_report_filename)
-
-                            # Copy the generated JSON to the reports dir for direct download
-                            json_download_path = os.path.join(REPORTS_DIR, json_report_filename_for_download)
-                            shutil.copy2(quark_json_output_path, json_download_path)
-                            print(f"INFO: Copied Quark JSON report to {json_download_path} for download.")
-
-                            # Write the text report (including JSON content)
-                            with open(report_filepath, "w", encoding="utf-8") as f_txt:
-                                f_txt.write(f"APK Scan Report (Quark Engine) for: {apk_filename}\\n")
-                                f_txt.write(f"Generated: {timestamp}\\n")
-                                f_txt.write(f"Raw JSON report also available.\\n\\n")
-                                f_txt.write("--- JSON Report Content ---\\n")
-                                f_txt.write(output_data)
-                            print(f"INFO: APK scan text report saved to {report_filepath}")
-                            # Store the base name for download links
-                            scan_results['report_filename_base'] = report_filename_base
-
+                            # Read JSON content for parsing and display in HTML
+                            with open(quark_json_output_path, 'r', encoding='utf-8') as f_json:
+                               raw_json_data = f_json.read()
+                               # Rewind or reopen not strictly necessary if only reading once
+                               # but good practice if file might be used again
+                               f_json.seek(0)
+                               parsed_quark_data = json.load(f_json)
+                            output_data = raw_json_data # Display raw JSON in HTML <pre> tag
+                        except json.JSONDecodeError as e:
+                            error_message = f"Error parsing generated Quark report: {e}"
+                            print(f"ERROR: {error_message}")
+                            output_data = raw_json_data # Show raw data even if parsing failed
+                            parsed_quark_data = None # Ensure it's None
                         except Exception as e:
-                            print(f"ERROR: Failed to save APK scan text report or copy JSON: {e}")
-                            error_message = error_message or "Failed to save report files."
-                            report_filename_base = None # Clear base name if saving failed
-                            scan_results.pop('report_filename_base', None)
+                             error_message = f"Error reading Quark report file: {e}"
+                             print(f"ERROR: {error_message}")
+                             output_data = f"Error reading report: {e}"
+                             parsed_quark_data = None
+
+                        # If JSON parsing was successful, format and save text/PDF reports
+                        if parsed_quark_data:
+                            try:
+                                timestamp = datetime.now().strftime("%d_%m_%y-%H_%M")
+                                report_filename_base = f"apk_scan_{timestamp}"
+                                text_report_filename = f"{report_filename_base}.txt"
+                                json_report_filename_for_download = f"{report_filename_base}.json"
+
+                                text_report_path = os.path.join(REPORTS_DIR, text_report_filename)
+                                json_download_path = os.path.join(REPORTS_DIR, json_report_filename_for_download)
+
+                                # Format the text report using the helper function
+                                formatted_text_report = format_quark_report_text(parsed_quark_data)
+
+                                # Write the FORMATTED text report
+                                with open(text_report_path, "w", encoding="utf-8") as f_txt:
+                                    f_txt.write(formatted_text_report)
+                                print(f"INFO: APK scan formatted text report saved to {text_report_path}")
+
+                                # Copy the original JSON to the reports dir for direct download
+                                shutil.copy2(quark_json_output_path, json_download_path)
+                                print(f"INFO: Copied Quark JSON report to {json_download_path} for download.")
+
+                                # Store the base name for download links
+                                scan_results['report_filename_base'] = report_filename_base
+
+                            except Exception as e:
+                                print(f"ERROR: Failed to save formatted text report or copy JSON: {e}")
+                                error_message = error_message or "Failed to save report files."
+                                scan_results.pop('report_filename_base', None)
 
                     else:
                         # JSON file was NOT created
@@ -1088,13 +1265,29 @@ def download_mobile_report(report_type):
                 return jsonify({"error": "JSON report format not available for this scan or it failed to generate."}), 404
 
         elif report_type == "pdf":
-            # Generate PDF from the TEXT report (which contains mobsfscan output or quark JSON)
-            if os.path.exists(text_report_path):
-                convert_mobile_scan_to_pdf(text_report_path, pdf_report_path)
-                print(f"INFO: Converted {text_report_path} to PDF at {pdf_report_path}")
-                return send_file(pdf_report_path, as_attachment=True)
+            # Decide which converter to use based on scan_type implied by base_filename prefix
+            if base_filename.startswith('apk_scan_'):
+                # Need the JSON file path for the dedicated Quark PDF converter
+                if os.path.exists(json_report_path):
+                    convert_quark_report_to_pdf(json_report_path, pdf_report_path)
+                    print(f"INFO: Converted Quark JSON {json_report_path} to PDF at {pdf_report_path}")
+                    return send_file(pdf_report_path, as_attachment=True)
+                else:
+                    # Fallback or error if JSON is missing but PDF was requested
+                    print(f"ERROR: Cannot generate Quark PDF, source JSON missing: {json_report_path}")
+                    return jsonify({"error": f"Cannot generate PDF: Source JSON report file not found for {base_filename}."}), 404
+            elif base_filename.startswith('mobile_scan_'):
+                # Use the standard text-to-PDF converter for mobsfscan
+                if os.path.exists(text_report_path):
+                    convert_mobile_scan_to_pdf(text_report_path, pdf_report_path)
+                    print(f"INFO: Converted mobsfscan text {text_report_path} to PDF at {pdf_report_path}")
+                    return send_file(pdf_report_path, as_attachment=True)
+                else:
+                    raise FileNotFoundError(f"Cannot generate PDF: Source text report not found: {text_report_path}")
             else:
-                raise FileNotFoundError(f"Cannot generate PDF: Source text report not found: {text_report_path}")
+                # Handle unknown base filename prefix
+                print(f"ERROR: Unknown report prefix in base_filename: {base_filename}")
+                return jsonify({"error": "Cannot determine report type from filename to generate PDF."}), 400
 
         else:
             return jsonify({"error": "Invalid report type requested. Use 'text', 'json', or 'pdf'."}), 400
