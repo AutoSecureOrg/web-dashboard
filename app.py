@@ -1092,12 +1092,12 @@ def mobile_scan():
                                # but good practice if file might be used again
                                f_json.seek(0)
                                parsed_quark_data = json.load(f_json)
-                            output_data = raw_json_data # Display raw JSON in HTML <pre> tag
+                            output_data = formatted_text_report = format_quark_report_text(parsed_quark_data)
                         except json.JSONDecodeError as e:
                             error_message = f"Error parsing generated Quark report: {e}"
                             print(f"ERROR: {error_message}")
                             output_data = raw_json_data # Show raw data even if parsing failed
-                            parsed_quark_data = None # Ensure it's None
+                            parsed_quark_data = None
                         except Exception as e:
                              error_message = f"Error reading Quark report file: {e}"
                              print(f"ERROR: {error_message}")
@@ -1118,12 +1118,16 @@ def mobile_scan():
                                 # Format the text report using the helper function
                                 formatted_text_report = format_quark_report_text(parsed_quark_data)
 
-                                # Write the FORMATTED text report
+                                # *** Update output_data for HTML display ***
+                                output_data = formatted_text_report
+
+                                # Write the FORMATTED text report to file
                                 with open(text_report_path, "w", encoding="utf-8") as f_txt:
                                     f_txt.write(formatted_text_report)
                                 print(f"INFO: APK scan formatted text report saved to {text_report_path}")
 
                                 # Copy the original JSON to the reports dir for direct download
+                                # We still need the raw JSON file for the PDF generation later
                                 shutil.copy2(quark_json_output_path, json_download_path)
                                 print(f"INFO: Copied Quark JSON report to {json_download_path} for download.")
 
@@ -1133,7 +1137,12 @@ def mobile_scan():
                             except Exception as e:
                                 print(f"ERROR: Failed to save formatted text report or copy JSON: {e}")
                                 error_message = error_message or "Failed to save report files."
+                                # Keep raw JSON in output if formatting/saving failed
+                                output_data = raw_json_data
                                 scan_results.pop('report_filename_base', None)
+                        else:
+                             # If parsing failed, keep raw JSON (or error) in output_data
+                            output_data = raw_json_data if raw_json_data else output_data
 
                     else:
                         # JSON file was NOT created
