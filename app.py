@@ -17,6 +17,8 @@ import uuid
 import zipfile
 import tempfile
 import shutil
+import pandas as pd
+from tabulate import tabulate
 
 AI_HOST = '127.0.0.1'
 AI_PORT = 5005
@@ -52,6 +54,11 @@ os.makedirs(QUARK_OUTPUT_DIR, exist_ok=True)
 REPORTS_DIR = "/home/autosecure/FYP/reports/"
 os.makedirs(REPORTS_DIR, exist_ok=True)
 
+# --- Directory for temporary scan outputs --- #
+TEMP_OUTPUT_DIR = os.path.join(app.root_path, 'tmp', 'scan_outputs')
+os.makedirs(TEMP_OUTPUT_DIR, exist_ok=True)
+# --- End Temp Output Dir --- #
+
 # Global variables to hold scan and test results
 services_found = {}
 targets = []
@@ -60,6 +67,107 @@ exploitation_results = {}
 test_status = {"complete": False}
 custom_exploit_results = {} # New global for custom results
 mobile_scan_results = {} # Global for mobile scan results
+
+# --- Helper Function for Rogue Data Formatting ---
+def process_rogue_data_for_json(rogue_df):
+    """Formats the rogue AP DataFrame into a dict for JSON response."""
+    summary_list = []
+    detailed_log_lines = []
+    detailed_log_lines.append("📄 Rogue Access Point Detection Report\n")
+
+    if rogue_df is None or rogue_df.empty:
+        detailed_log_lines.append("✅ No rogue APs detected or scan failed.")
+        return {"summary": [], "detailed_log": "\n".join(detailed_log_lines)}
+
+    for index, row in rogue_df.iterrows():
+        summary_list.append({
+            "SSID": row['SSID'],
+            "Status": row['Status'],
+            "Severity": row['Severity'],
+            "Rogue Indicators": row['Rogue Indicators']
+        })
+
+        # Reconstruct detailed log entry for this SSID
+        detailed_log_lines.append("\n" + "\u2550" * 60) # Top border (using unicode double line)
+        detailed_log_lines.append(f"🔍 SSID: {row['SSID']}\n")
+        if isinstance(row['BSSIDs'], list):
+            for bssid in row['BSSIDs']:
+                detailed_log_lines.append(f"    ➤ BSSID: {bssid}")
+        else:
+            detailed_log_lines.append(f"    ➤ BSSIDs: {row['BSSIDs']}") # Fallback if not list
+
+        # Try to get signal/encryption info if available (might require joining data earlier)
+        # detailed_log_lines.append(f"       Signal: {row.get('Signal Strength', 'N/A')}") # Example if data was joined
+        # detailed_log_lines.append(f"       Encryption: {row.get('Encryption Type', 'N/A')}")
+
+        detailed_log_lines.append(f"\nStatus: {row['Status']}")
+        detailed_log_lines.append(f"Severity: {row['Severity']}")
+        detailed_log_lines.append(f"Indicators: {row['Rogue Indicators']}")
+        detailed_log_lines.append("\u2550" * 60 + "\n") # Bottom border
+
+    return {
+        "summary": summary_list,
+        "detailed_log": "\n".join(detailed_log_lines)
+    }
+# --- End Helper Function ---
+
+# --- Helper to Format WiFi Analysis Data for Text Report ---
+def format_wifi_analysis_text(analysis_data):
+    lines = []
+    lines.append("=======================================")
+    lines.append("     Wi-Fi Network Analysis Report     ")
+    lines.append("=======================================")
+    lines.append(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+
+    # Target Info
+    target_info = analysis_data.get('target_info', {})
+    lines.append("--- Target Identification ---")
+    lines.append(f"SSID:             {target_info.get('SSID', 'N/A')}")
+    lines.append(f"BSSID:            {target_info.get('BSSID', 'N/A')}")
+    lines.append(f"Encryption Type:  {target_info.get('Encryption Type', 'N/A')}")
+    lines.append(f"Signal Strength:  {target_info.get('Signal Strength', 'N/A')}")
+    lines.append(f"Channel:          {target_info.get('Channel', 'N/A')}")
+    lines.append(f"Subnet:           {target_info.get('Subnet', 'N/A')}")
+    lines.append(f"Gateway MAC:      {target_info.get('Gateway MAC', 'N/A')}\n")
+
+    # Vulnerability Info
+    vuln_info = analysis_data.get('vulnerability', {})
+    lines.append("--- Encryption & Risk Analysis ---")
+    lines.append(f"Risk Details:")
+    lines.append(vuln_info.get('risk', 'N/A'))
+    lines.append("\n")
+
+    # Connected Devices
+    devices = analysis_data.get('devices', [])
+    lines.append("--- Connected Devices Fingerprinting ---")
+    if devices:
+        device_df = pd.DataFrame(devices)
+        # Select relevant columns for text report
+        device_df_text = device_df[['IP Address', 'MAC Address', 'Vendor', 'OS', 'Open Ports', 'Detected Activity']]
+        lines.append(tabulate(device_df_text, headers='keys', tablefmt='grid'))
+    else:
+        lines.append("No connected devices found or analysis failed.")
+    lines.append("\n")
+
+    # Device Vulnerability Summary (You might already have a table format for this elsewhere)
+    # Add logic here if needed, similar to devices table
+    lines.append("--- Device Vulnerability Summary ---")
+    # Placeholder - requires formatting logic like above
+    lines.append("(Device vulnerability summary based on open ports needs formatting)")
+    lines.append("\n")
+
+    # ARP Flood Output
+    lines.append("--- ARP Replay Flood Report ---")
+    lines.append(analysis_data.get('arp_flood_output', 'N/A'))
+    lines.append("\n")
+
+    # Router Checks - These are fetched async, might not be in initial data
+    # You might need a separate way to include these if required in the static report.
+    lines.append("--- Router Checks (Snapshot) ---")
+    lines.append("(Router Admin and UPnP checks are performed asynchronously and may not be included here)")
+
+    return "\n".join(lines)
+# --- End Report Formatting Helper ---
 
 # Helper function for allowed file extensions
 def allowed_file(filename):
@@ -768,33 +876,29 @@ def wifi_page():
     return render_template('wifi_page.html')
 
 
-@app.route('/wifi-analyze-page')
-def wifi_analyze_page():
-    return render_template('wifi_analyze.html')
+@app.route('/wifi-dashboard')
+def wifi_dashboard():
+    return render_template('wifi_dashboard.html')
 
 
-@app.route('/wifi-results', methods=['POST'])
-def wifi_results_page():
-    networks, rogue_data = scan_and_analyze()
-    return render_template(
-        'wifi_results.html',
-        networks=networks.to_dict(orient='records'),
-        rogue=rogue_data.to_dict(orient='records')
-    )
+# --- Endpoint for the initial scan called by wifi_dashboard.html JS --- #
+@app.route('/fetch-wifi-scan', methods=['POST'])
+def fetch_wifi_scan():
+    try:
+        networks_df, rogue_df = scan_and_analyze()
+        # Ensure rogue_df data is structured as expected by JS
+        # Assuming scan_and_analyze now returns a dict like {'summary': [...], 'detailed_log': '...'} for rogue data
+        rogue_report = process_rogue_data_for_json(rogue_df) # Helper function needed
 
-
-@app.route('/wifi_results.html')
-def wifi_result():
-    return render_template('wifi_results.html')
-
-
-@app.route('/wifi-scan', methods=['POST'])
-def wifi_scan():
-    networks_df, rogue_df = scan_and_analyze()
-    return jsonify({
-        "networks": networks_df.to_dict(orient="records"),
-        "rogue": rogue_df.to_dict(orient="records")
-    })
+        return jsonify({
+            "networks": networks_df.to_dict(orient="records") if networks_df is not None else [],
+            "rogue_report": rogue_report
+        })
+    except Exception as e:
+        print(f"ERROR in fetch_wifi_scan: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Failed to fetch Wi-Fi scan data: {e}"}), 500
 
 
 @app.route('/wifi-analyze', methods=['POST'])
@@ -802,68 +906,164 @@ def wifi_analyze():
     ssid = request.json.get("ssid")
     bssid = request.json.get("bssid")
 
-    # Step 1: Scan subnet and devices
-    subnet = detect_subnet_from_gateway()
-    devices_df = scan_connected_devices(subnet)
-    fp_df = fingerprint_devices(devices_df)
+    if not ssid or not bssid:
+        return jsonify({"error": "SSID and BSSID are required."}), 400
 
-    # Step 2: Create a DataFrame from the selected target
-    selected_network = {
-        "SSID": ssid,
-        "BSSID": bssid,
-        "Signal Strength": "Unknown",
-        "Encryption Type": "Unknown"
-    }
+    print(f"INFO: Analyzing network SSID: {ssid}, BSSID: {bssid}")
 
-    # If possible, re-scan Wi-Fi networks to get encryption and signal info
-    scanned_df = scan_wifi_networks_nmcli()
-    if scanned_df is not None:
-        match = scanned_df[
-            (scanned_df["SSID"] == ssid) & (scanned_df["BSSID"] == bssid)
-        ]
-        if not match.empty:
-            selected_network["Signal Strength"] = match.iloc[0]["Signal Strength"]
-            selected_network["Encryption Type"] = match.iloc[0]["Encryption Type"]
-
-    # Step 3: Analyze vulnerabilities
-    vuln_df = analyze_network_vulnerabilities(pd.DataFrame([selected_network]))
-    vuln_row = vuln_df.iloc[0]
-
-    vulnerability_info = {
-        "ssid": vuln_row["SSID"],
-        "bssid": vuln_row["BSSID"],
-        "encryption": vuln_row["Encryption Type"],
-        "signal": vuln_row["Signal Strength"],
-        "risk": vuln_row["Risk Analysis"]
-    }
-
-    # ✅ Step 4: Construct Target Identification Info
     try:
-        signal_val = int(selected_network["Signal Strength"].replace(" dBm", ""))
-    except:
+        # Step 1: Scan subnet and devices
+        subnet = detect_subnet_from_gateway()
+        if not subnet:
+             print("WARN: Could not detect subnet.")
+             # Decide if this is fatal or proceed with defaults
+             return jsonify({"error": "Could not detect network subnet."}), 500
+
+        devices_df = scan_connected_devices(subnet)
+        fp_df = fingerprint_devices(devices_df)
+
+        # Step 2: Create a DataFrame from the selected target
+        selected_network = {
+            "SSID": ssid,
+            "BSSID": bssid,
+            "Signal Strength": "Unknown",
+            "Encryption Type": "Unknown"
+        }
+
+        # Re-scan Wi-Fi networks to get encryption and signal info
+        scanned_df = scan_wifi_networks_nmcli()
+        if scanned_df is not None:
+            match = scanned_df[
+                (scanned_df["SSID"] == ssid) & (scanned_df["BSSID"] == bssid)
+            ]
+            if not match.empty:
+                selected_network["Signal Strength"] = match.iloc[0]["Signal Strength"]
+                selected_network["Encryption Type"] = match.iloc[0]["Encryption Type"]
+        else:
+            print("WARN: Failed to perform nmcli scan to get current signal/encryption.")
+
+        # Step 3: Analyze vulnerabilities
+        vuln_df = analyze_network_vulnerabilities(pd.DataFrame([selected_network]))
+        if vuln_df is None or vuln_df.empty:
+             print("WARN: Vulnerability analysis returned no results.")
+             vulnerability_info = {"ssid": ssid, "bssid": bssid, "error": "Analysis failed"}
+        else:
+            vuln_row = vuln_df.iloc[0]
+            vulnerability_info = {
+                "ssid": vuln_row["SSID"],
+                "bssid": vuln_row["BSSID"],
+                "encryption": vuln_row["Encryption Type"],
+                "signal": vuln_row["Signal Strength"],
+                "risk": vuln_row["Risk Analysis"]
+            }
+
+        # Step 4: Construct Target Identification Info
         signal_val = 0
+        try:
+            signal_str = str(selected_network["Signal Strength"])
+            numeric_part = re.search(r'-?\d+', signal_str)
+            if numeric_part:
+                signal_val = int(numeric_part.group(0))
+            else:
+                 print(f"WARN: Could not parse numeric value from signal strength: {signal_str}")
+        except Exception as e:
+             print(f"WARN: Error parsing signal strength '{selected_network['Signal Strength']}': {e}")
 
-    target_info = {
-        "SSID": selected_network["SSID"],
-        "BSSID": selected_network["BSSID"],
-        "Encryption Type": selected_network["Encryption Type"] + " (Mixed Mode)" if "WPA1" in selected_network["Encryption Type"] else selected_network["Encryption Type"],
-        "Signal Strength": selected_network["Signal Strength"] + " (Very Strong)" if signal_val >= 75 else selected_network["Signal Strength"],
+        signal_suffix = ""
+        if signal_val >= -67:
+            signal_suffix = " (Very Strong)"
+        elif signal_val >= -70:
+             signal_suffix = " (Strong)"
+        elif signal_val >= -80:
+             signal_suffix = " (Okay)"
+        else:
+             signal_suffix = " (Weak)"
 
-        "Channel": get_channel_for_network(selected_network["SSID"], selected_network["BSSID"]),
+        encryption_type = str(selected_network["Encryption Type"])
+        encryption_suffix = " (Mixed Mode)" if "WPA1" in encryption_type else ""
 
-        "Subnet": subnet,
-        "Gateway MAC": get_gateway_mac() or "Unknown"
-    }
+        target_info = {
+            "SSID": selected_network["SSID"],
+            "BSSID": selected_network["BSSID"],
+            "Encryption Type": f"{encryption_type}{encryption_suffix}",
+            "Signal Strength": f"{selected_network['Signal Strength']}{signal_suffix}",
+            "Channel": get_channel_for_network(selected_network["SSID"], selected_network["BSSID"]), # Assuming this helper exists and works
+            "Subnet": subnet,
+            "Gateway MAC": get_gateway_mac() or "Unknown"
+        }
 
-    # ✅ Final result
-    return jsonify({
-        "ssid": ssid,
-        "bssid": bssid,
-        "subnet": subnet,
-        "devices": fp_df.to_dict(orient="records"),
-        "vulnerability": vulnerability_info,
-        "target_info": target_info  # ✅ properly added here
-    })
+        # Step 5: Trigger ARP flood in background (don't wait for it)
+        arp_flood_output = "ARP flood initiated..."
+        try:
+             # Run in a separate thread? For now, just trigger and return placeholder.
+             # Ideally, this would update a status or use websockets.
+            threading.Thread(target=auto_arp_replay_flood, args=("wlan0",), daemon=True).start()
+            # result = auto_arp_replay_flood(interface="wlan0")
+            # arp_flood_output = result # This would block the response
+        except Exception as e:
+            print(f"ERROR: Failed to trigger ARP flood in background: {e}")
+            arp_flood_output = f"Error initiating ARP flood: {e}"
+
+        # Return all collected data as JSON
+        return jsonify({
+            "status": "success",
+            "ssid": ssid,
+            "bssid": bssid,
+            "subnet": subnet,
+            "devices": fp_df.to_dict(orient="records") if fp_df is not None else [],
+            "vulnerability": vulnerability_info,
+            "target_info": target_info,
+            "arp_flood_output": arp_flood_output # Placeholder or initial status
+        })
+
+        # --- Generate and Save Report --- #
+        report_base_filename = None
+        # Construct the data payload specifically for the report function
+        analysis_data_for_report = {
+                "target_info": target_info,
+                "vulnerability": vulnerability_info,
+                "devices": fp_df.to_dict(orient="records") if fp_df is not None else [],
+                "arp_flood_output": arp_flood_output # Include the placeholder
+                # Add other relevant pieces if needed
+        }
+        try:
+            report_text = format_wifi_analysis_text(analysis_data_for_report)
+            timestamp = datetime.now().strftime("%d%m%y_%H%M%S")
+            # Sanitize BSSID for filename
+            safe_bssid = bssid.replace(':', '-')
+            report_base_filename = f"wifi_analysis_{safe_bssid}_{timestamp}"
+            text_report_path = os.path.join(REPORTS_DIR, f"{report_base_filename}.txt")
+            with open(text_report_path, "w", encoding="utf-8") as f:
+                f.write(report_text)
+            print(f"INFO: Saved Wi-Fi analysis report: {text_report_path}")
+        except Exception as report_err:
+             print(f"ERROR: Failed to generate/save Wi-Fi analysis report: {report_err}")
+             # Set report_base_filename to None or add an error indicator if saving failed
+             report_base_filename = None # Indicate report saving failed
+        # --- End Report Generation --- #
+
+        # Return all collected data as JSON, including report filename if successful
+        # Construct the final JSON response separately
+        response_json = {
+            "status": "success",
+            "ssid": ssid,
+            "bssid": bssid,
+            "subnet": subnet,
+            "devices": fp_df.to_dict(orient="records") if fp_df is not None else [],
+            "vulnerability": vulnerability_info,
+            "target_info": target_info,
+            "arp_flood_output": arp_flood_output,
+            "report_base_filename": report_base_filename # Will be None if saving failed
+        }
+
+        return jsonify(response_json)
+
+    except Exception as e:
+         print(f"ERROR: Exception during wifi_analyze for {ssid}/{bssid}: {e}")
+         # Include traceback for detailed debugging if possible
+         import traceback
+         traceback.print_exc()
+         return jsonify({"error": f"An unexpected error occurred during analysis: {e}"}), 500
 
 
 @app.route('/attack', methods=['POST'])
@@ -923,29 +1123,29 @@ def program_exists(program):
 
 @app.route('/mobile_scan', methods=['GET', 'POST'])
 def mobile_scan():
-    global mobile_scan_results
     if request.method == 'POST':
-        scan_type = request.form.get('scan_type', 'zip') # Default to zip if not provided
+        scan_type = request.form.get('scan_type', 'zip')
         if 'app_file' not in request.files:
-            return jsonify({"error": "No file part"}), 400
+            session['mobile_scan_results'] = {'error': 'No file part'}
+            return redirect(url_for('mobile_results'))
         file = request.files['app_file']
         if file.filename == '':
-            return jsonify({"error": "No selected file"}), 400
+            session['mobile_scan_results'] = {'error': 'No selected file'}
+            return redirect(url_for('mobile_results'))
 
-        # --- File Type Validation based on scan_type ---
+        # File Type Validation
         allowed_extensions_for_type = {'zip'} if scan_type == 'zip' else {'apk'}
         file_ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
         if not file_ext in allowed_extensions_for_type:
-            return jsonify({"error": f"Invalid file type for {scan_type.upper()} scan. Expected .{list(allowed_extensions_for_type)[0]}"}), 400
-        # --------------------------------------------
+            session['mobile_scan_results'] = {'error': f"Invalid file type for {scan_type.upper()} scan. Expected .{list(allowed_extensions_for_type)[0]}"}
+            return redirect(url_for('mobile_results'))
 
-        scan_results = {'scan_type': scan_type} # Store scan type in results
+        scan_results = {'scan_type': scan_type}
         error_message = None
         output_data = ""
-        report_filename = None
 
         try:
-            # --- Clear the MOBTEST_DIR before placing new file --- (Common for both scans)
+            # Clear MOBTEST_DIR
             print(f"INFO: Clearing contents of {MOBTEST_DIR}...")
             for item in os.listdir(MOBTEST_DIR):
                 item_path = os.path.join(MOBTEST_DIR, item)
@@ -957,10 +1157,9 @@ def mobile_scan():
                 except Exception as e:
                     print(f"WARN: Failed to remove item {item_path}: {e}")
             print(f"INFO: Finished clearing {MOBTEST_DIR}.")
-            # ---------------------------------------------
 
             if scan_type == 'zip':
-                # --- Handle ZIP upload for mobsfscan --- (Existing Logic slightly adapted)
+                # Handle ZIP upload for mobsfscan
                 print("INFO: Handling ZIP file for mobsfscan")
                 temp_zip_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(f"{uuid.uuid4().hex}_{file.filename}"))
                 file.save(temp_zip_path)
@@ -984,22 +1183,16 @@ def mobile_scan():
                 try:
                     process = subprocess.run(cmd, capture_output=True, text=True, check=False, timeout=timeout_seconds)
                     print(f"INFO: mobsfscan completed with return code: {process.returncode}")
-                    #print(f"INFO: mobsfscan stdout:\n{process.stdout}")
-                    #print(f"INFO: mobsfscan stderr:\n{process.stderr}")
-
-                    # Process mobsfscan results (stderr preferred)
                     combined_output = process.stderr if process.stderr else process.stdout
                     combined_output = combined_output.strip()
-
                     filtered_lines = []
                     lines = combined_output.splitlines()
                     results_started = False
                     for line in lines:
-                        if line.strip().startswith(("╒", "|", "├──", "└──", "+-")):
+                        if line.strip().startswith(("\u2552", "|", "\u251c\u2500", "\u2514\u2500", "+-")):
                             results_started = True
                         if results_started:
                             filtered_lines.append(line)
-
                     if not filtered_lines and combined_output:
                         print("WARN: mobsfscan output filtering removed all lines or start pattern not found. Using raw output.")
                         output_data = combined_output
@@ -1016,28 +1209,31 @@ def mobile_scan():
                     error_message = f"ERROR: Exception during mobsfscan execution: {e}"
                     print(error_message)
 
-                # --- Save mobsfscan Report --- (If output exists)
+                # Save mobsfscan Report
                 if output_data and not error_message:
                     try:
                         timestamp = datetime.now().strftime("%d_%m_%y-%H_%M")
-                        report_filename = f"mobile_scan_{timestamp}.txt"
-                        report_filepath = os.path.join(REPORTS_DIR, report_filename)
+                        report_filename_base = f"mobile_scan_{timestamp}"
+                        text_report_filename = f"{report_filename_base}.txt"
+                        report_filepath = os.path.join(REPORTS_DIR, text_report_filename)
                         with open(report_filepath, "w", encoding="utf-8") as f:
                             f.write(output_data)
                         print(f"INFO: Mobile scan (mobsfscan) report saved to {report_filepath}")
+                        scan_results['report_filename_base'] = report_filename_base
                     except Exception as e:
                         print(f"ERROR: Failed to save mobsfscan report: {e}")
                         error_message = error_message or "Failed to save report file."
+                        scan_results.pop('report_filename_base', None)
 
             elif scan_type == 'apk':
-                # --- Handle APK upload for quark-engine ---
+                # Handle APK upload for quark-engine
                 print("INFO: Handling APK file for quark-engine")
                 apk_filename = secure_filename(file.filename)
                 apk_path = os.path.join(MOBTEST_DIR, apk_filename)
                 file.save(apk_path)
                 print(f"INFO: Saved uploaded APK to: {apk_path}")
 
-                # --- Check and Setup Quark Rules ---
+                # Check and Setup Quark Rules
                 quark_rules_path = os.path.expanduser("~/.quark-engine/quark-rules/rules")
                 if not os.path.exists(quark_rules_path):
                     print(f"INFO: Quark rules not found at {quark_rules_path}. Attempting to set up.")
@@ -1047,28 +1243,25 @@ def mobile_scan():
                     except subprocess.CalledProcessError as e:
                         error_message = "Failed to set up Quark rules automatically. Please ensure git is installed and rules can be cloned."
                         print(f"ERROR: {error_message} {e}")
-                        # Return error immediately if rules setup fails
                         scan_results['error'] = error_message
-                        mobile_scan_results = scan_results
-                        return render_template('mobile_scan.html', results=scan_results, error=error_message)
+                        session['mobile_scan_results'] = scan_results
+                        return redirect(url_for('mobile_results'))
                     except FileNotFoundError:
                         error_message = "Failed to set up Quark rules: 'git' command not found. Please install git."
                         print(f"ERROR: {error_message}")
                         scan_results['error'] = error_message
-                        mobile_scan_results = scan_results
-                        return render_template('mobile_scan.html', results=scan_results, error=error_message)
+                        session['mobile_scan_results'] = scan_results
+                        return redirect(url_for('mobile_results'))
                 else:
                     print("INFO: Quark rules found.")
 
-                # --- Define Quark JSON output path ---
+                # Define Quark JSON output path
                 quark_report_basename = f"quark_report_{os.path.splitext(apk_filename)[0]}.json"
                 quark_json_output_path = os.path.join(QUARK_OUTPUT_DIR, quark_report_basename)
                 print(f"INFO: Quark JSON report target path: {quark_json_output_path}")
-
-                # Ensure QUARK_OUTPUT_DIR exists
                 os.makedirs(QUARK_OUTPUT_DIR, exist_ok=True)
 
-                # --- Run Quark command (output to JSON) ---
+                # Run Quark command
                 cmd = ["quark", "-a", apk_path, "-o", quark_json_output_path]
                 print(f"INFO: Running APK analysis command: {' '.join(cmd)}")
                 timeout_seconds = 300
@@ -1076,27 +1269,22 @@ def mobile_scan():
                 try:
                     process = subprocess.run(cmd, capture_output=True, text=True, check=False, timeout=timeout_seconds)
                     print(f"INFO: APK analysis completed with return code: {process.returncode}")
-                    # print(f"DEBUG: quark stdout:\n{process.stdout}")
-                    # print(f"DEBUG: quark stderr:\n{process.stderr}")
 
-                    # --- Process Quark Results ---
+                    # Process Quark Results
                     if os.path.exists(quark_json_output_path):
                         print(f"INFO: Quark JSON report found at {quark_json_output_path}")
                         raw_json_data = ""
                         parsed_quark_data = None
                         try:
-                            # Read JSON content for parsing and display in HTML
                             with open(quark_json_output_path, 'r', encoding='utf-8') as f_json:
                                raw_json_data = f_json.read()
-                               # Rewind or reopen not strictly necessary if only reading once
-                               # but good practice if file might be used again
                                f_json.seek(0)
                                parsed_quark_data = json.load(f_json)
                             output_data = formatted_text_report = format_quark_report_text(parsed_quark_data)
                         except json.JSONDecodeError as e:
                             error_message = f"Error parsing generated Quark report: {e}"
                             print(f"ERROR: {error_message}")
-                            output_data = raw_json_data # Show raw data even if parsing failed
+                            output_data = raw_json_data
                             parsed_quark_data = None
                         except Exception as e:
                              error_message = f"Error reading Quark report file: {e}"
@@ -1104,61 +1292,41 @@ def mobile_scan():
                              output_data = f"Error reading report: {e}"
                              parsed_quark_data = None
 
-                        # If JSON parsing was successful, format and save text/PDF reports
                         if parsed_quark_data:
                             try:
                                 timestamp = datetime.now().strftime("%d_%m_%y-%H_%M")
                                 report_filename_base = f"apk_scan_{timestamp}"
                                 text_report_filename = f"{report_filename_base}.txt"
                                 json_report_filename_for_download = f"{report_filename_base}.json"
-
                                 text_report_path = os.path.join(REPORTS_DIR, text_report_filename)
                                 json_download_path = os.path.join(REPORTS_DIR, json_report_filename_for_download)
-
-                                # Format the text report using the helper function
                                 formatted_text_report = format_quark_report_text(parsed_quark_data)
-
-                                # *** Update output_data for HTML display ***
                                 output_data = formatted_text_report
-
-                                # Write the FORMATTED text report to file
                                 with open(text_report_path, "w", encoding="utf-8") as f_txt:
                                     f_txt.write(formatted_text_report)
                                 print(f"INFO: APK scan formatted text report saved to {text_report_path}")
-
-                                # Copy the original JSON to the reports dir for direct download
-                                # We still need the raw JSON file for the PDF generation later
                                 shutil.copy2(quark_json_output_path, json_download_path)
                                 print(f"INFO: Copied Quark JSON report to {json_download_path} for download.")
-
-                                # Store the base name for download links
                                 scan_results['report_filename_base'] = report_filename_base
-
                             except Exception as e:
                                 print(f"ERROR: Failed to save formatted text report or copy JSON: {e}")
                                 error_message = error_message or "Failed to save report files."
-                                # Keep raw JSON in output if formatting/saving failed
                                 output_data = raw_json_data
                                 scan_results.pop('report_filename_base', None)
                         else:
-                             # If parsing failed, keep raw JSON (or error) in output_data
                             output_data = raw_json_data if raw_json_data else output_data
-
                     else:
-                        # JSON file was NOT created
                         error_message = "APK analysis ran but did not produce the expected report file."
                         print(f"ERROR: {error_message} Expected at: {quark_json_output_path}")
-                        # Include command output in error message if helpful
                         if process.stderr:
                             error_message += f"\nDetails: {process.stderr.strip()}"
                         elif process.stdout:
                              error_message += f"\nDetails: {process.stdout.strip()}"
-                        output_data = process.stdout + "\n" + process.stderr # Show command output as fallback in HTML
+                        output_data = process.stdout + "\n" + process.stderr
 
-                    # Handle non-zero exit codes if the report wasn't generated
                     if process.returncode != 0 and not os.path.exists(quark_json_output_path):
                          error_message = error_message or f"APK analysis failed with exit code {process.returncode}."
-                         output_data = output_data or process.stdout + "\n" + process.stderr # Show command output
+                         output_data = output_data or process.stdout + "\n" + process.stderr
 
                 except FileNotFoundError:
                     error_message = "ERROR: Analysis command ('quark') not found. Is the tool installed and in PATH?"
@@ -1173,28 +1341,13 @@ def mobile_scan():
                     print(error_message)
                     output_data = error_message
 
-            else: # Handle zip scan type (mobsfscan)
-                # --- Handle ZIP upload for mobsfscan --- (Existing Logic adapted)
-                print("INFO: Handling ZIP file for mobsfscan")
-                # ... (rest of mobsfscan logic remains the same)
-                # ... ensure it sets scan_results['report_filename_base'] too
-                # --- Save mobsfscan Report --- (If output exists)
-                if output_data and not error_message:
-                    try:
-                        timestamp = datetime.now().strftime("%d_%m_%y-%H_%M")
-                        report_filename_base = f"mobile_scan_{timestamp}" # Base name for mobsfscan
-                        text_report_filename = f"{report_filename_base}.txt"
-                        report_filepath = os.path.join(REPORTS_DIR, text_report_filename)
-                        with open(report_filepath, "w", encoding="utf-8") as f:
-                            f.write(output_data)
-                        print(f"INFO: Mobile scan (mobsfscan) report saved to {report_filepath}")
-                        scan_results['report_filename_base'] = report_filename_base # Store base name
-                    except Exception as e:
-                        print(f"ERROR: Failed to save mobsfscan report: {e}")
-                        error_message = error_message or "Failed to save report file."
-                        scan_results.pop('report_filename_base', None)
+            else:
+                error_message = "Invalid scan_type provided."
+                print(f"ERROR: {error_message}")
+                output_data = error_message
 
-        except zipfile.BadZipFile: # Keep this for the zip path
+
+        except zipfile.BadZipFile:
             print("ERROR: Uploaded file is not a valid zip file.")
             error_message = "Invalid zip file uploaded."
             output_data = ""
@@ -1204,19 +1357,90 @@ def mobile_scan():
              output_data = ""
 
         scan_results['output_data'] = output_data
-        # No longer using report_filename directly, using report_filename_base
-        # scan_results['report_filename'] = report_filename
         if error_message:
-            scan_results['error'] = error_message # Store specific error
+            scan_results['error'] = error_message
 
-        mobile_scan_results = scan_results # Store results globally (consider session)
+        # --- Store large output data in a temporary file --- #
+        session_data = scan_results.copy() # Start with existing results
+        output_content = session_data.pop('output_data', '') # Remove large data
+        output_file_path = None
 
-        # Render the template with results and potential error
-        return render_template('mobile_scan.html', results=scan_results, error=scan_results.get('error'))
+        if output_content:
+            try:
+                # Create a unique temporary file
+                temp_fd, output_file_path = tempfile.mkstemp(suffix='.txt', dir=TEMP_OUTPUT_DIR)
+                with os.fdopen(temp_fd, 'w', encoding='utf-8') as temp_f:
+                    temp_f.write(output_content)
+                print(f"INFO: Saved temporary scan output to: {output_file_path}")
+                session_data['output_file_path'] = output_file_path # Store path in session
+            except Exception as e:
+                print(f"ERROR: Failed to save temporary output file: {e}")
+                # Add error to session data if saving fails, fallback to no output
+                session_data['error'] = session_data.get('error', '') + " | Failed to store output data."
+                session_data.pop('output_file_path', None) # Ensure path isn't stored if saving failed
+        else:
+            print("INFO: No output content generated to save to temporary file.")
+            session_data.pop('output_file_path', None)
+        # --- End storing output data --- #
+
+        # Store the modified results (without large output) in session
+        session['mobile_scan_results'] = session_data
+
+        # Redirect to the new results page
+        return redirect(url_for('mobile_results'))
 
     # GET request: just show the upload page
-    mobile_scan_results = {} # Clear results on GET
+    # Clear any old results from session on GET to avoid showing stale data
+    session.pop('mobile_scan_results', None)
     return render_template('mobile_scan.html', results=None, error=None)
+
+
+@app.route('/mobile-results')
+def mobile_results():
+    """Displays mobile scan results, reading large output from a temporary file."""
+    results_from_session = session.get('mobile_scan_results', None)
+    output_data_content = "No output captured or temporary file missing."
+    output_file_path_to_delete = None
+
+    if results_from_session:
+        output_file_path = results_from_session.get('output_file_path')
+        if output_file_path and os.path.exists(output_file_path):
+            output_file_path_to_delete = output_file_path # Mark for deletion
+            try:
+                with open(output_file_path, 'r', encoding='utf-8') as f:
+                    output_data_content = f.read()
+                print(f"INFO: Read output data from temporary file: {output_file_path}")
+            except Exception as e:
+                print(f"ERROR: Failed to read temporary output file {output_file_path}: {e}")
+                output_data_content = f"Error reading output data: {e}"
+                # Update error in session results if needed?
+                results_from_session['error'] = results_from_session.get('error', '') + " | Error reading scan output."
+        elif output_file_path:
+            print(f"WARN: Temporary output file path found in session but file does not exist: {output_file_path}")
+            output_data_content = "Scan output file was not found."
+            results_from_session['error'] = results_from_session.get('error', '') + " | Scan output file missing."
+            results_from_session.pop('output_file_path', None) # Remove invalid path from session data
+
+        # Add the read content back into the results dict for the template
+        results_from_session['output_data'] = output_data_content
+    else:
+        # Handle case where session data is missing entirely
+        print("WARN: No mobile_scan_results found in session.")
+        results_from_session = {'error': 'Scan results not found in session.'}
+
+    # --- Cleanup: Delete the temporary file --- #
+    if output_file_path_to_delete:
+        try:
+            os.remove(output_file_path_to_delete)
+            print(f"INFO: Deleted temporary output file: {output_file_path_to_delete}")
+            # Remove the path from session data *after* rendering to avoid issues if user refreshes?
+            # Or clear the whole session data after use?
+            session.pop('mobile_scan_results', None) # Clear session data after displaying
+        except Exception as e:
+            print(f"ERROR: Failed to delete temporary output file {output_file_path_to_delete}: {e}")
+    # --- End Cleanup --- #
+
+    return render_template('mobile_results.html', results=results_from_session, error=results_from_session.get('error') if results_from_session else 'Scan results not found.')
 
 
 @app.route('/download_mobile_report/<report_type>')
@@ -1362,6 +1586,50 @@ def convert_mobile_scan_to_pdf(text_file, pdf_file):
     except Exception as e:
         print(f"❌ Error creating mobile scan PDF (plain text): {e}")
         raise
+
+
+@app.route('/download_wifi_report/<report_type>')
+def download_wifi_report(report_type):
+    base_filename = request.args.get('base_filename', None)
+    if not base_filename:
+        return jsonify({"error": "Report identifier (base_filename) missing."}), 400
+
+    # Construct expected file paths
+    text_report_path = os.path.join(REPORTS_DIR, f"{base_filename}.txt")
+    pdf_report_path = os.path.join(REPORTS_DIR, f"{base_filename}.pdf")
+
+    try:
+        if report_type == "text":
+            if os.path.exists(text_report_path):
+                return send_file(text_report_path, as_attachment=True)
+            else:
+                 raise FileNotFoundError(f"Text report not found: {text_report_path}")
+
+        elif report_type == "pdf":
+            # Check if PDF exists, otherwise generate it from text
+            if not os.path.exists(pdf_report_path):
+                if os.path.exists(text_report_path):
+                    # Assuming convert_text_to_pdf is defined correctly before this route
+                    try:
+                        convert_text_to_pdf(text_report_path, pdf_report_path)
+                        print(f"INFO: Generated PDF report on demand: {pdf_report_path}")
+                    except Exception as pdf_err:
+                         print(f"ERROR: Failed to convert Wi-Fi text report to PDF: {pdf_err}")
+                         raise Exception(f"Failed to generate PDF report: {pdf_err}") # Raise to be caught below
+                else:
+                    raise FileNotFoundError(f"Cannot generate PDF: Source text report not found: {text_report_path}")
+
+            return send_file(pdf_report_path, as_attachment=True)
+
+        else:
+            return jsonify({"error": "Invalid report type requested. Use 'text' or 'pdf'."}), 400
+
+    except FileNotFoundError as e:
+        print(f"ERROR: Report file not found for {base_filename}. {e}")
+        return jsonify({"error": f"Requested report file '{base_filename}' not found."}), 404
+    except Exception as e:
+        print(f"ERROR in download_wifi_report: {e}")
+        return jsonify({"error": f"Failed to generate or send report: {e}"}), 500
 
 
 if __name__ == '__main__':

@@ -27,12 +27,30 @@
 
         <div class="input-card">
                 <h3>🛡️ Wi-Fi Security Scanner</h3>
-                <button id="start-wifi-scan-btn" data-url="{{ url_for('wifi_scan') }}" class="scan-button">Start Scan</button>
+                <button id="start-wifi-scan-btn" data-url="{{ url_for('wifi_dashboard') }}" class="scan-button">Start Scan</button>
             </div>
         </div>
 </div>
 
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+{# Add script to handle the button click #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const scanButton = document.getElementById('start-wifi-scan-btn');
+    if (scanButton) {
+        scanButton.addEventListener('click', function() {
+            const targetUrl = this.dataset.url;
+            if (targetUrl) {
+                console.log('Navigating to:', targetUrl);
+                window.location.href = targetUrl;
+            } else {
+                console.error('Scan button is missing data-url attribute.');
+            }
+        });
+    }
+});
+</script>
 
 </body>
 </html>

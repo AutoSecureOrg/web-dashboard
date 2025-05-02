@@ -139,7 +139,22 @@
              text-decoration: none;
         }
 
-        /* Alert styles from tools.css */
+        .results-table tbody {
+            display: block;
+            max-height: 400px;
+            overflow-y: auto; /* Enable vertical scroll */
+            width: 100%;
+        }
+
+        .results-table thead, .results-table tbody tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        .results-table thead {
+             width: calc( 100% - 1em );
+        }
     </style>
 </head>
 

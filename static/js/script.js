@@ -2,36 +2,49 @@
 const scanForm = document.getElementById('scanForm');
 if (scanForm) {
     scanForm.addEventListener('submit', function (event) {
-        const urlField = document.getElementById('target_url');
+    const urlField = document.getElementById('target_url');
         if (urlField && (!urlField.value.startsWith('http://') && !urlField.value.startsWith('https://'))) {
-            alert('Please enter a valid URL starting with http:// or https://');
-            event.preventDefault(); // Prevent form submission
-        }
-    });
+        alert('Please enter a valid URL starting with http:// or https://');
+        event.preventDefault(); // Prevent form submission
+    }
+});
 }
 
 // tools script:
 // network scanner: (Ensure elements exist)
 const networkScannerForm = document.getElementById('scanner-form');
 if (networkScannerForm) {
-    const scanningIcon = document.getElementById('scanning-icon');
-    const resultsDiv = document.getElementById('results');
-    const toggleResults = document.getElementById('toggle-results');
-    const resultsContent = document.getElementById('results-content');
-    const scanType = document.getElementById('scan_type');
-    const singleScan = document.getElementById('single-scan');
-    const rangeScan = document.getElementById('range-scan');
+const scanningIcon = document.getElementById('scanning-icon');
+const resultsDiv = document.getElementById('results');
+const toggleResults = document.getElementById('toggle-results');
+const resultsContent = document.getElementById('results-content');
+const scanType = document.getElementById('scan_type');
+const singleScan = document.getElementById('single-scan');
+const rangeScan = document.getElementById('range-scan');
+
+    // Get references to the actual input fields
+    const targetIpInput = document.getElementById('target_ip');
+    const startIpInput = document.getElementById('start_ip');
+    const endIpInput = document.getElementById('end_ip');
 
     // Show/hide scan options based on initial value and changes
     const updateScanOptionsVisibility = () => {
-        if (scanType) {
-             if (scanType.value === 'single') {
-                if(singleScan) singleScan.style.display = 'block';
-                if(rangeScan) rangeScan.style.display = 'none';
-            } else {
-                if(singleScan) singleScan.style.display = 'none';
-                if(rangeScan) rangeScan.style.display = 'block';
+        if (scanType && singleScan && rangeScan && targetIpInput && startIpInput && endIpInput) {
+            if (scanType.value === 'single') {
+                singleScan.style.display = 'block';
+                rangeScan.style.display = 'none';
+                targetIpInput.disabled = false; // Enable single IP input
+                startIpInput.disabled = true;   // Disable range inputs
+                endIpInput.disabled = true;
+            } else { // Assuming 'range'
+                singleScan.style.display = 'none';
+                rangeScan.style.display = 'block';
+                targetIpInput.disabled = true;    // Disable single IP input
+                startIpInput.disabled = false;  // Enable range inputs
+                endIpInput.disabled = false;
             }
+        } else {
+            console.warn("Network scanner form elements not found for visibility/disabling logic.");
         }
     };
 
@@ -42,7 +55,7 @@ if (networkScannerForm) {
     }
 
 
-    // Handle form submission
+// Handle form submission
     networkScannerForm.addEventListener('submit', (e) => {
         console.log("Network Scanner form submitted. Allowing standard navigation..."); // Log: Entry
 
@@ -51,18 +64,18 @@ if (networkScannerForm) {
         if (scanningIcon) {
             scanningIcon.classList.remove('hidden');
         }
-    });
+});
 
-    // Handle dropdown toggle
+// Handle dropdown toggle
     if (toggleResults && resultsContent) {
-        toggleResults.addEventListener('click', (e) => {
-            if (resultsContent.classList.contains('hidden')) {
-                resultsContent.classList.remove('hidden');
-                e.target.textContent = 'Hide Results';
-            } else {
-                resultsContent.classList.add('hidden');
-                e.target.textContent = 'Show Results';
-            }
+toggleResults.addEventListener('click', (e) => {
+    if (resultsContent.classList.contains('hidden')) {
+        resultsContent.classList.remove('hidden');
+        e.target.textContent = 'Hide Results';
+    } else {
+        resultsContent.classList.add('hidden');
+        e.target.textContent = 'Show Results';
+    }
         });
     }
 }
