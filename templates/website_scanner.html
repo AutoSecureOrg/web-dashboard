@@ -1,27 +1,36 @@
-{% extends 'base.html' %}
-
-{% block title %}Website Vulnerability Testing{% endblock %}
-
-{% block content %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Website Scanner</title>
+    <title>Website Vulnerability Testing</title>
+    {# Common Head Elements (Fonts, Base CSS) #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> {# Main style for top bar etc #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tools.css') }}"> {# Page specific styles if needed #}
+
+    {# Add favicons if desired, similar to home.html #}
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='assets/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='assets/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='assets/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='assets/site.webmanifest') }}">
+
 </head>
 <body>
-    <div class="container">
+    {% include '_top_bar.html' %}
+
+    <div class="container tool-container">
         <header>
             <div class="header-text">
-              <h2>Website Vulnerability Testing</h2>
+              <h2>Website Vulnerability Testing</h2>
             </div>
-            <img class="header-image" src="{{ url_for('static', filename='images/web.png') }}" alt="Authenticated Scanning">
         </header>
 
         <div class="input-card">
             <h3>Scan</h3>
-            <form method="POST">
+            <form method="POST" id="websiteScanForm"> {# Added ID for potential JS targeting #}
                 <div id="urlInputs">
                     <label>Target URL:</label>
                     <input type="text" name="urls" required>
@@ -48,9 +57,14 @@
         </div>
     </div>
 
+    {# Include main script for top bar interactions #}
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+    {# Page-specific scripts #}
     <script>
     function addURLField() {
         const container = document.getElementById("urlInputs");
+        if (!container) return;
         const count = container.querySelectorAll("input").length;
         if (count >= 10) return alert("You can only scan up to 10 URLs at once.");
 
@@ -64,12 +78,12 @@
     }
 
     function showLoading() {
-        document.getElementById("loading").style.display = "block";
+        const loadingElement = document.getElementById("loading");
+        if (loadingElement) {
+            loadingElement.style.display = "block";
+        }
     }
     </script>
 
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
-{% include 'footer.html' %}
-{% endblock %}

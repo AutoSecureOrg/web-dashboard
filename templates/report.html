@@ -1,277 +1,257 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Scanner Report</title>
+    {# Common Head Elements #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tools.css') }}">
+    {# Favicons #}
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='assets/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='assets/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='assets/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='assets/site.webmanifest') }}">
+    {# Font Awesome for AI button icon #}
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 
-{% block title %}Website Scanner Report{% endblock %}
+    {# Specific styles for report page #}
+    <style>
+        /* Reuse .tool-container from tools.css */
 
-{% block content %}
-<div class="scanner-report">
-    <!-- Report Header -->
-    <div class="report-header">
-        <h1>Website Vulnerability Testing Result</h1>
-        <p>Target: <span class="target-url">{{ target_url }}</span></p>
-    </div>
-
-    <!-- Progress Bar Section -->
-    <div class="progress-section">
-        <h2>Scan Progress</h2>
-        <div class="progress-bar">
-            <div class="progress" id="progress-bar" style="width: 0%"></div>
-        </div>
-        <p id="progress-text">Scanning target...</p>
-    </div>
-
-    <div class="results-list">
-        {% if output and output|length > 0 %}
-        <table class="table-auto w-full border border-gray-500">
-            <thead>
-                <tr class="bg-gray-700 text-white">
-                    <th class="px-4 py-2">Vulnerability Type</th>
-                    <th class="px-4 py-2">Status</th>
-                    <th class="px-4 py-2">Payload</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for result in output %}
-                <tr class="border-b border-gray-400">
-                    <td class="px-4 py-2 text-center">{{ result.type }}</td>
-                    <td class="px-4 py-2 text-center">
-                        {% if result.status == "Safe" %}
-                        <span class="positive">{{ result.status }}</span>
-                        {% else %}
-                        <span class="negative">{{ result.status }}</span>
-                        {% endif %}
-                    </td>
-                    <td class="px-4 py-2 text-center">
-                        {{ result.payload }}
-                        
-                        {% if result.payload and ('SQL Injection:' in result.payload or 'Cross-Site Scripting' in result.payload or 'Command Injection:' in result.payload or 'HTML Injection:' in result.payload) %}
-                            <br/>
-                            <button class="btn btn-sm btn-info mt-2 ai-fix-btn" data-payload="{{ result.payload }}">
-                                <i class="fas fa-robot me-1"></i> AI Fixes
-                            </button>
-                            <div class="ai-box mt-3 p-3 rounded text-white" style="display:none; background-color: #1a1a2e; border: 1px solid #333356; max-width: 800px; margin: 0 auto;">
-                                <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <div>
-                                        <div class="spinner-border spinner-border-sm text-light me-2" role="status" style="display: inline-block;"></div>
-                                    </div>
-                                </div>
-                                <div class="ai-response p-2" style="font-family: monospace; white-space: pre-wrap; font-size: 0.9rem; background-color: #0f0f1a; border-radius: 4px; padding: 10px;">Thinking...</div>
-                            </div>
-                        {% endif %}
-                    </td>
-                    
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p class="text-green-500">No vulnerabilities found! The target appears to be safe.</p>
-        {% endif %}
-    </div>
-    
-
-    <!-- Action Buttons -->
-    <div class="actions">
-        <a href="{{ url_for('home') }}" class="btn btn-gray">Return to Home</a>
-        <a href="{{ url_for('download_report', report_type='text') }}" class="btn btn-blue">Download Text Report</a>
-        <a href="{{ url_for('download_report', report_type='pdf') }}" class="btn btn-red">Download PDF Report</a>
-    </div>
-</div>
-
-<style>
-    body {
-        margin: 0;
-        padding: 0;
-        font-family: Arial, sans-serif;
-        background-color: #121212;
-        color: #eaeaea;
-    }
-
-    .scanner-report {
-        padding: 50px;
-        margin-top: 80px; /* Push content below navbar */
-        background-color: #0c1b37;
-        border-radius: 10px;
-        max-width: 100%;
-        box-sizing: border-box;
-        min-height: 100vh; /* Takes the entire viewport height */
-    }
-
-    .report-header {
-        text-align: center;
-        margin-bottom: 40px;
-    }
-
-    .report-header h1 {
-        font-size: 3rem;
-        color: #ff6f61;
-    }
-
-    .target-url {
-        color: #00d1ff;
-        font-size: 1.5rem;
-        font-weight: bold;
-        word-wrap: break-word;
-    }
-
-    /* Progress Section */
-    .progress-section {
-        margin-bottom: 50px;
-    }
-
-    .progress-section h2 {
-        font-size: 2rem;
-        color: #eaeaea;
-        margin-bottom: 20px;
-    }
-
-    .progress-bar {
-        width: 100%;
-        height: 35px;
-        background-color: #2e2e40;
-        border-radius: 12px;
-        overflow: hidden;
-    }
-
-    .progress {
-        height: 100%;
-        background-color: #81ca9e;
-        width: 0%;
-        transition: width 0.4s ease;
-    }
-
-    #progress-text {
-        margin-top: 15px;
-        font-size: 1.5rem;
-        color: #eaeaea;
-        text-align: center;
-    }
-
-    /* Results Section */
-    .results-section {
-        margin-bottom: 50px;
-    }
-
-    .results-section h2 {
-        font-size: 2.5rem;
-        color: #ff6f61;
-        margin-bottom: 20px;
-    }
-
-    .results-list {
-        list-style: none;
-        padding: 0;
-        font-size: 1.8rem;
-    }
-
-    .results-list li {
-        margin-bottom: 15px;
-        padding: 15px;
-        border-radius: 8px;
-        background-color: #2a2a2a;
-        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.5);
-    }
-
-    .positive {
-        color: #28a745; /* Green for success messages */
-        font-weight: bold;
-    }
-
-    .negative {
-        color: #dc3545; /* Red for error messages */
-        font-weight: bold;
-    }
-
-    .neutral {
-        color: #eaeaea;
-    }
-
-    /* Action Buttons */
-    .actions {
-        text-align: center;
-        margin-top: 40px;
-    }
-
-    .btn {
-        display: inline-block;
-        margin: 15px;
-        padding: 15px 25px;
-        font-size: 1.5rem;
-        border-radius: 8px;
-        text-decoration: none;
-        color: white;
-        transition: background-color 0.3s ease;
-    }
-
-    .btn-gray {
-        background-color: #6c757d;
-    }
-
-    .btn-gray:hover {
-        background-color: #5a6268;
-    }
-
-    .btn-blue {
-        background-color: #007bff;
-    }
-
-    .btn-blue:hover {
-        background-color: #0056b3;
-    }
-
-    .btn-red {
-        background-color: #dc3545;
-    }
-
-    .btn-red:hover {
-        background-color: #b02a37;
-    }
-    
-    /* AI Insight Box Styling */
-    .ai-box {
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        transition: all 0.3s ease;
-    }
-    
-    .ai-box .spinner-border {
-        width: 1rem;
-        height: 1rem;
-    }
-    
-    .ai-response {
-        line-height: 1.5;
-        max-height: 300px;
-        overflow-y: auto;
-    }
-    
-    .btn-sm {
-        padding: 5px 10px;
-        font-size: 0.875rem;
-    }
-</style>
-
-<script src="{{ url_for('static', filename='js/ai-insight.js') }}"></script>
-
-<script>
-    // JavaScript to simulate progress bar and display results after completion
-    let progress = 0;
-    const progressBar = document.getElementById('progress-bar');
-    const progressText = document.getElementById('progress-text');
-    const resultsSection = document.getElementById('results-section');
-
-    function simulateProgress() {
-        if (progress < 100) {
-            progress += 20; // Adjust step size as needed
-            progressBar.style.width = progress + '%';
-            progressText.textContent = `Scanning target... ${progress}%`;
-
-            setTimeout(simulateProgress, 500);
-        } else {
-            progressText.textContent = 'Scan complete!';
-            resultsSection.style.display = 'block'; // Show results section after progress reaches 100%
+        .report-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color, #333);
         }
-    }
 
-    // Start progress bar simulation on page load
-    document.addEventListener('DOMContentLoaded', simulateProgress);
-</script>
-{% endblock %}
+        .report-header h1 {
+            font-size: clamp(2.2rem, 5vw, 3rem);
+            color: var(--text-color, #fff);
+            margin-bottom: 10px;
+        }
+
+        .target-url {
+            color: var(--accent-color, #00ffff);
+            font-size: clamp(1.1rem, 3vw, 1.5rem);
+            font-weight: bold;
+            word-wrap: break-word;
+        }
+
+        /* Progress Section (if used) */
+        .progress-section {
+            margin-bottom: 40px;
+            background-color: rgba(17, 17, 17, 0.8);
+            padding: 20px 25px;
+            border: 1px solid var(--border-color, #333);
+            border-radius: 10px;
+        }
+
+        .progress-section h2 {
+            font-size: 1.5rem;
+            color: var(--text-color, #fff);
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 25px;
+            background-color: rgba(0,0,0,0.4);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color, #333);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--accent-color, #00ffff);
+            width: 0%; /* Controlled by JS */
+            transition: width 0.4s ease;
+            border-radius: 12px;
+        }
+
+        #progress-text {
+            margin-top: 10px;
+            font-size: 1rem;
+            color: var(--secondary-text, #a0a0a0);
+            text-align: center;
+        }
+
+        /* Results Table Section */
+        .results-card {
+            /* Uses styles from tools.css */
+            margin-top: 0;
+        }
+
+        .results-table {
+            /* Uses styles from tools.css */
+            width: 100%;
+            margin-top: 0;
+        }
+        .results-table td, .results-table th {
+             text-align: center; /* Center text in table cells */
+             vertical-align: middle;
+        }
+
+        .results-table .payload-col {
+            text-align: left; /* Keep payload left-aligned */
+            word-break: break-all;
+        }
+
+        /* Status indicators */
+        .status-safe {
+            color: #28a745; /* Green */
+            font-weight: bold;
+        }
+
+        .status-vulnerable {
+            color: #dc3545; /* Red */
+            font-weight: bold;
+        }
+
+        /* AI Fix Button (within table) */
+        .results-table .ai-button {
+            /* Uses .ai-button style from tools.css */
+            font-size: 0.85rem;
+            padding: 5px 12px;
+            margin-top: 5px;
+        }
+        .results-table .ai-button i {
+             margin-right: 5px;
+        }
+
+        /* AI Response Box (within table) */
+        .ai-response-box-web {
+             /* Similar to .ai-response-box from tools.css but tailored */
+            margin: 10px auto;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color, #444);
+            border-radius: 6px;
+            max-width: 90%; /* Limit width inside cell */
+            text-align: left;
+        }
+        .ai-response-box-web .spinner {
+            width: 16px;
+            height: 16px;
+            border-width: 2px;
+            display: inline-block;
+            vertical-align: middle;
+            margin: 0 8px 0 0;
+        }
+         .ai-response-box-web .ai-text {
+            white-space: pre-wrap;
+            display: block;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            max-height: 250px; /* Limit height */
+            overflow-y: auto;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            /* Uses styles from tools.css */
+            margin-top: 40px;
+        }
+
+    </style>
+</head>
+<body>
+    {% include '_top_bar.html' %}
+
+    <div class="container tool-container">
+        <!-- Report Header -->
+        <div class="report-header">
+            <h1>Website Vulnerability Test Report</h1>
+            <p>Target: <span class="target-url">{{ target_url }}</span></p>
+        </div>
+
+        <!-- Progress Bar Section (Optional: Can be removed if not updated by JS) -->
+        <div class="progress-section">
+            <h2>Scan Status</h2>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar" style="width: 100%"></div> {# Assuming scan is complete when report shown #}
+            </div>
+            <p id="progress-text">Scan Complete.</p>
+        </div>
+
+        <!-- Results -->
+        <div class="results-card">
+             <h3>Detected Vulnerabilities</h3>
+            {% if output and output|length > 0 %}
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Vulnerability Type</th>
+                        <th>Status</th>
+                        <th class="payload-col">Details / Payload</th> {# Payload column #}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in output %}
+                    <tr>
+                        <td>{{ result.type }}</td>
+                        <td>
+                            {% if result.status == "Safe" %}
+                            <span class="status-safe">{{ result.status }}</span>
+                            {% else %}
+                            <span class="status-vulnerable">{{ result.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="payload-col">
+                            <pre>{{ result.payload }}</pre> {# Use pre for formatting #}
+
+                            {# Conditionally show AI button #}
+                            {% if result.payload and ('SQL Injection:' in result.payload or 'Cross-Site Scripting' in result.payload or 'Command Injection:' in result.payload or 'HTML Injection:' in result.payload) %}
+                                <button class="ai-button ai-fix-btn" data-payload="{{ result.payload|escape }}">
+                                    <i class="fas fa-robot"></i> AI Fixes
+                                </button>
+                                <div class="ai-response-box-web" style="display:none;">
+                                     <div class="spinner" role="status" style="display: inline-block;"></div>
+                                     <span class="ai-text">Thinking...</span>
+                                </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="status-safe" style="text-align: center; padding: 20px;">No vulnerabilities found! The target appears to be safe.</p>
+            {% endif %}
+        </div>
+
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <a href="{{ url_for('home') }}"><button type="button" data-type="secondary">Return to Home</button></a>
+            {% if report_path %}
+            <a href="{{ url_for('download_web_report', report_type='text') }}"><button type="button" data-type="info">Download Text Report</button></a>
+            <a href="{{ url_for('download_web_report', report_type='pdf') }}"><button type="button" data-type="danger">Download PDF Report</button></a>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Scripts #}
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ai-insight.js') }}"></script>
+    {# Add script for progress bar if needed #}
+    <script>
+        // Basic progress bar update (can be enhanced)
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressBar = document.getElementById('progress-bar');
+            if (progressBar) {
+                // Set to 100% since report is generated after scan completes
+                progressBar.style.width = '100%';
+            }
+            // AI Insight button listener is in ai-insight.js
+        });
+    </script>
+</body>
+</html>

@@ -87,11 +87,11 @@ function getMobileRemediationAdvice(appName, packageName, version, findings) {
     const aiLoading = document.getElementById('aiLoading');
     const aiContent = document.getElementById('aiContent');
     const aiPre = aiContent.querySelector('pre');
-    
+
     aiResponse.classList.remove('d-none');
     aiLoading.classList.remove('d-none');
     aiContent.classList.add('d-none');
-    
+
     // Prepare data for AI request
     const findingsData = {
         app_name: appName,
@@ -99,7 +99,7 @@ function getMobileRemediationAdvice(appName, packageName, version, findings) {
         version: version,
         findings: findings
     };
-    
+
     // Make API call
     fetch('/get-mobile-ai-insight', {
         method: 'POST',
@@ -112,7 +112,7 @@ function getMobileRemediationAdvice(appName, packageName, version, findings) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let result = '';
-        
+
         function read() {
             return reader.read().then(({done, value}) => {
                 if (done) {
@@ -120,16 +120,16 @@ function getMobileRemediationAdvice(appName, packageName, version, findings) {
                     aiContent.classList.remove('d-none');
                     return;
                 }
-                
+
                 // Append the new chunk to the result
                 result += decoder.decode(value, {stream: true});
                 aiPre.textContent = result;
-                
+
                 // Keep reading
                 return read();
             });
         }
-        
+
         // Start reading the stream
         return read();
     })
@@ -149,36 +149,32 @@ document.addEventListener('DOMContentLoaded', function() {
             getWebScanInsight(this, payload);
         });
     });
-    
+
     // Mobile AI remediation button
     const askAIBtn = document.getElementById('askAIBtn');
     if (askAIBtn) {
         askAIBtn.addEventListener('click', function() {
             // Get the data attributes from the button
             const appName = this.getAttribute('data-app-name');
-            const packageName = this.getAttribute('data-package-name'); 
+            const packageName = this.getAttribute('data-package-name');
             const version = this.getAttribute('data-version');
             const findings = JSON.parse(this.getAttribute('data-findings'));
-            
+
             getMobileRemediationAdvice(appName, packageName, version, findings);
         });
     }
-    
-    // Port scan AI insight buttons
-    document.querySelectorAll('.ai-insight-btn').forEach(button => {
+
+    // Port scan AI insight buttons (Updated selector)
+    document.querySelectorAll('.ai-insight-btn-system').forEach(button => {
         button.addEventListener('click', function() {
-            const service = this.getAttribute('data-service');
-            const version = this.getAttribute('data-version');
-            const vulnerability = this.getAttribute('data-vuln');
-            
-            // Find the row for the response
-            const parentRow = this.closest('tr');
-            const responseRow = parentRow.nextElementSibling;
-            
-            // Show the response row
-            responseRow.classList.remove('d-none');
-            
-            // Get AI insight for the vulnerability
+            // Retrieve data from data-* attributes
+            const service = this.dataset.service;
+            const version = this.dataset.version;
+            const vulnerability = this.dataset.vuln;
+
+            console.log(`System AI Insight requested for: ${service} ${version}, Vuln: ${vulnerability.substring(0, 50)}...`); // Debug log
+
+            // Call the existing function (which handles finding the row etc.)
             getAiInsightSystem(this, service, version, vulnerability);
         });
     });

@@ -1,239 +1,154 @@
-{% extends 'base.html' %}
-
-{% block title %}AutoSecure{% endblock %}
-
-{% block content %}
-<div class="hero-section">
-    <div class="hero-content">
-        <h1>Get a hacker's perspective on your vulnerable port exploits, and web vulnerabilities</h1>
-        <p>Our platform helps security teams automate system and web testing, with ease and user-friendliness like never before.</p>
-        <ul class="feature-list">
-            <li>Automated scanning and exploitation of vulnerable ports</li>
-            <li>Automate detection of various web vulnerabilities</li>
-            <li>AI Powered insights to fixes</li>
-        </ul>
-    </div>
-    <link
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
-  rel="stylesheet"
-/>
-
-    <div class="hero-image">
-        <img src="{{ url_for('static', filename='images/penetration.png') }}" alt="Dashboard Screenshot">
-    </div>
-</div>
-
-<div class="penetration-test-section">
-    <div class="penetration-content">
-        <img src="{{ url_for('static', filename='images/penetration_testing.png') }}" alt="Access Granted" class="penetration-image">
-        <div class="vertical-divider"></div>
-
-        <div class="penetration-text">
-            <h2>Penetration Testing</h2>
-            <p>
-                A <strong>penetration test</strong> simulates a real-world cyber attack to identify vulnerabilities in your IT systems that could be exploited by malicious actors.
-                Our experts help you uncover security weaknesses <em>before the hackers do</em>.
-            </p>
-            <p>
-                With cyberattacks growing more sophisticated and frequent, <strong>regular penetration testing</strong> is crucial to safeguarding your business and protecting sensitive data.
-                Stay ahead of evolving threats by ensuring your security measures are always up-to-date. With us, you're always one step ahead.
-            </p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoSecure</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='assets/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='assets/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='assets/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='assets/site.webmanifest') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="background-layers">
+        <div class="bg-layer visible">
+            <video autoplay loop muted playsinline id="bg-video">
+                <source src="{{ url_for('static', filename='assets/bg.mp4') }}" type="video/mp4">
+            </video>
         </div>
+        <div class="grain-overlay" id="grain-overlay"></div>
     </div>
-</div>
 
-<div class="pentest-title">
-    <h2>Penetration Testing Process</h2>
-    <div class="divider"></div>
-    <p>A comprehensive overview of the steps involved in a penetration test.</p>
-</div>
-
-<div class="penetration-testing-flow">
-    <div class="step-card" onclick="showModal('recon-modal')" title="Gather information about your target.">
-        <div class="step-icon">
-            <i class="fas fa-search"></i>
+    <div class="top-bar">
+        <div class="logo">
+            <a href="{{ url_for('home') }}">
+                <img src="{{ url_for('static', filename='assets/autosecure-logo-white.png') }}" alt="AutoSecure Logo">
+            </a>
         </div>
-        <p class="step-title">Reconnaissance</p>
-    </div>
-
-    <div class="arrow">
-        <i class="fas fa-chevron-right"></i>
-    </div>
-
-    <div class="step-card" onclick="showModal('scanning-modal')" title="Scan for vulnerabilities and open ports.">
-        <div class="step-icon">
-            <i class="fas fa-network-wired"></i>
+        <div class="top-title" id="title-trigger">AutoSecure
+            <div class="info-card">
+                <h3>AutoSecure</h3>
+                <p>An advanced cybersecurity pentesting toolkit that automates complex security assessments, streamlining time-intensive tasks for faster and more efficient vulnerability detection and analysis.</p>
+            </div>
         </div>
-        <p class="step-title">Scanning</p>
+        <div class="top-year">2025</div>
     </div>
 
-    <div class="arrow">
-        <i class="fas fa-chevron-right"></i>
-    </div>
-
-    <div class="step-card" onclick="showModal('gaining-access-modal')" title="Exploit vulnerabilities to gain access.">
-        <div class="step-icon">
-            <i class="fas fa-lock-open"></i>
-        </div>
-        <p class="step-title">Gaining Access</p>
-    </div>
-
-    <div class="arrow">
-        <i class="fas fa-chevron-right"></i>
-    </div>
-
-    <div class="step-card" onclick="showModal('maintaining-access-modal')" title="Ensure continued access without detection.">
-        <div class="step-icon">
-            <i class="fas fa-user-shield"></i>
-        </div>
-        <p class="step-title">Maintaining Access</p>
-    </div>
-
-    <div class="arrow">
-        <i class="fas fa-chevron-right"></i>
-    </div>
-
-    <div class="step-card" onclick="showModal('covering-tracks-modal')" title="Remove traces of your activity.">
-        <div class="step-icon">
-            <i class="fas fa-eraser"></i>
-        </div>
-        <p class="step-title">Covering Tracks</p>
-    </div>
-</div>
-
-<!-- Modals for Detailed Info -->
-<div class="modal" id="recon-modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal('recon-modal')">&times;</span>
-        <h3>Reconnaissance</h3>
-        <p>Gather information about the target using both active and passive methods.</p>
-    </div>
-</div>
-
-<div class="modal" id="scanning-modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal('scanning-modal')">&times;</span>
-        <h3>Scanning</h3>
-        <p>Scan for vulnerabilities, open ports, and misconfigurations using automated tools.</p>
-    </div>
-</div>
-
-<section class="penetration-benefits">
     <div class="container">
-        <h2>Why do Penetration Tests?</h2>
-
-        <div class="benefits-grid">
-            <div class="benefit-card">
-                <div class="benefit-icon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <h3>Vulnerability identification</h3>
-                <p>Penetration testing uncovers security flaws in your IT infrastructure that could be exploited by cybercriminals.</p>
-            </div>
-            <div class="benefit-card">
-                <div class="benefit-icon">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-                <h3>Data and system protection</h3>
-                <p>Penetration testing helps safeguard your data and systems from cyberattacks and potential breaches.</p>
-            </div>
-            <div class="benefit-card">
-                <div class="benefit-icon">
-                    <i class="fas fa-lock"></i>
-                </div>
-                <h3>Enhancing cyber security</h3>
-                <p>After a penetration test and the application of remediation measures, your cybersecurity will experience significant improvements.</p>
-            </div>
-            <div class="benefit-card">
-                <div class="benefit-icon">
-                    <i class="fas fa-balance-scale"></i>
-                </div>
-                <h3>Compliance with guidelines and regulations</h3>
-                <p>Ensures adherence to regulations like the Cybersecurity Act.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="about-autosecure">
-    <div class="content-container">
-      <h2>What you can do with AutoSecure</h2>
-      <p>
-     <strong>AutoSecure</strong> is designed to streamline essential steps in cybersecurity assessments, including reconnaissance, vulnerability scanning, exploitation, and reporting. With our suite of advanced tools, you can identify weaknesses, secure systems, and stay ahead of cyber threats.
-      </p>
-    </div>
-  </section>
-
-<div class="attack-surface-section reverse">
-    <div class="attack-surface-image">
-        <img src="{{ url_for('static', filename='images/vulnerability .png') }}" alt="Vulnerability Scanning Visualization">
-    </div>
-    <div class="attack-surface-content">
-        <h2 class="attack-title">Vulnerability Assessment</h2>
-        <div class="attack-subsection">
-            <h3>System Testing</h3>
-            <ul class="feature-list">
-                <li>
-                    <i class="fas fa-check-circle"></i>
-                    Uncover a wide range of infrastructure security issues with our <a href="{{ url_for('network_scanner') }}"
-                        class="link-highlight">System Testing</a>, a custom tool which finds open ports and services, automatically runs payloads and exploits and safely checks if they are exploitable.
-                </li>
+        <nav class="feature-nav">
+            <ul>
+                <li><a href="#" data-target="system-testing" data-url="{{ url_for('network_scanner') }}">System Testing</a></li>
+                <li><a href="#" data-target="web-testing" data-url="{{ url_for('website_scanner') }}">Web Application Testing</a></li>
+                <li><a href="#" data-target="wifi-testing" data-url="{{ url_for('wifi_page') }}">WiFi Network Testing</a></li>
+                <li><a href="#" data-target="mobile-testing" data-url="{{ url_for('mobile_scan') }}">Mobile Application Testing</a></li>
+                <li><a href="#" data-target="ai-analysis">AI-Powered Analysis</a></li>
             </ul>
+        </nav>
+
+        <!-- Details Modal -->
+        <div class="details-modal" id="details-modal">
+            <div class="modal-content" id="modal-content">
+                 <div id="details-content-container"></div>
+                 <button class="close-btn" id="close-btn">CLOSE</button>
+                 {# Test button will be added here dynamically by script.js #}
+            </div>
         </div>
-        <div class="attack-subsection">
-            <h3>Web Application Testing</h3>
-            <ul class="feature-list">
-                <li>
-                    <i class="fas fa-check-circle"></i>
-                    Use our powerful, custom <a href="{{ url_for('website_scanner') }}" class="link-highlight">Website Vulnerability Testing</a> to accurately detect common vulnerabilities (e.g. XSS, SQLi, OS Command injection) in classic and modern web applications.
-                </li>
-            </ul>
+
+        <!-- Hidden Feature Details (content sources) -->
+        <div class="feature-details" id="system-testing">
+            <div class="detail-header">FEATURE PROFILE</div>
+            <h2>System Testing</h2>
+            <div class="detail-body">
+                <p>Comprehensive testing for system-level vulnerabilities:</p>
+                <ul>
+                    <li>Checks for open ports and identifies running services.</li>
+                    <li>Leverages the Metasploit Framework for automated exploitation.</li>
+                    <li>Offers <strong>Lite Testing</strong> for quick scans and <strong>Deep Testing</strong> for thorough analysis.</li>
+                    <li>Allows users to upload and integrate their own custom exploits.</li>
+                    <li>Supports testing on a single host or a range of IP addresses.</li>
+                </ul>
+            </div>
         </div>
-        <button class="explore-button">Explore scanning tools</button>
-    </div>
-</div>
 
-<div class="attack-surface-section">
-    <div class="attack-surface-content">
-        <h2>Exploitation Tools</h2>
-        <ul class="feature-list">
-            <li>Demonstrate business risks with safe vulnerability exploitation</li>
-            <li>Test real-world scenarios for unauthorized access</li>
-            <li>Generate detailed exploit reports with proof-of-concept</li>
-        </ul>
-        <button class="explore-button">Explore exploitation tools</button>
-    </div>
-    <div class="attack-surface-image">
-        <img src="{{ url_for('static', filename='images/exploit.png') }}" alt="Exploitation Tools Visualization">
-    </div>
-</div>
+        <div class="feature-details" id="web-testing">
+            <div class="detail-header">FEATURE PROFILE</div>
+            <h2>Web Application Testing</h2>
+            <div class="detail-body">
+                <p>Dedicated module for uncovering web vulnerabilities:</p>
+                <ul>
+                    <li>Detects common flaws like SQL Injection, Cross-Site Scripting (XSS), Command Injection, and HTML Injection.</li>
+                    <li>Supports uploading custom payloads to test for specific vulnerabilities or bypass filters.</li>
+                </ul>
+             </div>
+        </div>
 
-<div class="attack-surface-section reverse">
-    <div class="attack-surface-image">
-        <img src="{{ url_for('static', filename='images/report11.png') }}" alt="Reporting Tools Visualization">
-    </div>
-    <div class="attack-surface-content">
-        <h2>Reporting</h2>
-        <ul class="feature-list">
-            <li>Create reports for analysis</li>
-            <li>Export results in multiple formats (TXT, PDF)</li>
-            <li>Get AI-Powered Insights on fixing detected security vulnerabilities</li>
-        </ul>
-    </div>
-</div>
-<div class="attack-surface-section">
-    <div class="attack-surface-content">
-        <h2>AI-Driven Vulnerability Analysis</h2>
-        <ul class="feature-list">
-            <li>Utilizes Llama 3.1 8b for in-depth log analysis and vulnerability detection</li>
-            <li>Provides actionable insights and remediation suggestions for identified vulnerabilities</li>
-            <li>Delivers real-time recommendations to improve system resilience</li>
-        </ul>
-    </div>
-    <div class="attack-surface-image">
-        <img src="{{ url_for('static', filename='images/llma.png') }}" alt="AI-Driven Vulnerability Analysis Visualization">
-    </div>
-</div>
+        <div class="feature-details" id="wifi-testing">
+            <div class="detail-header">FEATURE PROFILE</div>
+            <h2>WiFi Network Testing</h2>
+            <div class="detail-body">
+                <p>Comprehensive wireless network security assessment toolkit featuring advanced detection and analysis capabilities:</p>
+                <ul>
+                    <li>Network Discovery & Analysis: Advanced scanning engine identifies all nearby wireless networks, providing detailed encryption protocols and security configurations.</li>
+                    <li>Security Threat Detection: Sophisticated algorithms detect malicious access points, including SSID spoofing attempts and vendor mismatches that could indicate potential honeypots.</li>
+                    <li>Encryption Vulnerability Assessment: In-depth analysis of network security protocols, highlighting networks using deprecated standards like WEP or weak WPA configurations.</li>
+                    <li>Network Device Enumeration: Multi-protocol device discovery using advanced techniques including ARP scanning, Nmap integration, and wireless packet analysis.</li>
+                    <li>Advanced Device Profiling: Detailed fingerprinting system reveals operating systems, device categories, active services, and manufacturer information of connected devices.</li>
+                    <li>ARP Security Analysis: Identifies devices susceptible to ARP-based attacks, including spoofing vulnerabilities and potential hijacking vectors.</li>
+                    <li>Router Security Assessment: Comprehensive evaluation of network infrastructure, including admin interface security, port scanning, and authentication strength testing.</li>
+                </ul>
+            </div>
+        </div>
 
-{% include 'footer.html' %}
-{% endblock %}
+        <div class="feature-details" id="mobile-testing">
+            <div class="detail-header">FEATURE PROFILE</div>
+            <h2>Mobile Application Testing</h2>
+            <div class="detail-body">
+                <p>Static and dynamic analysis for Mobile App Code & Android application (APKs):</p>
+                <ul>
+                    <li>Analyzes uploaded Mobile App Code and APK files for known vulnerabilities, insecure configurations, and malicious code patterns.</li>
+                    <li>Detects hardcoded secrets and sensitive information leakage.</li>
+                    <li>Identifies excessive application permissions.</li>
+                    <li>Checks for insecure network communication practices.</li>
+                    <li>Scans for known malware signatures and potentially harmful code.</li>
+                    <li>Analyzes APK files for requested permissions and maps them to potential privacy risks.</li>
+                    <li>Detects insecure data storage practices (e.g., world-readable/writable files).</li>
+                    <li>Identifies weak cryptographic implementations.</li>
+                    <li>Checks for potential intent vulnerabilities (e.g., broadcast theft, intent spoofing).</li>
+                    <li>Flags potentially malicious behaviors like dynamic code loading or SMS manipulation.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="feature-details" id="ai-analysis">
+            <div class="detail-header">FEATURE PROFILE</div>
+            <h2>AI-Powered Vulnerability Analysis</h2>
+            <div class="detail-body">
+                <p>Advanced threat detection and analysis powered by locally-hosted LLaMA 3 AI model with real-time NVD integration:</p>
+                <ul>
+                    <li>Real-Time Threat Intelligence: Direct integration with the National Vulnerability Database (NVD) for live vulnerability data, including CVE details, severity indicators, and risk scores.</li>
+                    <li>Comprehensive Vulnerability Profiling: Detailed analysis including severity ratings with visual indicators, CWE classifications, and full vulnerability descriptions with reference links.</li>
+                    <li>Offline-Capable AI Analysis: Locally hosted LLaMA 3 model ensures secure, private, and instantaneous vulnerability assessment without external dependencies.</li>
+                    <li>Automated Remediation Guidance: AI-generated expert remediation steps including:
+                        <ul>
+                            <li>Specific patch recommendations</li>
+                            <li>Detection and verification commands</li>
+                            <li>Strategic mitigation approaches</li>
+                        </ul>
+                    </li>
+                    <li>Real-Time Processing: Instant analysis and response generation, enabling immediate security decision-making and rapid vulnerability management.</li>
+                </ul>
+            </div>
+        </div>
+        <!-- End Hidden Feature Details -->
+
+    </div> <!-- /container -->
+
+    <!-- Add Grained.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/grained@0.0.2/grained.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Scan Results</title>
+    {# Common Head Elements (Fonts, Base CSS) #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tools.css') }}">
+
+    {# Add favicons #}
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='assets/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='assets/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='assets/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='assets/site.webmanifest') }}">
+
+    <style>
+        /* Minimal styles for this page if needed */
+        .tool-container h2 {
+            color: var(--text-color, #fff);
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 700;
+            border-bottom: 1px solid var(--border-color, #333);
+            padding-bottom: 15px;
+        }
+        /* Ensure pre tag uses monospace font */
+         .results-card #results-content pre code {
+            font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: var(--text-color, #fff); /* Ensure text is visible */
+            white-space: pre-wrap; /* Wrap long lines */
+            word-break: break-all; /* Break long words */
+        }
+    </style>
+</head>
+<body>
+    {% include '_top_bar.html' %}
+
+    <div class="container tool-container">
+        <h2>Mobile Scan Results</h2>
+
+        {# Error Display #}
+        {% if error %}
+        <div class="alert error">
+            <strong>Error:</strong> {{ error }}
+        </div>
+        {% endif %}
+
+        {# Results Display #}
+        {% if results %}
+        <div class="results-card">
+            <h3>Scan Output</h3>
+
+            {# Download Buttons #}
+            {% if results.get('report_filename_base') %}
+                <div class="download-buttons">
+                     <a href="{{ url_for('mobile_scan') }}"><button type="button" data-type="secondary">New Scan</button></a>
+                    {# Use specific download route based on scan type and pass base filename #}
+                    <a href="{{ url_for('download_mobile_report', report_type='text', scan_type=results.get('scan_type'), base_filename=results.get('report_filename_base')) }}"><button type="button" data-type="info">Download Text Report</button></a>
+                    {# Conditionally show JSON download for APK scans #}
+                    {% if results.get('scan_type') == 'apk' %}
+                        <a href="{{ url_for('download_mobile_report', report_type='json', scan_type=results.get('scan_type'), base_filename=results.get('report_filename_base')) }}"><button type="button" data-type="success">Download JSON Report</button></a>
+                    {% endif %}
+                    <a href="{{ url_for('download_mobile_report', report_type='pdf', scan_type=results.get('scan_type'), base_filename=results.get('report_filename_base')) }}"><button type="button" data-type="danger">Download PDF Report</button></a>
+                </div>
+            {% elif not error %}
+                 <div class="alert warning">
+                    Scan may have completed, but no report file was generated. Check output below.
+                     <a href="{{ url_for('mobile_scan') }}"><button type="button" data-type="secondary" style="margin-left: 15px;">New Scan</button></a>
+                </div>
+            {% else %}
+                 {# If only error, show back button #}
+                 <div class="action-buttons" style="text-align: center; margin-top: 20px;">
+                     <a href="{{ url_for('mobile_scan') }}"><button type="button" data-type="secondary">Back to Scan Page</button></a>
+                 </div>
+            {% endif %}
+
+            {# Use the standard results-content ID for potential toggling/styling #}
+            <div id="results-content">
+                <pre><code>{{ results.get('output_data', 'No output captured.') }}</code></pre>
+            </div>
+        </div>
+        {% elif not error %}
+         {# Case where results are empty but no error #}
+         <div class="alert info">
+             No scan results were generated.
+             <a href="{{ url_for('mobile_scan') }}"><button type="button" data-type="secondary" style="margin-left: 15px;">Back to Scan Page</button></a>
+         </div>
+        {% endif %}
+
+    </div>
+
+    {# Include main script for top bar interactions #}
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {# Font Awesome if needed for icons #}
+    {# <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script> #}
+
+</body>
+</html>
