@@ -214,6 +214,7 @@ body {
     height: 100%;
     display: flex;
     align-items: center;
+    pointer-events: auto;
 }
 
 .logo img {
