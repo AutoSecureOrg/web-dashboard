@@ -52,31 +52,24 @@ def parse_input_fields(url, session):
         print(f"[-] Error while parsing input fields: {e}")
         return []
 
-def load_payloads(vulnerability_type, payload_dir="payload_texts"):
-    """Loads payloads from external text files based on the vulnerability type."""
-    
-    # Get the absolute path to the payload directory
-    script_dir = os.path.dirname(os.path.abspath(__file__))  # Directory where script is running
-    payload_dir_path = os.path.join(script_dir, payload_dir)  # Full path to payload_texts
-    payload_file = os.path.join(payload_dir_path, f"{vulnerability_type}.txt")
-
-    print(f"[DEBUG] Looking for payload file: {payload_file}")  # Debugging statement
-
-    if not os.path.isfile(payload_file):  # Ensure it's a valid file
-        print(f"Warning: Payload file {payload_file} not found.")
-        return []
-
+def load_payloads(vuln_type):
     payloads = []
-    try:
-        with open(payload_file, "r", encoding="utf-8") as file:
-            payloads = [line.strip() for line in file if line.strip()]  # Read non-empty lines
-            print("PAYLOADS ----------------------------", payloads)
-    except Exception as e:
-        print(f"Error loading payload file {payload_file}: {e}")
-        return []
 
-    print(f"[DEBUG] Loaded {len(payloads)} payload(s) from {payload_file}")
-    return payloads
+    base_dir = os.path.dirname(__file__)
+    default_file = os.path.join(base_dir, "payload_texts", f"{vuln_type}.txt")
+    custom_file  = os.path.join(base_dir, "custom_payloads", f"{vuln_type}_custom.txt")
+
+    if os.path.exists(default_file):
+        with open(default_file, "r", encoding="utf-8") as f:
+            payloads.extend([line.strip() for line in f if line.strip()])
+
+    if os.path.exists(custom_file):
+        print(f"[DEBUG] Using custom payloads from: {custom_file}")
+        with open(custom_file, "r", encoding="utf-8") as f:
+            payloads.extend([line.strip() for line in f if line.strip()])
+
+    return list(set(payloads))  # Deduplicate
+
 
 def login_sql_injection(base_url, session):
     results=[]

@@ -881,6 +881,29 @@ def website_scanner():
 
     return render_template('website_scanner.html')
 
+#custom payloads upload
+@app.route('/upload_payload', methods=['POST'])
+def upload_payload():
+    payload_type = request.form.get("type")
+    payload_files = request.files.getlist("payload_files")
+
+    if payload_type and payload_files:
+        custom_payload_dir = os.path.join(os.path.dirname(__file__), "scripts", "custom_payloads")
+        os.makedirs(custom_payload_dir, exist_ok=True)
+
+        # Overwrite or merge all into ONE file: xss_custom.txt
+        save_path = os.path.join(custom_payload_dir, f"{payload_type}_custom.txt")
+
+        with open(save_path, "a", encoding="utf-8") as outfile:
+            for f in payload_files:
+                if f and f.filename.endswith(".txt"):
+                    contents = f.read().decode("utf-8")
+                    outfile.write(contents + "\n")
+
+        return '', 200
+
+    return "❌ Invalid upload", 400
+
 
 #------------------------------------------------------------------------------wifi---------------------------------
 @app.route("/check-upnp")

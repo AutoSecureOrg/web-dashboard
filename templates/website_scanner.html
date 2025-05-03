@@ -16,6 +16,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='assets/favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='assets/favicon-16x16.png') }}">
     <link rel="manifest" href="{{ url_for('static', filename='assets/site.webmanifest') }}">
+    
 
 </head>
 <body>
@@ -29,6 +30,7 @@
         </header>
 
         <div class="input-card">
+            <br>
             <h3>Scan</h3>
             <form method="POST" id="websiteScanForm"> {# Added ID for potential JS targeting #}
                 <div id="urlInputs">
@@ -49,6 +51,9 @@
                     <option value="command_injection">Command Injection</option>
                 </select>
 
+                <button type="button" class="neon-button" onclick="openCustomPayloadModal()">➕ Custom Payload</button>
+                <pre id="uploadedFileName" style="color: #bbb; font-size: 0.9em; margin-top: 6px;"></pre>
+
                 <p id="loading" style="display:none; color: orange;">Targeting vulnerabilities ...</p>
 
                 <br><br>
@@ -56,6 +61,31 @@
             </form>
         </div>
     </div>
+
+    <div id="customPayloadModal" class="hidden">
+        <div class="">
+          <h2 class="feature-title">Select Payload Type</h2>
+          <p class="feature-desc">Upload a <code>.txt</code> file containing custom payloads for a specific test:</p>
+      
+          <input type="file" id="fileInput" accept=".txt" multiple required class="neon-input"><br><br>
+      
+          <!-- Buttons row -->
+          <div class="payload-button-row">
+            <button type="button" class="modal-button test-btn" onclick="uploadPayload('xss')">XSS</button>
+            <button type="button" class="modal-button test-btn" onclick="uploadPayload('sql_injection')">SQL</button>
+            <button type="button" class="modal-button test-btn" onclick="uploadPayload('command_injection')">Command</button>
+            <button type="button" class="modal-button test-btn" onclick="uploadPayload('html_injection')">HTML</button>
+          </div>
+          <br>
+          <!-- Close button -->
+          <button type="button" class="modal-button close-btn" onclick="closeCustomPayloadModal()">CLOSE</button>
+      
+          <!-- Uploaded filenames -->
+          <pre id="uploadedFileName" style="color: #bbb; font-size: 0.85rem; margin-top: 1rem;"></pre>
+        </div>
+      </div>
+      
+      
 
     {# Include main script for top bar interactions #}
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
@@ -83,6 +113,83 @@
             loadingElement.style.display = "block";
         }
     }
+    
+    function openCustomPayloadModal() {
+    document.getElementById('customPayloadModal').classList.remove('hidden');
+    }
+    function closeCustomPayloadModal() {
+        document.getElementById('customPayloadModal').classList.add('hidden');
+    }
+
+
+    function uploadPayload(type) {
+    const fileInput = document.getElementById("fileInput");
+    const files = fileInput.files;
+
+    if (!files.length || !type) {
+        alert("⚠️ Please select one or more files and a test type.");
+        return;
+    }
+
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+        formData.append("payload_files", files[i]);  // Name matches Flask route
+    }
+    formData.append("type", type);
+
+    fetch("/upload_payload", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => {
+        if (response.ok) {
+            const fileNames = Array.from(files).map(f => f.name).join(", ");
+            const display = document.getElementById("uploadedFileName");
+            if (display) {
+                display.textContent += `\nUploaded ${files.length} file(s) for ${type.toUpperCase()}: ${fileNames}`;
+            }
+            closeCustomPayloadModal();
+        } else {
+            alert("❌ Upload failed.");
+        }
+    })
+    .catch(error => {
+        console.error("Upload error:", error);
+        alert("❌ An error occurred during upload.");
+    });
+    }
+
+
+    const formData = new FormData();
+    formData.append("payload_file", file);
+    formData.append("type", type);
+
+    fetch("/upload_payload", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => {
+        if (response.ok) {
+    const fileName = file.name;
+    const display = document.getElementById("uploadedFileName");
+    if (display) {
+        const existing = display.textContent;
+        const newEntry = `Uploaded ${files.length} file(s) for ${type.toUpperCase()}: ${fileNames}`;
+        display.textContent = existing ? `${existing}\n${newEntry}` : newEntry;
+    }
+
+    closeCustomPayloadModal();}
+
+        // fileInput.value = ''; // Uncomment this if you want to reset file input//
+        else {
+        alert("❌ Upload failed.");
+        }
+    })
+    .catch(error => {
+        console.error("Upload error:", error);
+        alert("❌ An error occurred during upload.");
+    });
+
     </script>
 
 </body>
