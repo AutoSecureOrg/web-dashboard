@@ -85,7 +85,8 @@ body {
     top: 0;
     left: 0;
     width: 100%;
-    padding: 1rem 2rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -209,15 +210,16 @@ body {
 /* Logo Styling */
 .logo {
     position: absolute;
-    top: 1rem;
+    top: 0.4rem;
     left: 2rem;
     height: 100%;
     display: flex;
     align-items: center;
+    pointer-events: auto;
 }
 
 .logo img {
-    height: 8rem;
+    height: 2rem;
     width: auto;
 }
 

@@ -27,26 +27,86 @@
 
         <div class="input-card">
                 <h3>🛡️ Wi-Fi Security Scanner</h3>
-                <button id="start-wifi-scan-btn" data-url="{{ url_for('wifi_dashboard') }}" class="scan-button">Start Scan</button>
-            </div>
+                <button id="start-wifi-scan-btn" class="scan-button">Start Network Scan</button>
+                <div id="scan-loading" style="display: none; text-align: center; margin-top: 15px;">
+                    <div class="spinner"></div>
+                    <p>Scanning for Wi-Fi networks...</p>
+                </div>
+                <div id="network-selection-area" style="margin-top: 20px;">
+                    <!-- Network list will be injected here -->
+                </div>
         </div>
-</div>
+    </div>
 
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
-{# Add script to handle the button click #}
+{# Add script to handle the button click and display networks #}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const scanButton = document.getElementById('start-wifi-scan-btn');
+    const loadingIndicator = document.getElementById('scan-loading');
+    const networkSelectionArea = document.getElementById('network-selection-area');
+
     if (scanButton) {
         scanButton.addEventListener('click', function() {
-            const targetUrl = this.dataset.url;
-            if (targetUrl) {
-                console.log('Navigating to:', targetUrl);
-                window.location.href = targetUrl;
-            } else {
-                console.error('Scan button is missing data-url attribute.');
-            }
+            // Show loading, clear previous results
+            if (loadingIndicator) loadingIndicator.style.display = 'block';
+            if (networkSelectionArea) networkSelectionArea.innerHTML = '';
+            scanButton.disabled = true; // Disable button during scan
+
+            // Fetch initial scan results
+            fetch("{{ url_for('fetch_wifi_scan') }}", { method: 'POST' })
+                .then(res => {
+                    if (!res.ok) {
+                        return res.json().then(err => { throw new Error(err.error || `HTTP error! Status: ${res.status}`); });
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (loadingIndicator) loadingIndicator.style.display = 'none';
+                    scanButton.disabled = false;
+
+                    if (data.error) {
+                         networkSelectionArea.innerHTML = `<p class="error-message">❌ Error scanning networks: ${data.error}</p>`;
+                         return;
+                    }
+
+                    const networks = data.networks;
+                    if (!networks || networks.length === 0) {
+                        networkSelectionArea.innerHTML = "<p>No Wi-Fi networks detected.</p>";
+                        return;
+                    }
+
+                    // Render network table for selection
+                    let html = `<h4>Select a Network to Analyze:</h4>
+                                <table class="results-table" style="color: var(--text-color); border-collapse: collapse; width: 100%;">
+                                <thead><tr><th>SSID</th><th>BSSID</th><th>Signal</th><th>Encryption</th><th>Action</th></tr></thead>
+                                <tbody>`;
+
+                    networks.forEach(net => {
+                        const safeSSID = encodeURIComponent(net['SSID'] || '');
+                        const safeBSSID = encodeURIComponent(net['BSSID'] || '');
+                        const dashboardUrl = `{{ url_for('wifi_dashboard') }}?ssid=${safeSSID}&bssid=${safeBSSID}`;
+
+                        html += `<tr>
+                            <td style="border: 1px solid var(--border-color, #444); padding: 8px;">${net['SSID'] || 'Hidden'}</td>
+                            <td style="border: 1px solid var(--border-color, #444); padding: 8px;">${net['BSSID'] || 'N/A'}</td>
+                            <td style="border: 1px solid var(--border-color, #444); padding: 8px;">${net['Signal Strength'] || 'N/A'}</td>
+                            <td style="border: 1px solid var(--border-color, #444); padding: 8px;">${net['Encryption Type'] || 'Unknown'}</td>
+                            <td style="border: 1px solid var(--border-color, #444); padding: 8px;">
+                                <a href="${dashboardUrl}"><button type="button" data-type="info" style="margin: 0;">Analyze</button></a>
+                            </td>
+                        </tr>`;
+                    });
+                    html += `</tbody></table>`;
+                    networkSelectionArea.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Initial WiFi Scan Error:', error);
+                    if (loadingIndicator) loadingIndicator.style.display = 'none';
+                    scanButton.disabled = false;
+                    if (networkSelectionArea) networkSelectionArea.innerHTML = `<p class="error-message">❌ Failed to scan networks: ${error.message}</p>`;
+                });
         });
     }
 });

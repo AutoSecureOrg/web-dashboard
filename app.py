@@ -149,12 +149,39 @@ def format_wifi_analysis_text(analysis_data):
         lines.append("No connected devices found or analysis failed.")
     lines.append("\n")
 
-    # Device Vulnerability Summary (You might already have a table format for this elsewhere)
-    # Add logic here if needed, similar to devices table
+    # --- Add Device Vulnerability Summary Table ---
     lines.append("--- Device Vulnerability Summary ---")
-    # Placeholder - requires formatting logic like above
-    lines.append("(Device vulnerability summary based on open ports needs formatting)")
+    if devices:
+        vuln_summary_data = []
+        for dev in devices:
+            ports = (dev.get('Open Ports', '') or '').lower()
+            risk = "✅ Low"
+            reason = "No high-risk open ports detected"
+            if "23/tcp" in ports or "21/tcp" in ports:
+                risk = "❌ Critical"
+                reason = "Exposed Telnet or FTP services (unencrypted)"
+            elif ("80/tcp" in ports and "443/tcp" not in ports) or \
+                 any(p in ports for p in ["unknown", "9100", "22/tcp", "3306", "8000", "8080", "9010", "9020", "50100"]):
+                risk = "⚠️ Medium"
+                reason = "Potentially vulnerable/exposed services detected"
+
+            vuln_summary_data.append({
+                'IP Address': dev.get('IP Address', 'N/A'),
+                'MAC Address': dev.get('MAC Address', 'N/A'),
+                'Vendor': dev.get('Vendor', 'N/A'),
+                'Risk Level': risk,
+                'Reason': reason
+            })
+
+        if vuln_summary_data:
+            vuln_df = pd.DataFrame(vuln_summary_data)
+            lines.append(tabulate(vuln_df, headers='keys', tablefmt='grid'))
+        else:
+            lines.append("No device vulnerability data to display.")
+    else:
+        lines.append("Device vulnerability analysis skipped (no devices found).")
     lines.append("\n")
+    # --- End Device Vulnerability Summary ---
 
     # ARP Flood Output
     lines.append("--- ARP Replay Flood Report ---")
@@ -909,20 +936,15 @@ def wifi_dashboard():
 @app.route('/fetch-wifi-scan', methods=['POST'])
 def fetch_wifi_scan():
     try:
-        networks_df, rogue_df = scan_and_analyze()
-        # Ensure rogue_df data is structured as expected by JS
-        # Assuming scan_and_analyze now returns a dict like {'summary': [...], 'detailed_log': '...'} for rogue data
-        rogue_report = process_rogue_data_for_json(rogue_df) # Helper function needed
+        networks_df = scan_wifi_networks_nmcli() # Only scan networks
+        if networks_df is None:
+            return jsonify({"error": "Failed to scan networks or no networks found."}), 500
 
         return jsonify({
-            "networks": networks_df.to_dict(orient="records") if networks_df is not None else [],
-            "rogue_report": rogue_report
+            "networks": networks_df.to_dict(orient="records")
         })
     except Exception as e:
         print(f"ERROR in fetch_wifi_scan: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({"error": f"Failed to fetch Wi-Fi scan data: {e}"}), 500
 
 
 @app.route('/wifi-analyze', methods=['POST'])
@@ -1017,16 +1039,14 @@ def wifi_analyze():
         }
 
         # Step 5: Trigger ARP flood in background (don't wait for it)
-        arp_flood_output = "ARP flood initiated..."
+        arp_flood_output = "ARP flood initiation failed or was skipped."
         try:
-             # Run in a separate thread? For now, just trigger and return placeholder.
-             # Ideally, this would update a status or use websockets.
-            threading.Thread(target=auto_arp_replay_flood, args=("wlan0",), daemon=True).start()
-            # result = auto_arp_replay_flood(interface="wlan0")
-            # arp_flood_output = result # This would block the response
+            # Run synchronously now to get the result string
+            arp_flood_output = auto_arp_replay_flood(interface="wlan0")
+            print("INFO: ARP flood analysis completed.")
         except Exception as e:
-            print(f"ERROR: Failed to trigger ARP flood in background: {e}")
-            arp_flood_output = f"Error initiating ARP flood: {e}"
+            print(f"ERROR: Failed to run ARP flood: {e}")
+            arp_flood_output = f"Error running ARP flood analysis: {e}"
 
         # Return all collected data as JSON
         return jsonify({
@@ -1047,15 +1067,15 @@ def wifi_analyze():
                 "target_info": target_info,
                 "vulnerability": vulnerability_info,
                 "devices": fp_df.to_dict(orient="records") if fp_df is not None else [],
-                "arp_flood_output": arp_flood_output # Include the placeholder
-                # Add other relevant pieces if needed
+                "arp_flood_output": arp_flood_output # Include the actual ARP report string
         }
         try:
             report_text = format_wifi_analysis_text(analysis_data_for_report)
             timestamp = datetime.now().strftime("%d%m%y_%H%M%S")
             # Sanitize BSSID for filename
-            safe_bssid = bssid.replace(':', '-')
+            safe_bssid = bssid.replace(':', '-').replace(' ', '_') # Basic sanitization
             report_base_filename = f"wifi_analysis_{safe_bssid}_{timestamp}"
+            print(f"DEBUG: Generated report_base_filename: {report_base_filename}") # <-- ADD DEBUG PRINT
             text_report_path = os.path.join(REPORTS_DIR, f"{report_base_filename}.txt")
             with open(text_report_path, "w", encoding="utf-8") as f:
                 f.write(report_text)
@@ -1066,7 +1086,6 @@ def wifi_analyze():
              report_base_filename = None # Indicate report saving failed
         # --- End Report Generation --- #
 
-        # Return all collected data as JSON, including report filename if successful
         # Construct the final JSON response separately
         response_json = {
             "status": "success",
@@ -1080,6 +1099,7 @@ def wifi_analyze():
             "report_base_filename": report_base_filename # Will be None if saving failed
         }
 
+        print(f"DEBUG: Returning JSON: {response_json}") # <-- ADD DEBUG PRINT
         return jsonify(response_json)
 
     except Exception as e:
