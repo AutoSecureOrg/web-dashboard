@@ -7,7 +7,7 @@ body {
 
 .tool-container {
     max-width: 1100px;
-    margin: 100px auto 40px auto;
+    margin: 50px auto 20px auto;
     padding: 20px;
 }
 
@@ -62,7 +62,6 @@ header {
     padding: 25px 30px;
     border: 1px solid var(--border-color, #333);
     border-radius: 10px;
-    margin-bottom: 30px;
     backdrop-filter: blur(5px);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
@@ -451,3 +450,26 @@ button[data-type="danger"]:hover {
 .alert strong {
     font-weight: 700;
 }
+
+#customPayloadModal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #111;
+    color: #fff;
+    padding: 30px 40px;
+    border-radius: 16px;
+    box-shadow: 0 0 20px rgba(0,255,255,0.3);
+    z-index: 9999;
+    width: 450px;
+    text-align: center;
+  }
+  
+  .payload-button-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  
