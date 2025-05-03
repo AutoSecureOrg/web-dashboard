@@ -801,57 +801,81 @@ def download_web_report(report_type):
 @app.route('/website_scanner', methods=['GET', 'POST'])
 def website_scanner():
     if request.method == 'POST':
-        target_url = request.form['target_url']
+        target_urls = request.form.getlist('urls') # Get all URLs
         scan_type = request.form['scan_type']
 
-        results = ""
+        if not target_urls or not any(url.strip() for url in target_urls):
+            return render_template('website_scanner.html', error="No target URL(s) provided.")
 
-        try:
-            if scan_type == "all":
-                results = complete_scan(target_url)
-            elif scan_type == "sql_login":
-                results = login_sql_injection(target_url, None)
-            elif scan_type == "sql_injection":
-                results = sql_only(target_url)
-            elif scan_type == "xss":
-                results = xss_only(target_url)
-            elif scan_type == "html_injection":
-                results = html_only(target_url)
-            elif scan_type == "command_injection":
-                results = command_only(target_url)
-            else:
-                results = "Invalid scan type selected."
+        all_results = {} # Dictionary to hold results per URL
+        all_errors = {} # Dictionary to hold errors per URL
 
-        except Exception as e:
-            results = f"An error occurred: {str(e)}"
+        # --- Loop through each target URL --- #
+        for target_url in target_urls:
+            target_url = target_url.strip()
+            if not target_url: # Skip empty inputs
+                continue
 
-        # Format results into a list of dictionaries
-        results_list = []
-        if isinstance(results, str):  # Convert strings to list of dictionaries
-            for line in results.split("\n"):
-                if line.strip():
-                    results_list.append({"type": "General", "status": "Info", "payload": line})
-        elif isinstance(results, list):  # Use provided list format
-            for res in results:
-                if isinstance(res, dict):
-                    results_list.append({
-                        "type": res.get("type", "Unknown"),
-                        "status": res.get("status", "Unknown"),
-                        "payload": res.get("payload", "N/A")
-                    })
+            print(f"INFO: Scanning URL: {target_url} with type: {scan_type}")
+            results = ""
+            try:
+                if scan_type == "all":
+                    results = complete_scan(target_url)
+                elif scan_type == "sql_login":
+                    results = login_sql_injection(target_url, None)
+                elif scan_type == "sql_injection":
+                    results = sql_only(target_url)
+                elif scan_type == "xss":
+                    results = xss_only(target_url)
+                elif scan_type == "html_injection":
+                    results = html_only(target_url)
+                elif scan_type == "command_injection":
+                    results = command_only(target_url)
                 else:
-                    results_list.append({"type": "General", "status": "Info", "payload": str(res)})
+                    results = "Invalid scan type selected."
+                    all_errors[target_url] = "Invalid scan type selected."
 
-        # Display all results (including General) in the dashboard
-        display_results = results_list if results_list else [{"type": "No vulnerabilities found", "status": "Safe", "payload": "N/A"}]
+                # Format results for this specific URL
+                current_results_list = []
+                if isinstance(results, str):
+                    for line in results.split("\n"):
+                        if line.strip():
+                            current_results_list.append({"type": "General", "status": "Info", "payload": line})
+                elif isinstance(results, list):
+                    for res in results:
+                        if isinstance(res, dict):
+                            current_results_list.append({
+                                "type": res.get("type", "Unknown"),
+                                "status": res.get("status", "Unknown"),
+                                "payload": res.get("payload", "N/A")
+                            })
+                        else:
+                            current_results_list.append({"type": "General", "status": "Info", "payload": str(res)})
+
+                # Store formatted results for this URL
+                if not current_results_list and not all_errors.get(target_url):
+                     all_results[target_url] = [{"type": "No vulnerabilities found", "status": "Safe", "payload": "N/A"}]
+                elif current_results_list:
+                     all_results[target_url] = current_results_list
+
+            except Exception as e:
+                error_msg = f"An error occurred scanning {target_url}: {str(e)}"
+                print(f"ERROR: {error_msg}")
+                all_errors[target_url] = error_msg
+                # Optionally add an error entry to the results for this URL
+                all_results[target_url] = [{'type': 'Error', 'status': 'Failed', 'payload': error_msg}]
+
+        # --- End URL Loop --- #
 
         # Generate a report
-        report_path = web_vuln_report(REPORTS_DIR, target_url, results_list)
+        report_path = web_vuln_report(REPORTS_DIR, target_urls, all_results)
 
+        # Pass the dictionary of results to the template
         return render_template(
             'report.html',
-            output=display_results,
-            target_url=target_url,
+            scan_outputs=all_results, # Pass the dictionary
+            scan_errors=all_errors, # Pass errors separately
+            target_urls=target_urls, # Pass the list of URLs
             report_path=report_path
         )
 
@@ -1635,4 +1659,4 @@ def download_wifi_report(report_type):
 if __name__ == '__main__':
     if not app.secret_key or app.secret_key == 'temporary_secret_key_for_testing':
         app.secret_key = os.urandom(24) # Ensure a key is set for session
-    app.run(host='0.0.0.0', port=5556, debug=True)
+    app.run(host='0.0.0.0', port=8000, debug=True)

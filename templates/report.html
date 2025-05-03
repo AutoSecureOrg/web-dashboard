@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Website Scanner Report</title>
+    <title>Web Scan Report</title>
     {# Common Head Elements #}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -166,92 +166,97 @@
     {% include '_top_bar.html' %}
 
     <div class="container tool-container">
-        <!-- Report Header -->
-        <div class="report-header">
-            <h1>Website Vulnerability Test Report</h1>
-            <p>Target: <span class="target-url">{{ target_url }}</span></p>
-        </div>
+        <h1><i class="fas fa-shield-alt" style="margin-right: 10px;"></i>Web Vulnerability Scan Report</h1>
 
-        <!-- Progress Bar Section (Optional: Can be removed if not updated by JS) -->
-        <div class="progress-section">
-            <h2>Scan Status</h2>
-            <div class="progress-bar-container">
-                <div class="progress-bar" id="progress-bar" style="width: 100%"></div> {# Assuming scan is complete when report shown #}
+        {# Display errors first, if any #}
+        {% if scan_errors %}
+            <div class="results-section">
+                <h3><i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i>Scan Errors Encountered</h3>
+                {% for url, error_msg in scan_errors.items() %}
+                    <div class="alert error" style="margin-bottom: 10px;">
+                        <strong>Error scanning {{ url }}:</strong> {{ error_msg }}
+                    </div>
+                {% endfor %}
             </div>
-            <p id="progress-text">Scan Complete.</p>
-        </div>
+        {% endif %}
 
-        <!-- Results -->
-        <div class="results-card">
-             <h3>Detected Vulnerabilities</h3>
-            {% if output and output|length > 0 %}
-            <table class="results-table">
-                <thead>
-                    <tr>
-                        <th>Vulnerability Type</th>
-                        <th>Status</th>
-                        <th class="payload-col">Details / Payload</th> {# Payload column #}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for result in output %}
-                    <tr>
-                        <td>{{ result.type }}</td>
-                        <td>
-                            {% if result.status == "Safe" %}
-                            <span class="status-safe">{{ result.status }}</span>
+        {# Loop through results for each URL #}
+        {% if scan_outputs %}
+            {% for url, results_list in scan_outputs.items() %}
+                <div class="results-section">
+                    <h2><i class="fas fa-link" style="margin-right: 8px;"></i>Results for: {{ url }}</h2>
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Payload/Details</th>
+                                <th>AI Fix</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in results_list %}
+                            <tr>
+                                <td>{{ item.type }}</td>
+                                <td class="{% if item.status == 'Vulnerable' or item.status == 'Failed' %}status-negative{% elif item.status == 'Safe' %}status-positive{% else %}status-info{% endif %}">{{ item.status }}</td>
+                                <td><pre>{{ item.payload }}</pre></td>
+                                <td>
+                                     {% if item.status == 'Vulnerable' and item.payload != 'N/A' %}
+                                        {# Pass payload to AI insight function #}
+                                        <button class="ai-button ai-insight-btn"
+                                            data-payload="{{ item.payload | replace('\n', '\\n') | replace('"', '&quot;') }}">
+                                            Fix With AI
+                                        </button>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {# AI response row (hidden initially) #}
+                            {% if item.status == 'Vulnerable' and item.payload != 'N/A' %}
+                            <tr class="ai-row" style="display: none;">
+                                <td colspan="4">
+                                    <div class="ai-response-box">
+                                        <strong>AI Insight:</strong>
+                                        <div class="spinner" role="status"></div>
+                                        <span class="ai-text">Thinking...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                             {% endif %}
                             {% else %}
-                            <span class="status-vulnerable">{{ result.status }}</span>
-                            {% endif %}
-                        </td>
-                        <td class="payload-col">
-                            <pre>{{ result.payload }}</pre> {# Use pre for formatting #}
+                            <tr>
+                                <td colspan="4">No specific results found for this URL.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+        {% elif not scan_errors %}
+             <div class="alert info">
+                 No scan results were generated for any URL.
+             </div>
+        {% endif %}
 
-                            {# Conditionally show AI button #}
-                            {% if result.payload and ('SQL Injection:' in result.payload or 'Cross-Site Scripting' in result.payload or 'Command Injection:' in result.payload or 'HTML Injection:' in result.payload) %}
-                                <button class="ai-button ai-fix-btn" data-payload="{{ result.payload|escape }}">
-                                    <i class="fas fa-robot"></i> AI Fixes
-                                </button>
-                                <div class="ai-response-box-web" style="display:none;">
-                                     <div class="spinner" role="status" style="display: inline-block;"></div>
-                                     <span class="ai-text">Thinking...</span>
-                                </div>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p class="status-safe" style="text-align: center; padding: 20px;">No vulnerabilities found! The target appears to be safe.</p>
-            {% endif %}
-        </div>
-
-
-        <!-- Action Buttons -->
+        {# Action Buttons #}
         <div class="action-buttons">
             <a href="{{ url_for('home') }}"><button type="button" data-type="secondary">Return to Home</button></a>
-            {% if report_path %}
-            <a href="{{ url_for('download_web_report', report_type='text') }}"><button type="button" data-type="info">Download Text Report</button></a>
-            <a href="{{ url_for('download_web_report', report_type='pdf') }}"><button type="button" data-type="danger">Download PDF Report</button></a>
+            {# Check if report_path exists - needs adjustment in app.py report generation #}
+            {% if report_path and (scan_outputs or scan_errors) %}
+                <a href="{{ url_for('download_web_report', report_type='text') }}"><button type="button" data-type="info">Download Text Report</button></a>
+                <a href="{{ url_for('download_web_report', report_type='pdf') }}"><button type="button" data-type="danger">Download PDF Report</button></a>
+            {% else %}
+                <p style="color: var(--secondary-text, #a0a0a0); width: 100%;">No results available to generate a report.</p>
             {% endif %}
         </div>
+
     </div>
 
-    {# Scripts #}
+    {# Include necessary scripts #}
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {# Include AI insight script if using the AI Fix button #}
     <script src="{{ url_for('static', filename='js/ai-insight.js') }}"></script>
-    {# Add script for progress bar if needed #}
-    <script>
-        // Basic progress bar update (can be enhanced)
-        document.addEventListener('DOMContentLoaded', function() {
-            const progressBar = document.getElementById('progress-bar');
-            if (progressBar) {
-                // Set to 100% since report is generated after scan completes
-                progressBar.style.width = '100%';
-            }
-            // AI Insight button listener is in ai-insight.js
-        });
-    </script>
+
 </body>
 </html>
