@@ -131,35 +131,16 @@
     <div class="container tool-container">
         <h1><i class="fas fa-wifi" style="margin-right: 10px;"></i>Wi-Fi Security Dashboard</h1>
 
-        <!-- == Section 1: Initial Scan Results == -->
-        <div class="results-section" id="scan-list-section">
-            <h2><i class="fas fa-broadcast-tower" style="margin-right: 8px;"></i>Available Wi-Fi Networks</h2>
-            <div id="initial-scan-loading">
-                <div class="spinner"></div>
-                <p>Scanning for networks... Please wait.</p>
-            </div>
-            <div id="networkTableContainer">
-                {# Network table will be rendered here by JS #}
-                <p>Waiting for scan results...</p>
-            </div>
-            <div id="rogueSummaryTableContainer">
-                 {# Rogue AP table will be rendered here #}
-            </div>
-             <div id="rogueDetailedLogContainer" style="margin-top: 15px;">
-                 {# Rogue detailed log #}
-            </div>
-        </div>
-
-        <!-- == Section 2: Analysis Results (Initially hidden/empty) == -->
-        <div class="results-section" id="analysis-section" style="display: none;">
+        <!-- Section for Analysis Results -->
+        <div class="results-section" id="analysis-section">
             <h2 id="analysis-title">Analysis Details</h2> {# Title will be updated #}
 
-            <div id="analysis-loading">
+            <div id="analysis-loading" style="display: none;"> {# Initially hidden #}
                 <div class="spinner"></div>
-                <p>Analyzing selected network...</p>
+                <p>Analyzing selected network... Please wait.</p>
             </div>
 
-            <div id="analysis-content">
+            <div id="analysis-content" style="display: none;"> {# Content initially hidden until analysis done #}
                 <!-- Target Identification -->
                 <h3><i class="fas fa-bullseye" style="margin-right: 8px;"></i>Target Identification</h3>
                 <div id="targetInfoTable"><p>Waiting for analysis...</p></div>
@@ -191,14 +172,14 @@
                 <h3><i class="fas fa-skull-crossbones" style="margin-right: 8px;"></i>ARP Replay Flood Report</h3>
                 <div id="arpFloodOutput"><pre>Waiting for analysis...</pre></div>
 
-                 <!-- Report Download (TODO: Update download endpoint logic) -->
+                 <!-- Report Download -->
                 <div style="margin-top: 30px;">
                      <h3><i class="fas fa-download" style="margin-right: 8px;"></i>Download Analysis Report</h3>
                     <div class="download-buttons-container">
-                         <a href="#" id="download-txt-link"><button type="button" data-type="info">Download TXT Report</button></a>
-                         <a href="#" id="download-pdf-link"><button type="button" data-type="danger">Download PDF Report</button></a>
+                         <a href="#" id="download-txt-link" style="display: none;"><button type="button" data-type="info">Download TXT Report</button></a>
+                         <a href="#" id="download-pdf-link" style="display: none;"><button type="button" data-type="danger">Download PDF Report</button></a>
                     </div>
-                     <p style="text-align:center; font-size: 0.8rem; color: #888; margin-top: 10px;">(Note: Report download functionality needs update)</p>
+                     <p id="download-info" style="text-align:center; font-size: 0.8rem; color: #888; margin-top: 10px;">(Report download will be available after analysis)</p>
                 </div>
             </div> {# End analysis-content #}
         </div> {# End analysis-section #}
@@ -209,68 +190,16 @@
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const initialScanLoading = document.getElementById('initial-scan-loading');
-            const networkTableContainer = document.getElementById('networkTableContainer');
-            const rogueSummaryContainer = document.getElementById('rogueSummaryTableContainer');
-            const rogueLogContainer = document.getElementById('rogueDetailedLogContainer');
-
+            // Removed initialScanLoading, networkTableContainer, rogue elements
             const analysisSection = document.getElementById('analysis-section');
             const analysisLoading = document.getElementById('analysis-loading');
             const analysisContent = document.getElementById('analysis-content');
             const analysisTitle = document.getElementById('analysis-title');
+            const downloadTxtLink = document.getElementById('download-txt-link');
+            const downloadPdfLink = document.getElementById('download-pdf-link');
+            const downloadInfoP = document.getElementById('download-info');
 
-            // --- Render Functions (Copied from previous wifi_results/wifi_analyze) ---
-            function renderNetworks(networks) {
-                if (!networkTableContainer) return;
-                if (!networks || networks.length === 0) {
-                    networkTableContainer.innerHTML = "<p>No Wi-Fi networks detected.</p>";
-                    return;
-                }
-                let html = `<table class="results-table">
-                    <thead><tr><th>SSID</th><th>BSSID</th><th>Signal</th><th>Encryption</th><th>Action</th></tr></thead><tbody>`;
-                networks.forEach(net => {
-                     // Use encodeURIComponent for SSID/BSSID in onclick to handle special characters
-                     const safeSSID = encodeURIComponent(net['SSID'] || '');
-                     const safeBSSID = encodeURIComponent(net['BSSID'] || '');
-                     html += `<tr>
-                        <td>${net['SSID'] || 'N/A'}</td>
-                        <td>${net['BSSID'] || 'N/A'}</td>
-                        <td>${net['Signal Strength'] || 'N/A'}</td>
-                        <td>${net['Encryption Type'] || 'Unknown'}</td>
-                        <td><button data-type="info" onclick="analyzeNetwork('${safeSSID}', '${safeBSSID}')">Analyze</button></td>
-                    </tr>`;
-                });
-                html += `</tbody></table>`;
-                networkTableContainer.innerHTML = html;
-            }
-
-            function renderRogue(rogueReport) {
-                 if (!rogueSummaryContainer || !rogueLogContainer) return;
-                 const rogueSummary = rogueReport.summary || [];
-                 const detailedLog = rogueReport.detailed_log || "No detailed logs available.";
-
-                 if (rogueSummary.length === 0) {
-                     rogueSummaryContainer.innerHTML = "<h3><i class=\"fas fa-user-secret\" style=\"margin-right: 8px;\"></i>Rogue Access Point Detection</h3><p>✅ No potential rogue access points detected.</p>";
-                     rogueLogContainer.innerHTML = "<h3><i class=\"fas fa-file-alt\" style=\"margin-right: 8px;\"></i>Detailed Rogue Detection Report</h3><pre>" + detailedLog + "</pre>";
-                     return;
-                 }
-
-                 let table = `<h3><i class="fas fa-user-secret" style="margin-right: 8px;"></i>Rogue Access Point Detection</h3><table class="results-table">
-                    <thead><tr><th>SSID</th><th>Status</th><th>Severity</th><th>Indicators</th></tr></thead><tbody>`;
-                 rogueSummary.forEach(row => {
-                     table += `<tr>
-                         <td>${row.SSID || 'N/A'}</td>
-                         <td>${row.Status || 'Unknown'}</td>
-                         <td>${row.Severity || 'Info'}</td>
-                         <td>${row['Rogue Indicators'] || 'None'}</td>
-                     </tr>`;
-                 });
-                 table += `</tbody></table>`;
-                 rogueSummaryContainer.innerHTML = table;
-                 rogueLogContainer.innerHTML = "<h3><i class=\"fas fa-file-alt\" style=\"margin-right: 8px;\"></i>Detailed Rogue Detection Report</h3><pre>" + detailedLog + "</pre>";
-            }
-
-            // Render functions for analysis data (Target, Vuln, Devices, etc.)
+            // --- Render Functions (Keep these as they are needed for analysis results) ---
             function renderTargetInfo(info) {
                  const container = document.getElementById('targetInfoTable');
                  if (!container) return;
@@ -337,6 +266,7 @@
             function renderArpFlood(output) {
                  const container = document.getElementById('arpFloodOutput');
                  if (!container) return;
+                 // Display ARP flood report in a pre tag
                  container.innerHTML = `<pre>${output || 'ARP flood simulation completed or no output captured.'}</pre>`;
             }
             function renderRouterAdmin(result) {
@@ -348,46 +278,25 @@
                  if(el) el.textContent = result || "Error checking UPnP.";
             }
 
-            // --- Initial Scan Function --- //
-            function performInitialScan() {
-                if (initialScanLoading) initialScanLoading.style.display = 'block';
-                if (networkTableContainer) networkTableContainer.innerHTML = '<p>Scanning...</p>';
-                if (rogueSummaryContainer) rogueSummaryContainer.innerHTML = '';
-                if (rogueLogContainer) rogueLogContainer.innerHTML = '';
-
-                fetch("{{ url_for('fetch_wifi_scan') }}", { method: 'POST' }) // Assumes wifi_scan endpoint still exists!
-                    .then(res => {
-                        if (!res.ok) { throw new Error(`HTTP error! Status: ${res.status}`); }
-                        return res.json();
-                    })
-                    .then(data => {
-                        if (initialScanLoading) initialScanLoading.style.display = 'none';
-                        renderNetworks(data.networks || []);
-                        renderRogue(data.rogue_report || { summary: [], detailed_log: "No rogue AP data found." });
-                    })
-                    .catch(error => {
-                        console.error('Initial WiFi Scan Error:', error);
-                        if (initialScanLoading) initialScanLoading.innerHTML = '<p class="error-message">❌ Error during initial scan.</p>';
-                        if(networkTableContainer) networkTableContainer.innerHTML = '<p class="error-message">Failed to load network data.</p>';
-                    });
-            }
-
-            // --- Analyze Network Function --- //
-            window.analyzeNetwork = function(encodedSsid, encodedBssid) {
-                 // Decode SSID/BSSID for display/use
+            // --- Analyze Network Function (Now called on page load) --- //
+            // Make it a standalone function to call directly
+            function analyzeSelectedNetwork(encodedSsid, encodedBssid) {
                 const ssid = decodeURIComponent(encodedSsid);
                 const bssid = decodeURIComponent(encodedBssid);
 
-                 console.log(`Analyzing network: SSID=${ssid}, BSSID=${bssid}`);
-                if (analysisSection) analysisSection.style.display = 'block';
-                if (analysisLoading) analysisLoading.style.display = 'block';
-                if (analysisContent) analysisContent.style.display = 'none'; // Hide old content while loading
+                console.log(`Analyzing selected network: SSID=${ssid}, BSSID=${bssid}`);
+                if (analysisSection) analysisSection.style.display = 'block'; // Show the section
+                if (analysisLoading) analysisLoading.style.display = 'block'; // Show loading spinner
+                if (analysisContent) analysisContent.style.display = 'none'; // Hide content area while loading
                 if (analysisTitle) analysisTitle.textContent = `Analysis for: ${ssid} (${bssid})`;
 
-                // Clear previous analysis results visually
+                // Clear previous analysis results visually (important if re-analyzing)
                 renderTargetInfo(null); renderVulnerabilityTable(null); renderDevices(null);
-                renderDeviceVulnTable(null); renderArpFlood('Analyzing...');
-                renderRouterAdmin('Analyzing...'); renderUpnp('Analyzing...');
+                renderDeviceVulnTable(null); renderArpFlood('Running ARP flood analysis...');
+                renderRouterAdmin('Checking Router Admin...'); renderUpnp('Checking UPnP...');
+                if(downloadTxtLink) downloadTxtLink.style.display = 'none'; // Hide download links
+                if(downloadPdfLink) downloadPdfLink.style.display = 'none';
+                if(downloadInfoP) downloadInfoP.textContent = '(Report download will be available after analysis)';
 
                 fetch("{{ url_for('wifi_analyze') }}", {
                     method: 'POST',
@@ -395,15 +304,17 @@
                     body: JSON.stringify({ ssid: ssid, bssid: bssid })
                 })
                 .then(res => {
-                    if (!res.ok) { throw new Error(`HTTP error! Status: ${res.status}`); }
+                    if (!res.ok) {
+                         // Try to parse error from backend
+                         return res.json().then(err => { throw new Error(err.error || `HTTP error! Status: ${res.status}`); });
+                    }
                     return res.json();
                 })
                 .then(data => {
-                    if (analysisLoading) analysisLoading.style.display = 'none';
-                    if (analysisContent) analysisContent.style.display = 'block';
+                    if (analysisLoading) analysisLoading.style.display = 'none'; // Hide loading
+                    if (analysisContent) analysisContent.style.display = 'block'; // Show content area
 
                     if(data.error) {
-                        // Handle backend error during analysis
                         console.error("Analysis Error from Backend:", data.error);
                         analysisContent.innerHTML = `<div class="alert error">Analysis failed: ${data.error}</div>`;
                         return;
@@ -413,43 +324,28 @@
                     renderTargetInfo(data.target_info);
                     renderVulnerabilityTable(data.vulnerability);
                     renderDevices(data.devices);
-                    renderDeviceVulnTable(data.devices);
-                    renderArpFlood(data.arp_flood_output);
+                    renderDeviceVulnTable(data.devices); // Uses the same device data
+                    renderArpFlood(data.arp_flood_output); // Render the actual ARP report
 
-                    // Update Download links (TODO: Adapt download endpoint)
-                    const txtLink = document.getElementById('download-txt-link');
-                    const pdfLink = document.getElementById('download-pdf-link');
+                    // Update Download links
                     const reportBaseFilename = data.report_base_filename;
-
                     if (reportBaseFilename) {
-                        txtLink.href = `{{ url_for('download_wifi_report', report_type='text') }}?base_filename=${encodeURIComponent(reportBaseFilename)}`;
-                        pdfLink.href = `{{ url_for('download_wifi_report', report_type='pdf') }}?base_filename=${encodeURIComponent(reportBaseFilename)}`;
-                        // Make links visible/enabled if they were initially hidden/disabled
-                        txtLink.parentElement.style.display = ''; // Show button container
-                        pdfLink.parentElement.style.display = '';
-                        txtLink.onclick = null; // Remove any previous disabled state
-                        pdfLink.onclick = null;
+                        downloadTxtLink.href = `{{ url_for('download_wifi_report', report_type='text') }}?base_filename=${encodeURIComponent(reportBaseFilename)}`;
+                        downloadPdfLink.href = `{{ url_for('download_wifi_report', report_type='pdf') }}?base_filename=${encodeURIComponent(reportBaseFilename)}`;
+                        downloadTxtLink.style.display = ''; // Show buttons
+                        downloadPdfLink.style.display = '';
+                        downloadInfoP.textContent = '(Report includes analysis snapshot)'; // Update info text
                     } else {
-                        // Handle case where report generation failed - disable/hide links
-                        txtLink.href = '#';
-                        pdfLink.href = '#';
-                        txtLink.onclick = (e) => e.preventDefault(); // Prevent navigation
-                        pdfLink.onclick = (e) => e.preventDefault();
-                        // Optionally hide or show an error message near buttons
-                        console.error("Report base filename not found in analysis response. Download links disabled.");
-                         // Might want to hide the buttons or the entire download section
-                         // txtLink.parentElement.style.display = 'none';
-                         // pdfLink.parentElement.style.display = 'none';
+                        console.error("Report base filename not found. Download links remain hidden.");
+                        downloadInfoP.textContent = '(Report generation failed, download unavailable)'; // Update info text
                     }
 
                     // Trigger async checks AFTER main analysis data is loaded
-                    fetch("{{ url_for('check_router_admin') }}").then(r => r.json()).then(d => renderRouterAdmin(d.result)).catch(e => renderRouterAdmin(`Error: ${e}`));
-                    fetch("{{ url_for('check_upnp_route') }}").then(r => r.json()).then(d => renderUpnp(d.result)).catch(e => renderUpnp(`Error: ${e}`));
-                    // ARP flood was already triggered by backend, maybe fetch status?
-                    // fetch("{{ url_for('trigger_arp_flood') }}", { method: 'POST' }).then(r=>r.json()).then(d=>renderArpFlood(d.output)).catch(e=>renderArpFlood(`Error: ${e}`));
+                    fetch("{{ url_for('check_router_admin') }}").then(r => r.json()).then(d => renderRouterAdmin(d.result)).catch(e => renderRouterAdmin(`Error: ${e.message || e}`));
+                    fetch("{{ url_for('check_upnp_route') }}").then(r => r.json()).then(d => renderUpnp(d.result)).catch(e => renderUpnp(`Error: ${e.message || e}`));
 
-                    // Scroll to analysis section
-                    analysisSection.scrollIntoView({ behavior: 'smooth' });
+                    // Scroll to analysis section (optional)
+                    // analysisSection.scrollIntoView({ behavior: 'smooth' });
                 })
                 .catch(error => {
                     console.error('Analyze Network Error:', error);
@@ -458,11 +354,28 @@
                         analysisContent.style.display = 'block'; // Show the section to display error
                         analysisContent.innerHTML = `<div class="alert error">Error analyzing network: ${error.message}</div>`;
                     }
+                     if(downloadInfoP) downloadInfoP.textContent = '(Analysis failed, download unavailable)'; // Update info text
                 });
             }
 
-            // --- Run initial scan on page load --- //
-            performInitialScan();
+            // --- Get URL Params and Trigger Analysis on Load --- //
+            const urlParams = new URLSearchParams(window.location.search);
+            const ssidParam = urlParams.get('ssid');
+            const bssidParam = urlParams.get('bssid');
+
+            if (ssidParam && bssidParam) {
+                // If SSID and BSSID are present, start the analysis
+                analyzeSelectedNetwork(ssidParam, bssidParam);
+            } else {
+                // Handle case where parameters are missing
+                console.error("SSID or BSSID missing from URL parameters.");
+                if (analysisTitle) analysisTitle.textContent = "Error: Network Not Specified";
+                if (analysisContent) {
+                    analysisContent.style.display = 'block';
+                    analysisContent.innerHTML = `<div class="alert error">Could not load analysis. Please go back and select a network to analyze.</div>`;
+                }
+                if(downloadInfoP) downloadInfoP.textContent = '(Cannot analyze without network selection)';
+            }
 
         }); // End DOMContentLoaded
     </script>

