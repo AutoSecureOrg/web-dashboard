@@ -19,9 +19,20 @@
 
     {# Custom styles for results page #}
     <style>
+        .tool-container {
+            /* Force vertical stacking & take full width */
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 1200px;
+            align-items: center;
+            justify-content: flex-start;
+            margin: 0 auto;
+        }
         .tool-container h1 {
             color: var(--text-color, #fff);
             text-align: center;
+            margin-top: 40px;
             margin-bottom: 30px;
             font-weight: 700;
         }
@@ -48,7 +59,7 @@
         }
 
         table.results-table {
-            width: 100%;
+            width: 800px;
             border-collapse: collapse;
             margin-top: 15px;
             color: var(--text-color, #fff);
@@ -126,35 +137,38 @@
              line-height: 1.6;
         }
 
-        /* Buttons at bottom */
-        .action-buttons {
-            text-align: center;
-            margin-top: 30px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-        }
-        .action-buttons a {
-             text-decoration: none;
-        }
-
-        .results-table tbody {
-            display: block;
-            max-height: 400px;
-            overflow-y: auto; /* Enable vertical scroll */
-            width: 100%;
-        }
-
         .results-table thead, .results-table tbody tr {
-            display: table;
-            width: 100%;
-            table-layout: fixed;
+            table-layout: fixed; /* Force columns to obey widths more strictly */
         }
 
-        .results-table thead {
-             width: calc( 100% - 1em );
-        }
+        /* Define column widths explicitly for better control with table-layout: fixed */
+        .results-table th:nth-child(1), .results-table td:nth-child(1) { width: 8%; }  /* Port */
+        .results-table th:nth-child(2), .results-table td:nth-child(2) { width: 15%; } /* Service */
+        .results-table th:nth-child(3), .results-table td:nth-child(3) { width: 20%; } /* Version */
+        .results-table th:nth-child(4), .results-table td:nth-child(4) { width: 42%; } /* Vuln Info */
+        .results-table th:nth-child(5), .results-table td:nth-child(5) { width: 15%; } /* AI Insight */
+
+        /* Column widths for Exploitation table */
+        .results-table[data-table-type="exploitation"] th:nth-child(1),
+        .results-table[data-table-type="exploitation"] td:nth-child(1) { width: 20%; } /* Service */
+        .results-table[data-table-type="exploitation"] th:nth-child(2),
+        .results-table[data-table-type="exploitation"] td:nth-child(2) { width: 10%; } /* Port */
+        .results-table[data-table-type="exploitation"] th:nth-child(3),
+        .results-table[data-table-type="exploitation"] td:nth-child(3) { width: 45%; } /* Exploit */
+        .results-table[data-table-type="exploitation"] th:nth-child(4),
+        .results-table[data-table-type="exploitation"] td:nth-child(4) { width: 25%; } /* Status */
+
+        /* Column widths for Custom Exploit table */
+        .results-table[data-table-type="custom"] th:nth-child(1),
+        .results-table[data-table-type="custom"] td:nth-child(1) { width: 15%; } /* Target IP */
+        .results-table[data-table-type="custom"] th:nth-child(2),
+        .results-table[data-table-type="custom"] td:nth-child(2) { width: 15%; } /* Status */
+        .results-table[data-table-type="custom"] th:nth-child(3),
+        .results-table[data-table-type="custom"] td:nth-child(3) { width: 35%; } /* stdout */
+        .results-table[data-table-type="custom"] th:nth-child(4),
+        .results-table[data-table-type="custom"] td:nth-child(4) { width: 35%; } /* stderr */
+
+        /* Style action buttons container - defined in style.css */
     </style>
 </head>
 
@@ -219,7 +233,7 @@
 
             {% if exploitation_results and ip in exploitation_results %}
             <h4 style="margin-top: 20px;">Exploitation Results for IP: {{ ip }}</h4>
-            <table class="results-table">
+            <table class="results-table" data-table-type="exploitation">
                 <thead>
                     <tr>
                         <th>Service</th>
@@ -264,7 +278,7 @@
             {% endif %}
 
             {% if custom_exploit_results.get('targets') %}
-            <table class="results-table">
+            <table class="results-table" data-table-type="custom">
                 <thead>
                     <tr>
                         <th>Target IP</th>

@@ -49,7 +49,7 @@ body {
 }
 
 html, body {
-    height: auto !important;
+    height: 100%;
     overflow-y: auto !important;
 }
 
@@ -368,8 +368,8 @@ pre {
 }
 
 .close-btn {
-    right: 1.5rem; /* Position close button */
-    top: auto; /* Remove absolute top positioning */
+    right: 1.5rem;
+    top: auto;
 }
 
 .test-btn {
@@ -386,7 +386,7 @@ pre {
 
 /* Details Content Styling inside Modal */
 #details-content-container {
-     padding-right: 1rem; /* Adjust padding if needed, was 4rem */
+     padding-right: 1rem;
 }
 
 .detail-header {
@@ -446,8 +446,6 @@ pre {
     display: none;
 }
 
-/* Footer styles removed */
-
 /* Responsive Adjustments */
 @media (max-width: 768px) {
     .top-bar {
@@ -462,10 +460,10 @@ pre {
     .modal-content {
         padding: 1.5rem;
         max-height: 90vh;
-        padding-bottom: 4.5rem; /* Adjust bottom padding */
+        padding-bottom: 4.5rem;
     }
     #details-content-container {
-         padding-right: 1rem; /* was 3.5rem */
+         padding-right: 1rem;
     }
     .modal-button {
         bottom: 1rem;
@@ -498,7 +496,7 @@ pre {
     }
      .modal-content {
         padding: 1.5rem 1rem;
-        padding-bottom: 4rem; /* Adjust bottom padding */
+        padding-bottom: 4rem;
     }
     .modal-button {
         padding: 0.2em 0.6em;
@@ -600,8 +598,25 @@ pre {
     margin-top: 1rem;
     justify-content: center;
   }
-  
+
   .payload-button-row .modal-button {
-    position: static; /* Remove absolute positioning */
+    position: static;
   }
-  
+
+/* Action Buttons */
+.action-buttons {
+    margin-top: 40px;
+    text-align: center; /* Center buttons horizontally */
+}
+
+.action-buttons a {
+    display: inline-block; /* Prevent line breaks */
+    margin: 10px 15px; /* Add space between buttons */
+}
+
+.action-buttons button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+}
