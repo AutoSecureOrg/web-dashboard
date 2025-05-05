@@ -1026,16 +1026,15 @@ def wifi_crack_start():
         with app_context: # Need app context for potential Flask operations inside the function if any
             print(f"INFO: Background thread started for task {current_task_id}")
             try:
-                password = crack_wifi_password(current_ssid, A=current_limit)
-                if password:
-                    print(f"SUCCESS: Password found for {current_ssid} (Task: {current_task_id})")
-                    crack_tasks[current_task_id] = {"status": "success", "result": password}
+                crack_result_dict = crack_wifi_password(current_ssid, A=current_limit)
+                if crack_result_dict:
+                    print(f"SUCCESS: Password analysis complete for {current_ssid} (Task: {current_task_id})")
+                    crack_tasks[current_task_id] = {"status": "success", "result": crack_result_dict} # Store the whole dict
                 else:
                     print(f"INFO: Password not found for {current_ssid} within limit (Task: {current_task_id}).")
                     crack_tasks[current_task_id] = {"status": "fail", "result": f"Password not found within the first {current_limit} attempts."}
             except Exception as e:
                 print(f"ERROR: Exception during cracking (Task: {current_task_id}): {e}")
-                # Optional: Add traceback logging here if needed
                 crack_tasks[current_task_id] = {"status": "error", "result": f"An error occurred during cracking: {e}"}
             print(f"INFO: Background thread finished for task {current_task_id}")
 
@@ -1058,7 +1057,8 @@ def wifi_crack_status(task_id):
 
     # Return the current status and result
     if task["status"] == "success":
-        return jsonify({"status": "success", "password": task["result"]})
+        # Return the entire result dictionary
+        return jsonify({"status": "success", "result": task["result"]})
     elif task["status"] == "fail":
         return jsonify({"status": "fail", "message": task["result"]})
     elif task["status"] == "error":

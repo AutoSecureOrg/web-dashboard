@@ -8,6 +8,8 @@ import subprocess
 import re
 import random
 import string
+import hashlib
+import requests
 from tabulate import tabulate
 
 
@@ -329,11 +331,95 @@ def crack_wifi_password(ssid, wordlist=None,A=5):
 
             #print(f"[*] Trying: {password}")
             if connect_to_network(ssid, password, delay=2):  # ⏱️ faster mode
-                return password
+                print(f"\n--- Analyzing cracked password: {password} ---")
+                pwned_result = check_pwned_password(password)
+                strength_issues = password_strength_feedback(password)
+                suggestion = generate_strong_password()
+                print("---------------------------------------------")
+                # Return structured dictionary
+                return {
+                    'password': password,
+                    'analysis': {
+                        'pwned_count': pwned_result["pwned_count"],
+                        'pwned_error': pwned_result["pwned_error"],
+                        'strength_issues': strength_issues,
+                        'suggestion': suggestion
+                    }
+                }
 
     print("[-] No credentials found in top entries.")
     return None
 
+
+# --- Password Analysis Functions --- #
+
+# Check if password is leaked using HIBP API
+def check_pwned_password(password):
+    analysis = {"pwned_count": 0, "pwned_error": None}
+    try:
+        sha1_hash = hashlib.sha1(password.encode('utf-8')).hexdigest().upper()
+        prefix = sha1_hash[:5]
+        suffix = sha1_hash[5:]
+
+        url = f"https://api.pwnedpasswords.com/range/{prefix}"
+        res = requests.get(url, timeout=5) # Added timeout
+
+        if res.status_code != 200:
+            print(f"❌ Error querying the HIBP API (Status: {res.status_code}).")
+            analysis["pwned_error"] = f"HIBP API Error (Status: {res.status_code})"
+            return analysis
+
+        found = False
+        for line in res.text.splitlines():
+            hash_suffix, count_str = line.split(":")
+            if hash_suffix == suffix:
+                count = int(count_str)
+                print(f"⚠️ Password LEAKED {count} times!")
+                analysis["pwned_count"] = count
+                found = True
+                break
+
+        if not found:
+            print("✅ Password not found in known breaches.")
+            analysis["pwned_count"] = 0
+
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Network error checking HIBP: {e}")
+        analysis["pwned_error"] = "Network error during HIBP check."
+    except Exception as e:
+        print(f"❌ Unexpected error during HIBP check: {e}")
+        analysis["pwned_error"] = "Unexpected error during HIBP check."
+
+    return analysis
+
+# Local password strength checker
+def password_strength_feedback(password):
+    issues = []
+    if len(password) < 8:
+        issues.append("Too short (<8 characters)")
+    if not re.search(r'[A-Z]', password):
+        issues.append("No uppercase letters")
+    if not re.search(r'[a-z]', password):
+        issues.append("No lowercase letters")
+    if not re.search(r'[0-9]', password):
+        issues.append("No numbers")
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+        issues.append("No special characters")
+
+    if issues:
+        print("\n❌ Weak Password Detected:", ", ".join(issues))
+    else:
+        print("\n✅ Password strength is good.")
+    return issues
+
+# Suggest a strong password
+def generate_strong_password(length=12):
+    chars = string.ascii_letters + string.digits + "!@#$%^&*()"
+    strong_pass = ''.join(random.choice(chars) for _ in range(length))
+    print("\n🔐 Suggested Strong Password:", strong_pass)
+    return strong_pass
+
+# --- End Password Analysis Functions --- #
 
 # --- Helper Function for Rogue Data Formatting ---
 def process_rogue_data_for_json(rogue_df):

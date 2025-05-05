@@ -440,13 +440,33 @@
                                 crackButton.disabled = false; // Re-enable button
 
                                 if (data.status === 'success') {
-                                    crackStatus.textContent = `✅ Success! Password found: ${data.password}`;
-                                    crackStatus.style.color = 'lightgreen';
+                                    // Display password and analysis
+                                    const result = data.result;
+                                    let analysisHTML = `✅ Success! Password found: <strong>${escapeHTML(result.password)}</strong><br><br><strong>Analysis:</strong><ul>`;
+                                    if (result.analysis.pwned_error) {
+                                        analysisHTML += `<li style="color: orange;">Leaked Check Error: ${escapeHTML(result.analysis.pwned_error)}</li>`;
+                                    } else if (result.analysis.pwned_count > 0) {
+                                        analysisHTML += `<li style="color: red;">⚠️ Leaked in ${result.analysis.pwned_count} breaches!</li>`;
+                                    } else {
+                                        analysisHTML += `<li style="color: lightgreen;">✅ Not found in known breaches.</li>`;
+                                    }
+
+                                    if (result.analysis.strength_issues && result.analysis.strength_issues.length > 0) {
+                                        analysisHTML += `<li style="color: orange;">Strength Issues: ${escapeHTML(result.analysis.strength_issues.join(', '))}</li>`;
+                                    } else {
+                                        analysisHTML += `<li style="color: lightgreen;">✅ Strength seems adequate.</li>`;
+                                    }
+                                    analysisHTML += `<li>Suggested Strong Password: <code>${escapeHTML(result.analysis.suggestion)}</code></li>`;
+                                    analysisHTML += `</ul>`;
+
+                                    crackStatus.innerHTML = analysisHTML;
+                                    crackStatus.style.color = 'inherit'; // Use colors from list items
+
                                 } else if (data.status === 'fail') {
-                                    crackStatus.textContent = `❌ Failed: ${data.message}`;
+                                    crackStatus.textContent = `❌ Failed: ${escapeHTML(data.message)}`;
                                     crackStatus.style.color = 'orange';
                                 } else { // Error status from backend
-                                    crackStatus.textContent = `❌ Error: ${data.message || 'Unknown error during cracking.'}`;
+                                    crackStatus.textContent = `❌ Error: ${escapeHTML(data.message || 'Unknown error during cracking.')}`;
                                     crackStatus.style.color = '#dc3545'; // Red
                                 }
                             }
@@ -457,10 +477,26 @@
                             clearInterval(crackPollInterval); // Stop polling on error
                             crackPollInterval = null;
                             crackButton.disabled = false;
-                            crackStatus.textContent = `❌ Polling Error: ${error.message}`;
+                            crackStatus.textContent = `❌ Polling Error: ${escapeHTML(error.message)}`;
                             crackStatus.style.color = '#dc3545'; // Red
                         });
                 }, 5000); // Poll every 5 seconds (adjust as needed)
+            }
+
+            // Helper function to escape HTML for security
+            function escapeHTML(str) {
+                if (str === null || str === undefined) return '';
+                return String(str).replace(/[&<>'"/]/g, function (s) {
+                    const entityMap = {
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;',
+                        "'": '&#39;',
+                        '/': '&#x2F;'
+                    };
+                    return entityMap[s];
+                });
             }
 
         }); // End DOMContentLoaded
