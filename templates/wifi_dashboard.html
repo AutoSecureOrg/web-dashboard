@@ -148,31 +148,23 @@
                 <!-- Encryption & Risk Analysis -->
                 <h3><i class="fas fa-shield-alt" style="margin-right: 8px;"></i>Encryption & Risk Analysis</h3>
                 <div id="vulnTable"><p>Waiting for analysis...</p></div>
-
-                <!-- Router Checks -->
-                <h3><i class="fas fa-network-wired" style="margin-right: 8px;"></i>Router Checks</h3>
-                <div class="section">
-                    <h4><i class="fas fa-user-shield" style="margin-right: 5px;"></i>Router Admin Interface</h4>
-                    <pre id="routerAdminResult">Waiting for analysis...</pre>
+                {# --- Password Cracking Section --- #}
+                <div id="password-crack-section" style="margin-top: 15px; display: none;">
+                    <h4><i class="fas fa-key" style="margin-right: 5px;"></i>Password Cracking</h4>
+                    <p>Attempt to crack the password using a common wordlist (WPA/WPA2 networks only). This may take time.</p>
+                     <label for="crack-limit" style="display: inline-block; margin-right: 10px;">Attempt Limit:</label>
+                     <input type="number" id="crack-limit" value="100" style="width: 80px; display: inline-block; margin-right: 20px;">
+                    <button id="crack-password-btn" data-type="danger">Attempt Crack</button>
+                    <div id="crack-status" style="margin-top: 10px; font-weight: bold;"></div>
                 </div>
-                <div class="section">
-                    <h4><i class="fas fa-plug" style="margin-right: 5px;"></i>UPnP Vulnerability</h4>
-                    <div id="upnpResult">Waiting for analysis...</div>
-                </div>
+                {# --- End Password Cracking --- #}
 
-                <!-- Connected Devices Fingerprinting -->
-                <h3><i class="fas fa-sitemap" style="margin-right: 8px;"></i>Connected Devices Fingerprinting</h3>
-                <div id="deviceTable"><p>Waiting for analysis...</p></div>
+                <!-- Rogue AP Detection -->
+                <h3><i class="fas fa-user-secret" style="margin-right: 8px;"></i>Rogue Access Point Detection</h3>
+                <div id="rogueSummaryTableContainer"><p>Waiting for analysis...</p></div>
+                <div id="rogueDetailedLogContainer" style="margin-top: 15px;"><pre>Waiting for analysis...</pre></div>
 
-                <!-- Device Vulnerability Table -->
-                <h3><i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>Device Vulnerability Summary</h3>
-                <div id="deviceVulnTable"><p>Waiting for analysis...</p></div>
-
-                <!-- ARP Flood Output -->
-                <h3><i class="fas fa-skull-crossbones" style="margin-right: 8px;"></i>ARP Replay Flood Report</h3>
-                <div id="arpFloodOutput"><pre>Waiting for analysis...</pre></div>
-
-                 <!-- Report Download -->
+                <!-- Report Download -->
                 <div style="margin-top: 30px;">
                      <h3><i class="fas fa-download" style="margin-right: 8px;"></i>Download Analysis Report</h3>
                     <div class="download-buttons-container">
@@ -198,6 +190,13 @@
             const downloadTxtLink = document.getElementById('download-txt-link');
             const downloadPdfLink = document.getElementById('download-pdf-link');
             const downloadInfoP = document.getElementById('download-info');
+            const rogueSummaryContainer = document.getElementById('rogueSummaryTableContainer');
+            const rogueLogContainer = document.getElementById('rogueDetailedLogContainer');
+            const crackSection = document.getElementById('password-crack-section');
+            const crackButton = document.getElementById('crack-password-btn');
+            const crackStatus = document.getElementById('crack-status');
+            const crackLimitInput = document.getElementById('crack-limit');
+            let currentSsid = null;
 
             // --- Render Functions (Keep these as they are needed for analysis results) ---
             function renderTargetInfo(info) {
@@ -225,50 +224,6 @@
                     </tr></tbody></table>`;
                  container.innerHTML = html;
             }
-            function renderDevices(devices) {
-                 const container = document.getElementById('deviceTable');
-                 if (!container) return;
-                 if (!devices || devices.length === 0) {
-                    container.innerHTML = "<p>No connected devices found or analysis pending.</p>"; return;
-                 }
-                 let html = `<table class="results-table"><thead><tr><th>IP</th><th>MAC</th><th>Vendor</th><th>OS</th><th>Ports</th><th>Activity</th></tr></thead><tbody>`;
-                 devices.forEach(dev => {
-                     html += `<tr>
-                        <td>${dev['IP Address'] || 'N/A'}</td><td>${dev['MAC Address'] || 'N/A'}</td><td>${dev['Vendor'] || 'N/A'}</td>
-                        <td>${dev['OS'] || 'N/A'}</td><td>${dev['Open Ports'] || '-'}</td><td>${dev['Detected Activity'] || '-'}</td>
-                     </tr>`;
-                 });
-                 html += `</tbody></table>`;
-                 container.innerHTML = html;
-            }
-            function renderDeviceVulnTable(devices) {
-                 const container = document.getElementById('deviceVulnTable');
-                 if (!container) return;
-                 if (!devices || devices.length === 0) {
-                    container.innerHTML = "<p>Device vulnerability analysis pending or no devices found.</p>"; return;
-                 }
-                 let vulnHTML = `<table class="results-table"><thead>
-                    <tr><th>IP</th><th>MAC</th><th>Vendor</th><th>Risk Level</th><th>Reason</th></tr></thead><tbody>`;
-                 devices.forEach(dev => {
-                     const ports = (dev['Open Ports'] || '').toLowerCase();
-                     let risk = "✅ Low"; let reason = "No high-risk open ports detected";
-                     if (ports.includes("23/tcp") || ports.includes("21/tcp")) { risk = "❌ Critical"; reason = "Exposed Telnet or FTP services (unencrypted)"; }
-                     else if ((ports.includes("80/tcp") && !ports.includes("443/tcp")) || ports.includes("unknown") || ports.includes("9100") || ports.includes("22/tcp") || ports.includes("3306") || ports.includes("8000") || ports.includes("8080") || ports.includes("9010") || ports.includes("9020") || ports.includes("50100"))
-                         { risk = "⚠️ Medium"; reason = "Potentially vulnerable/exposed services detected"; }
-                     vulnHTML += `<tr>
-                        <td>${dev['IP Address'] || 'N/A'}</td><td>${dev['MAC Address'] || 'N/A'}</td><td>${dev['Vendor'] || 'N/A'}</td>
-                        <td>${risk}</td><td style="white-space: pre-wrap;">${reason}</td>
-                     </tr>`;
-                 });
-                 vulnHTML += `</tbody></table>`;
-                 container.innerHTML = vulnHTML;
-            }
-            function renderArpFlood(output) {
-                 const container = document.getElementById('arpFloodOutput');
-                 if (!container) return;
-                 // Display ARP flood report in a pre tag
-                 container.innerHTML = `<pre>${output || 'ARP flood simulation completed or no output captured.'}</pre>`;
-            }
             function renderRouterAdmin(result) {
                  const el = document.getElementById('routerAdminResult');
                  if(el) el.textContent = result || "Error checking router admin.";
@@ -278,11 +233,39 @@
                  if(el) el.textContent = result || "Error checking UPnP.";
             }
 
+            // --- Render Rogue AP Data --- //
+            function renderRogue(rogueReport) {
+                 if (!rogueSummaryContainer || !rogueLogContainer) return;
+                 const rogueSummary = rogueReport?.summary || [];
+                 const detailedLog = rogueReport?.detailed_log || "No detailed logs available.";
+
+                 if (rogueSummary.length === 0) {
+                     rogueSummaryContainer.innerHTML = "<p>✅ No potential rogue access points detected based on scan.</p>";
+                 } else {
+                     let table = `<table class="results-table">
+                        <thead><tr><th>SSID</th><th>Status</th><th>Severity</th><th>Indicators</th></tr></thead><tbody>`;
+                     rogueSummary.forEach(row => {
+                         table += `<tr>
+                             <td>${row.SSID || 'N/A'}</td>
+                             <td>${row.Status || 'Unknown'}</td>
+                             <td>${row.Severity || 'Info'}</td>
+                             <td>${row['Rogue Indicators'] || 'None'}</td>
+                         </tr>`;
+                     });
+                     table += `</tbody></table>`;
+                     rogueSummaryContainer.innerHTML = table;
+                 }
+                 // Always show detailed log
+                 rogueLogContainer.innerHTML = "<h4>Detailed Rogue Detection Log:</h4><pre>" + detailedLog + "</pre>";
+            }
+            // --- End Render Rogue --- //
+
             // --- Analyze Network Function (Now called on page load) --- //
             // Make it a standalone function to call directly
             function analyzeSelectedNetwork(encodedSsid, encodedBssid) {
                 const ssid = decodeURIComponent(encodedSsid);
                 const bssid = decodeURIComponent(encodedBssid);
+                currentSsid = ssid; // Store SSID for potential cracking
 
                 console.log(`Analyzing selected network: SSID=${ssid}, BSSID=${bssid}`);
                 if (analysisSection) analysisSection.style.display = 'block'; // Show the section
@@ -291,9 +274,8 @@
                 if (analysisTitle) analysisTitle.textContent = `Analysis for: ${ssid} (${bssid})`;
 
                 // Clear previous analysis results visually (important if re-analyzing)
-                renderTargetInfo(null); renderVulnerabilityTable(null); renderDevices(null);
-                renderDeviceVulnTable(null); renderArpFlood('Running ARP flood analysis...');
-                renderRouterAdmin('Checking Router Admin...'); renderUpnp('Checking UPnP...');
+                renderTargetInfo(null); renderVulnerabilityTable(null);
+                renderRogue({ summary: [], detailed_log: 'Waiting for analysis...' }); // Clear rogue sections
                 if(downloadTxtLink) downloadTxtLink.style.display = 'none'; // Hide download links
                 if(downloadPdfLink) downloadPdfLink.style.display = 'none';
                 if(downloadInfoP) downloadInfoP.textContent = '(Report download will be available after analysis)';
@@ -323,9 +305,16 @@
                     // Render received analysis data
                     renderTargetInfo(data.target_info);
                     renderVulnerabilityTable(data.vulnerability);
-                    renderDevices(data.devices);
-                    renderDeviceVulnTable(data.devices); // Uses the same device data
-                    renderArpFlood(data.arp_flood_output); // Render the actual ARP report
+                    renderRogue(data.rogue_report); // Render Rogue AP data
+
+                    // Show/hide crack section based on encryption
+                    const encryption = data.vulnerability?.encryption || '';
+                    if (crackSection && (encryption.includes('WPA') || encryption.includes('wpa'))) { // Only show for WPA/WPA2
+                        crackSection.style.display = 'block';
+                        crackStatus.textContent = ''; // Clear previous status
+                    } else if (crackSection) {
+                        crackSection.style.display = 'none'; // Hide for Open/WEP etc.
+                    }
 
                     // Update Download links
                     const reportBaseFilename = data.report_base_filename;
@@ -339,10 +328,6 @@
                         console.error("Report base filename not found. Download links remain hidden.");
                         downloadInfoP.textContent = '(Report generation failed, download unavailable)'; // Update info text
                     }
-
-                    // Trigger async checks AFTER main analysis data is loaded
-                    fetch("{{ url_for('check_router_admin') }}").then(r => r.json()).then(d => renderRouterAdmin(d.result)).catch(e => renderRouterAdmin(`Error: ${e.message || e}`));
-                    fetch("{{ url_for('check_upnp_route') }}").then(r => r.json()).then(d => renderUpnp(d.result)).catch(e => renderUpnp(`Error: ${e.message || e}`));
 
                     // Scroll to analysis section (optional)
                     // analysisSection.scrollIntoView({ behavior: 'smooth' });
@@ -375,6 +360,107 @@
                     analysisContent.innerHTML = `<div class="alert error">Could not load analysis. Please go back and select a network to analyze.</div>`;
                 }
                 if(downloadInfoP) downloadInfoP.textContent = '(Cannot analyze without network selection)';
+            }
+
+            // --- Password Cracking Event Listener --- //
+            let crackPollInterval = null; // Variable to hold the polling interval ID
+
+            if (crackButton) {
+                crackButton.addEventListener('click', function() {
+                    if (!currentSsid) {
+                        crackStatus.textContent = 'Error: SSID not available.';
+                        crackStatus.style.color = '#dc3545'; // Red
+                        return;
+                    }
+                    // Clear previous polling if any
+                    if (crackPollInterval) {
+                        clearInterval(crackPollInterval);
+                        crackPollInterval = null;
+                    }
+
+                    const limit = crackLimitInput.value || 10; // Use a reasonable default
+                    crackStatus.innerHTML = '<div class="spinner" style="width: 16px; height: 16px; border-width: 2px; display: inline-block; margin-right: 5px;"></div> Starting crack attempt...';
+                    crackStatus.style.color = 'var(--secondary-text, #a0a0a0)'; // Neutral color
+                    crackButton.disabled = true;
+
+                    // Request to start the crack task
+                    fetch("{{ url_for('wifi_crack_start') }}", { // Use the new start endpoint name
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ssid: currentSsid, limit: limit })
+                    })
+                    .then(res => {
+                        if (!res.ok) { // Handle initial request errors
+                             return res.json().then(err => { throw new Error(err.message || `HTTP error! Status: ${res.status}`); });
+                        }
+                        return res.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'pending' && data.task_id) {
+                            crackStatus.innerHTML = '<div class="spinner" style="width: 16px; height: 16px; border-width: 2px; display: inline-block; margin-right: 5px;"></div> Cracking in progress... Polling for results.';
+                            startPolling(data.task_id); // Start polling with the received task ID
+                        } else {
+                            // Handle unexpected response from start endpoint
+                            throw new Error(data.message || 'Failed to start cracking task.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Start Crack Network Error:', error);
+                        crackButton.disabled = false;
+                        crackStatus.textContent = `❌ Error starting task: ${error.message}`;
+                        crackStatus.style.color = '#dc3545'; // Red
+                        if (crackPollInterval) { // Clear interval if start failed
+                            clearInterval(crackPollInterval);
+                            crackPollInterval = null;
+                        }
+                    });
+                });
+            }
+
+            // Function to poll for crack status
+            function startPolling(taskId) {
+                crackPollInterval = setInterval(() => {
+                    fetch(`{{ url_for('wifi_crack_status', task_id='TASK_ID_PLACEHOLDER') }}`.replace('TASK_ID_PLACEHOLDER', taskId))
+                        .then(res => {
+                             if (!res.ok) { // Handle polling request errors
+                                return res.json().then(err => { throw new Error(err.message || `Polling HTTP error! Status: ${res.status}`); });
+                            }
+                            return res.json();
+                        })
+                        .then(data => {
+                            if (data.status === 'pending') {
+                                // Still pending, continue polling
+                                console.log(`Task ${taskId} still pending...`);
+                                // Optional: Update UI slightly to show it's still working
+                                crackStatus.innerHTML = '<div class="spinner" style="width: 16px; height: 16px; border-width: 2px; display: inline-block; margin-right: 5px;"></div> Cracking in progress... Still polling.';
+                            } else {
+                                // Task finished (success, fail, or error)
+                                clearInterval(crackPollInterval); // Stop polling
+                                crackPollInterval = null;
+                                crackButton.disabled = false; // Re-enable button
+
+                                if (data.status === 'success') {
+                                    crackStatus.textContent = `✅ Success! Password found: ${data.password}`;
+                                    crackStatus.style.color = 'lightgreen';
+                                } else if (data.status === 'fail') {
+                                    crackStatus.textContent = `❌ Failed: ${data.message}`;
+                                    crackStatus.style.color = 'orange';
+                                } else { // Error status from backend
+                                    crackStatus.textContent = `❌ Error: ${data.message || 'Unknown error during cracking.'}`;
+                                    crackStatus.style.color = '#dc3545'; // Red
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            // Handle errors during the polling fetch itself
+                            console.error('Polling Error:', error);
+                            clearInterval(crackPollInterval); // Stop polling on error
+                            crackPollInterval = null;
+                            crackButton.disabled = false;
+                            crackStatus.textContent = `❌ Polling Error: ${error.message}`;
+                            crackStatus.style.color = '#dc3545'; // Red
+                        });
+                }, 5000); // Poll every 5 seconds (adjust as needed)
             }
 
         }); // End DOMContentLoaded

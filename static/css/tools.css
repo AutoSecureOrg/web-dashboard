@@ -465,11 +465,10 @@ button[data-type="danger"]:hover {
     width: 450px;
     text-align: center;
   }
-  
+
   .payload-button-row {
     display: flex;
     justify-content: space-between;
     gap: 10px;
     flex-wrap: wrap;
   }
-  
