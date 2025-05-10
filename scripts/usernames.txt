@@ -14,5 +14,3 @@ operator
 supervisor
 admin1
 webadmin
-backend
-login

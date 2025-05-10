@@ -9,7 +9,7 @@ import re
 from datetime import datetime
 from dotenv import load_dotenv
 from scripts.portExploit import nmap_scan, connect_to_metasploit, search_and_run_exploit, get_local_ip, port_exploit_report, query_nvd_api, clean_version_info, format_description
-from scripts.web_scanner import login_sql_injection, xss_only, command_only, html_only, complete_scan, sql_only
+from scripts.web_scanner import login_sql_injection, xss_only, command_only, html_only, complete_scan, sql_only,test_brute_force
 from scripts.web_report import web_vuln_report
 from scripts.wifi_tool import *
 from werkzeug.utils import secure_filename
@@ -858,6 +858,8 @@ def website_scanner():
                     results = html_only(target_url)
                 elif scan_type == "command_injection":
                     results = command_only(target_url)
+                elif scan_type == "brute_force":
+                    results = test_brute_force(target_url)
                 else:
                     results = "Invalid scan type selected."
                     all_errors[target_url] = "Invalid scan type selected."
@@ -909,6 +911,18 @@ def website_scanner():
     return render_template('website_scanner.html')
 
 #custom payloads upload
+@app.route("/test_bruteforce", methods=["POST"])
+def test_bruteforce():
+    url = request.form.get("url")
+    session = requests.Session()
+
+    # Load wordlists
+    usernames = load_payloads("usernames")  # from payload_texts/usernames.txt
+    passwords = load_payloads("passwords")  # from payload_texts/passwords.txt
+
+    results = test_brute_force(url, session, usernames, passwords)
+    return render_template("result.html", results=results)
+
 @app.route('/upload_payload', methods=['POST'])
 def upload_payload():
     payload_type = request.form.get("type")
