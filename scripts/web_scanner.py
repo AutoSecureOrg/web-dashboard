@@ -7,6 +7,11 @@ import re
 
 
 def create_session():
+    """
+    Creates and returns a new requests session with default headers.
+    Used to maintain cookies and session persistence during scanning.
+    """
+
     session = requests.Session()
     print("Creating session")
     return session
@@ -14,13 +19,16 @@ def create_session():
 
 def parse_input_fields(url, session):
     """
-    Parses HTML forms and standalone input tags.
+    Extracts form-based and standalone input fields from the specified URL.
+
+    Args:
+        url (str): Target URL to scan for input fields.
+        session (requests.Session): Authenticated session object.
+
     Returns:
-        {
-            "forms": [ {...} ],
-            "input_tags": [ {...} ]
-        }
+        dict: Contains two keys - 'forms' (list of form structures) and 'input_tags' (standalone input elements).
     """
+
     headers = {"User-Agent": "Mozilla/5.0"}
     forms = []
     input_tags = []
@@ -79,6 +87,16 @@ def parse_input_fields(url, session):
 
 
 def load_payloads(vuln_type):
+    """
+    Loads payloads for the given vulnerability type from default and custom payload directories.
+
+    Args:
+        vuln_type (str): Type of vulnerability (e.g., xss, sql_injection, command_injection).
+
+    Returns:
+        list: A deduplicated list of payload strings.
+    """
+        
     payloads = []
 
     base_dir = os.path.dirname(__file__)
@@ -97,21 +115,77 @@ def load_payloads(vuln_type):
 
     return list(set(payloads))  # Deduplicate
 
-def detect_login_via_redirect(url, session):
+def detect_login_page(target_url, session):
+    """
+    Identifies the login page by:
+    1. Checking for HTTP redirects.
+    2. Scanning for login-related input fields on the target page.
+    3. Attempting known login paths if needed.
+
+    Args:
+        target_url (str): The target page URL to check.
+        session (requests.Session): Session used for sending requests.
+
+    Returns:
+        str: The best-matched login page URL or base URL fallback.
+    """
+
+    print(f"[*] Detecting login page from: {target_url}")
+    headers = {"User-Agent": "Mozilla/5.0"}
+    base_url = "/".join(target_url.split("/")[:3])  # keeps scheme + domain + port
+
+    # === Step 1: Follow redirection logic ===
     try:
-        response = session.get(url, timeout=10, allow_redirects=False)
-        print(response.status_code)
+        response = session.get(target_url, headers=headers, timeout=10, allow_redirects=False, verify=False)
         if response.status_code in [301, 302, 303]:
             location = response.headers.get("Location", "")
-            print(f"Location : {location}")
-            if location and not location.startswith("http"):
-                base = "/".join(url.split("/")[:3])
-                location = base + location
-            print(f"[🔁] Detected redirection to login page → {location}")
-            return location
+            if location:
+                if not location.startswith("http"):
+                    base = "/".join(target_url.split("/")[:3])
+                    location = base + location
+                print(f"[🔁] Redirected to login page at: {location}")
+                return location
     except Exception as e:
         print(f"[!] Redirect detection failed: {e}")
-    return None
+
+    # === Step 2: Check if target URL itself contains login form ===
+    try:
+        response = session.get(target_url, headers=headers, timeout=10, verify=False)
+        soup = BeautifulSoup(response.text, "html.parser")
+        for form in soup.find_all("form"):
+            inputs = [i.get("name", "").lower() for i in form.find_all("input")]
+            if any("user" in i for i in inputs) and any("pass" in i for i in inputs):
+                print(f"[🔐] Login form found on current page: {target_url}")
+                return target_url
+    except Exception as e:
+        print(f"[!] HTML form detection failed: {e}")
+
+    # === Step 3: Fallback to common login paths ===
+    print("[*] Scanning for actual login page...")
+    possible_paths = [
+        "/", "/login","/login.php", "/signin", "/auth", "/index", "/home", "/admin", "/account/login"
+    ]
+
+    headers = {"User-Agent": "Mozilla/5.0"}
+    for path in possible_paths:
+        full_url = base_url.rstrip("/") + path
+        print(f"[DEBUG] Checking: {full_url}")
+        try:
+            r = session.get(full_url, headers=headers, timeout=10, verify=False)
+            soup = BeautifulSoup(r.text, "html.parser")
+
+            for form in soup.find_all("form"):
+                inputs = [i.get("name", "").lower() for i in form.find_all("input")]
+                if any("user" in i or "email" in i or "login" in i for i in inputs) and any("pass" in i for i in inputs):
+                    print(f"[+] Login page identified at: {full_url}")
+                    return full_url
+        except Exception as e:
+            print(f"[!] Error checking {full_url}: {e}")
+
+    print("[-] Could not detect login page automatically.")
+    return base_url  # fallback to base
+
+
 
 '''sql_payloads = [
                 f"' UNION SELECT {', '.join(['sqlite_version()'] + ['NULL'] * (num_cols - 1))} --",
@@ -126,6 +200,19 @@ def detect_login_via_redirect(url, session):
 
 
 def test_sql_injection(base_url, session, is_api=False, api_endpoints=[]):
+    """
+    Tests for SQL Injection vulnerabilities via form fields, standalone input fields, and optional API endpoints.
+
+    Args:
+        base_url (str): Target URL or base route of the web app.
+        session (requests.Session): Session for request handling.
+        is_api (bool): Whether to test API endpoints.
+        api_endpoints (list): List of API endpoint URLs to test.
+
+    Returns:
+        list: List of SQLi test results.
+    """
+        
     results = []
     sql_error_signatures = [
     "sql syntax",
@@ -306,6 +393,19 @@ def test_sql_injection(base_url, session, is_api=False, api_endpoints=[]):
 
     return results
 def test_xss(base_url, session, is_api=False, api_endpoints=[]):
+    """
+    Tests for Cross-Site Scripting (XSS) vulnerabilities across forms, standalone inputs, and optional API endpoints.
+
+    Args:
+        base_url (str): Target page or domain.
+        session (requests.Session): Authenticated session object.
+        is_api (bool): Whether to test API endpoints.
+        api_endpoints (list): List of API endpoint URLs.
+
+    Returns:
+        list: List of XSS test results.
+    """
+        
     results = []
     results.append(" ")
     results.append("=========================== Cross-Site Scripting (XSS) Test Results: ===========================")
@@ -392,6 +492,18 @@ def test_xss(base_url, session, is_api=False, api_endpoints=[]):
     return results
 
 def test_command_injection(base_url, session, is_api=False, api_endpoints=[]):
+    """
+    Tests for OS Command Injection using payloads with success indicators on form inputs and endpoints.
+
+    Args:
+        base_url (str): Web page base URL to test.
+        session (requests.Session): Active HTTP session.
+        is_api (bool): Whether to test API endpoints.
+        api_endpoints (list): Optional list of endpoint URLs.
+
+    Returns:
+        list: Detected command injection results.
+    """
     results = []
     results.append(" ")
     results.append("=========================== Command Injection ===========================")
@@ -497,6 +609,19 @@ def test_command_injection(base_url, session, is_api=False, api_endpoints=[]):
 
 
 def test_html_injection(base_url, session, is_api=False, api_endpoints=[]):
+    """
+    Detects HTML Injection vulnerabilities via reflected content in forms, inputs, and APIs.
+
+    Args:
+        base_url (str): Target URL for scanning.
+        session (requests.Session): HTTP session object.
+        is_api (bool): Whether to test API endpoints.
+        api_endpoints (list): Optional list of endpoint URLs.
+
+    Returns:
+        list: Results of HTML Injection attempts.
+    """
+
     results = []
     results.append(" ")
     results.append("=========================== HTML Injection ===========================")
@@ -581,12 +706,24 @@ def test_html_injection(base_url, session, is_api=False, api_endpoints=[]):
 
 
 def xss_only(target_url):
+    """
+    Executes an XSS-only scan on the given target URL.
+    Handles login (SQLi, brute force) if required before scanning.
+
+    Args:
+        target_url (str): Target page for XSS testing.
+
+    Returns:
+        list: Result log of XSS test.
+    """
+
     results = []
     session = create_session()
     test_login_url = detect_login_via_redirect(target_url, session)
-    print(f"Location returned {test_login_url}")
+    login_url = detect_login_page(target_url, session)
+    print(f"Location returned {login_url}")
 
-    login_url = "/".join(target_url.split("/")[:3])
+    #login_url = "/".join(target_url.split("/")[:3])
     login_required = is_login_required(target_url, session)
 
     if login_required:
@@ -613,9 +750,22 @@ def xss_only(target_url):
 
 
 def command_only(target_url):
+    """
+    Performs command injection testing on the target URL.
+    Handles login if required using SQLi or brute force.
+
+    Args:
+        target_url (str): Endpoint or page to be tested.
+
+    Returns:
+        list: Command injection vulnerability report.
+    """
+
     results = []
     session = create_session()
-    login_url = "/".join(target_url.split("/")[:3])
+    login_url = detect_login_page(target_url, session)
+    print(f"Location returned {login_url}")
+    #login_url = "/".join(target_url.split("/")[:3])
     login_required = is_login_required(target_url, session)
 
     if login_required: 
@@ -641,9 +791,22 @@ def command_only(target_url):
 
 
 def html_only(target_url):
+    """
+    Performs HTML Injection testing on the specified URL.
+    Handles login scenarios if present.
+
+    Args:
+        target_url (str): Target URL for testing.
+
+    Returns:
+        list: HTML Injection findings.
+    """
+
     results = []
     session = create_session()
-    login_url = "/".join(target_url.split("/")[:3])
+    login_url = detect_login_page(target_url, session)
+    print(f"Location returned {login_url}")
+    #login_url = "/".join(target_url.split("/")[:3])
     login_required = is_login_required(target_url, session)
 
     if login_required : 
@@ -669,9 +832,22 @@ def html_only(target_url):
 
 
 def sql_only(target_url):
+    """
+    Executes SQL Injection tests only.
+    Handles login bypass before injection testing.
+
+    Args:
+        target_url (str): Page to scan for SQL injection vulnerabilities.
+
+    Returns:
+        list: SQL injection results.
+    """
+
     results = []
     session = create_session()
-    login_url = "/".join(target_url.split("/")[:3])
+    login_url = detect_login_page(target_url, session)
+    print(f"Location returned {login_url}")
+    #login_url = "/".join(target_url.split("/")[:3])
     login_required = is_login_required(target_url, session)
     
     if login_required:
@@ -697,8 +873,18 @@ def sql_only(target_url):
 
 
 def login_sql_injection(base_url, session):
-    results=[]
+    """
+    Attempts to bypass login using classic SQL Injection on detected login forms.
 
+    Args:
+        base_url (str): Login page URL.
+        session (requests.Session): Session object for request reuse.
+
+    Returns:
+        list: Login attempt results.
+    """
+
+    results=[]
     results.append(f" ")
     results.append(f"\n Login Using SQL Injection:")
 
@@ -740,7 +926,17 @@ def login_sql_injection(base_url, session):
     return results
 
 def is_login_required(url, session):
+    """
+    Determines whether the given URL requires login based on content keywords.
 
+    Args:
+        url (str): Page URL to inspect.
+        session (requests.Session): Active HTTP session.
+
+    Returns:
+        bool: True if login-related keywords are found, False otherwise.
+    """
+        
     try:
         headers = {"User-Agent": "Mozilla/5.0"}
         r = session.get(url, headers=headers, timeout=10, verify=False)
@@ -766,7 +962,20 @@ def is_login_required(url, session):
 
 
 def brute_force_login(base_url, session):
-    login_url = base_url + "/login"  # adjust if different
+    """
+    Attempts login via brute-force using a username and password list.
+
+    Args:
+        base_url (str): Target base URL.
+        session (requests.Session): Session object.
+
+    Returns:
+        tuple or None: (username, password) if successful, else None.
+    """
+
+    login_url = detect_login_page(base_url, session)
+    print(f"Location returned {login_url}")
+    #login_url = base_url + "/login"  # adjust if different
     print("URL in brute force func", login_url)
     
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -803,6 +1012,16 @@ def brute_force_login(base_url, session):
 
 #brute force only function
 def test_brute_force(base_url):
+    """
+    Dynamically attempts brute-force login by parsing login form structure and trying credentials.
+
+    Args:
+        base_url (str): Target URL to attempt brute force login.
+
+    Returns:
+        list: Success or failure messages for each attempt.
+    """
+
     print(f"URL in brute force function : {base_url}")
     results = []
     session = create_session()
@@ -873,12 +1092,28 @@ def test_brute_force(base_url):
     return results
 
 def complete_scan(target_url):
+    """
+    Performs a complete vulnerability assessment:
+    - Login bypass (SQLi, Brute-force)
+    - API endpoint discovery
+    - All injection types (SQLi, XSS, Command, HTML)
+
+    Args:
+        target_url (str): Web page or application base URL.
+
+    Returns:
+        list: Full vulnerability scan report.
+    """
+
     results = []
     results.append(f"=== Vulnerability Scanner ===")
 
     session = requests.Session()
+
+    base_url = detect_login_page(target_url, session)
+    print(f"Location returned {base_url}")
     # Extract base login URL (e.g., http://127.0.0.1:5000)
-    base_url = "/".join(target_url.split("/")[:3])
+    #base_url = "/".join(target_url.split("/")[:3])
     #check if login is required using a flag
     if is_login_required(base_url,session):
         login = False
@@ -972,7 +1207,15 @@ def inject_column_placeholders(payload, num_cols):
     Replaces <<cols>> or <<cols:N>> with the exact number of NULLs needed to
     make the total number of columns in the SELECT statement equal to `num_cols`.
     This works regardless of where <<cols>> appears in the list.
+
+    Args:
+        payload (str): SQL injection payload template.
+        num_cols (int): Number of columns expected in SELECT query.
+
+    Returns:
+        str: Transformed payload with correct column count.
     """
+
     if "<<" not in payload:
         return payload
 
@@ -1017,6 +1260,17 @@ def inject_column_placeholders(payload, num_cols):
     return payload.replace(placeholder, nulls)
 
 def detect_js_api_endpoints(url, session):
+    """
+    Scans embedded JavaScript files for fetch/AJAX API endpoints.
+
+    Args:
+        url (str): Page URL to extract <script> sources.
+        session (requests.Session): Current HTTP session.
+
+    Returns:
+        list: Discovered API endpoints.
+    """
+
     print(" Scanning JavaScript for AJAX/fetch API endpoints...")
     endpoints = set()
 
@@ -1043,6 +1297,17 @@ def detect_js_api_endpoints(url, session):
 
 
 def extract_js_endpoints_from_scripts(url, soup):
+    """
+    Extracts potential API endpoints from linked JavaScript files in a given HTML soup.
+
+    Args:
+        url (str): Base URL for resolving relative script paths.
+        soup (bs4.BeautifulSoup): Parsed HTML object.
+
+    Returns:
+        list: Unique list of endpoint paths.
+    """
+
     base_url = "/".join(url.split("/")[:3])
     endpoints = []
 

@@ -916,11 +916,7 @@ def test_bruteforce():
     url = request.form.get("url")
     session = requests.Session()
 
-    # Load wordlists
-    usernames = load_payloads("usernames")  # from payload_texts/usernames.txt
-    passwords = load_payloads("passwords")  # from payload_texts/passwords.txt
-
-    results = test_brute_force(url, session, usernames, passwords)
+    results = test_brute_force(url, session)
     return render_template("result.html", results=results)
 
 @app.route('/upload_payload', methods=['POST'])
