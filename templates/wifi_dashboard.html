@@ -123,7 +123,32 @@
             /* Use spinner from tools.css */
             margin: 0 auto 10px auto; /* Center spinner */
         }
+        .ai-button {
+        background-color: #262e3d;
+        color: #fff;
+        border: 1px solid #4b566b;
+        padding: 6px 12px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        border-radius: 4px;
+        margin: 5px 0;
+        display: inline-block;
+        }
+        .ai-button:hover {
+            background-color: #1a202c;
+        }
+        .ai-button i {
+            margin-right: 5px;
+        }
+        .ai-text {
+            font-family: Consolas, Monaco, monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            margin-top: 10px;
+        }
     </style>
+    <script src="{{ url_for('static', filename='js/ai-insight.js') }}"></script>
 </head>
 <body>
     {% include '_top_bar.html' %}
@@ -148,6 +173,16 @@
                 <!-- Encryption & Risk Analysis -->
                 <h3><i class="fas fa-shield-alt" style="margin-right: 8px;"></i>Encryption & Risk Analysis</h3>
                 <div id="vulnTable"><p>Waiting for analysis...</p></div>
+                <div style="margin-top: 15px;">
+                    <button id="wifi-risk-ai-btn" class="ai-button" data-type="info">
+                        <i class="fas fa-robot"></i> Get AI Analysis
+                    </button>
+                    <div id="wifi-ai-response" style="display: none; margin-top: 10px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px;">
+                        <div class="spinner" style="width: 16px; height: 16px; border-width: 2px; display: none;"></div>
+                        <pre class="ai-text" style="white-space: pre-wrap;"></pre>
+                    </div>
+                </div>
+
                 {# --- Password Cracking Section --- #}
                 <div id="password-crack-section" style="margin-top: 15px; display: none;">
                     <h4><i class="fas fa-key" style="margin-right: 5px;"></i>Password Cracking</h4>
@@ -163,16 +198,19 @@
                 <h3><i class="fas fa-user-secret" style="margin-right: 8px;"></i>Rogue Access Point Detection</h3>
                 <div id="rogueSummaryTableContainer"><p>Waiting for analysis...</p></div>
                 <div id="rogueDetailedLogContainer" style="margin-top: 15px;"><pre>Waiting for analysis...</pre></div>
-
+                
                 <!-- Report Download -->
                 <div style="margin-top: 30px;">
-                     <h3><i class="fas fa-download" style="margin-right: 8px;"></i>Download Analysis Report</h3>
-                    <div class="download-buttons-container">
-                         <a href="#" id="download-txt-link" style="display: none;"><button type="button" data-type="info">Download TXT Report</button></a>
-                         <a href="#" id="download-pdf-link" style="display: none;"><button type="button" data-type="danger">Download PDF Report</button></a>
-                    </div>
-                     <p id="download-info" style="text-align:center; font-size: 0.8rem; color: #888; margin-top: 10px;">(Report download will be available after analysis)</p>
+                     
+                    
                 </div>
+                <div class="action-buttons">
+                    <a href="{{ url_for('home') }}"><button type="button" data-type="secondary">Return to Home</button></a>
+                
+                    <a href="{{ url_for('download_report', report_type='text') }}"><button type="button" data-type="info">Download Text Report</button></a>
+                    <a href="{{ url_for('download_report', report_type='pdf') }}"><button type="button" data-type="danger">Download PDF Report</button></a>
+                
+               </div>
             </div> {# End analysis-content #}
         </div> {# End analysis-section #}
 
@@ -273,12 +311,6 @@
                 if (analysisContent) analysisContent.style.display = 'none'; // Hide content area while loading
                 if (analysisTitle) analysisTitle.textContent = `Analysis for: ${ssid} (${bssid})`;
 
-                // Clear previous analysis results visually (important if re-analyzing)
-                renderTargetInfo(null); renderVulnerabilityTable(null);
-                renderRogue({ summary: [], detailed_log: 'Waiting for analysis...' }); // Clear rogue sections
-                if(downloadTxtLink) downloadTxtLink.style.display = 'none'; // Hide download links
-                if(downloadPdfLink) downloadPdfLink.style.display = 'none';
-                if(downloadInfoP) downloadInfoP.textContent = '(Report download will be available after analysis)';
 
                 fetch("{{ url_for('wifi_analyze') }}", {
                     method: 'POST',
@@ -316,18 +348,7 @@
                         crackSection.style.display = 'none'; // Hide for Open/WEP etc.
                     }
 
-                    // Update Download links
-                    const reportBaseFilename = data.report_base_filename;
-                    if (reportBaseFilename) {
-                        downloadTxtLink.href = `{{ url_for('download_wifi_report', report_type='text') }}?base_filename=${encodeURIComponent(reportBaseFilename)}`;
-                        downloadPdfLink.href = `{{ url_for('download_wifi_report', report_type='pdf') }}?base_filename=${encodeURIComponent(reportBaseFilename)}`;
-                        downloadTxtLink.style.display = ''; // Show buttons
-                        downloadPdfLink.style.display = '';
-                        downloadInfoP.textContent = '(Report includes analysis snapshot)'; // Update info text
-                    } else {
-                        console.error("Report base filename not found. Download links remain hidden.");
-                        downloadInfoP.textContent = '(Report generation failed, download unavailable)'; // Update info text
-                    }
+                
 
                     // Scroll to analysis section (optional)
                     // analysisSection.scrollIntoView({ behavior: 'smooth' });
@@ -482,6 +503,20 @@
                         });
                 }, 5000); // Poll every 5 seconds (adjust as needed)
             }
+            document.addEventListener('DOMContentLoaded', function () {
+            const downloadFinalLink = document.getElementById('download-final-link');
+            const downloadInfoP = document.getElementById('download-info');
+            const urlParams = new URLSearchParams(window.location.search);
+            const baseFilename = urlParams.get('base_filename');
+
+            if (baseFilename && downloadFinalLink) {
+                downloadFinalLink.href = `/download_wifi_report/full?base_filename=${encodeURIComponent(baseFilename)}`;
+                downloadFinalLink.style.display = 'inline-block';
+                if (downloadInfoP) {
+                    downloadInfoP.textContent = '(All report formats are ready for download)';
+                }
+            }
+        });
 
             // Helper function to escape HTML for security
             function escapeHTML(str) {
