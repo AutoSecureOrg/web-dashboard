@@ -423,8 +423,102 @@ def get_web_ai_insight():
     except Exception as e:
         print(f"Error in get-web-ai-insight: {str(e)}")
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/get-mobile-ai-insight', methods=['POST'])
+def get_mobile_ai_insight():
+    try:
+        data = request.get_json(force=True)
+        crimes = data.get('crimes', [])
+        top_crimes = crimes[:5]
 
+        print("\n[DEBUG] Received mobile AI insight request with", len(crimes), "crime entries")
+        
+        # Handle raw output analysis
+        has_raw_output = any(c.get('rawOutput') for c in top_crimes)
+        
+        summarized = []
+        if has_raw_output:
+            # Extract the raw output for analysis
+            raw_crime = next((c for c in top_crimes if c.get('rawOutput')), None)
+            print("[DEBUG] Processing raw output analysis")
+            
+            raw_output = raw_crime.get('output', '')
+            if raw_output:
+                # Create a specialized prompt for raw output
+                prompt = (
+                    "Analyze this raw output from an Android app security scan. "
+                    "Summarize the key security findings, providing a technical "
+                    "short remediation for these issues:\n\n"
+                    + raw_output
+                )
+                
+                print("\n[DEBUG] Raw output analysis prompt created with", len(raw_output), "characters")
+            else:
+                print("\n⚠️ [DEBUG] Raw output flag set but no output data found")
+                prompt = (
+                    "No valid output data was found in the Android security scan. "
+                )
+        else:
+            # Standard processing for structured findings
+            print("\n🔍 [DEBUG] Processing", len(top_crimes), "structured findings:")
+            for c in top_crimes:
+                crime = c.get("crime", "")
+                labels = ", ".join(c.get("label", []))
+                entry = f"- {crime} [{labels}]" if labels else f"- {crime}"
+                print(entry)
+                summarized.append(entry)
 
+            prompt = (
+                # "Summarize the following Android app security issues. "
+                # "Explain why each matters and provide a short, technical remediation for each:\n\n"
+                "Provide a single, very short summary and techincal remediation suggestion for these but not limited to Android app security risks"
+                "\n"
+                + "\n".join(summarized)
+            )
+
+        print("\n[DEBUG] Final Prompt to AI (first 500 chars):\n" + prompt[:500] + ("..." if len(prompt) > 500 else ""))
+
+        def generate():
+            for chunk in call_ai_stream(prompt):
+                yield chunk
+
+        return Response(stream_with_context(generate()), content_type='text/plain')
+
+    except Exception as e:
+        import traceback
+        traceback_str = traceback.format_exc()
+        print(f"[Mobile AI Error] {e}")
+        print(f"[Traceback] {traceback_str}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/get-wifi-ai-insight', methods=['POST'])
+def get_wifi_ai_insight():
+    try:
+        data = request.get_json()
+        risk_analysis = data.get('risk_analysis', '').strip()
+        
+        if not risk_analysis:
+            return jsonify({"error": "No risk analysis provided"}), 400
+
+        prompt = (
+            "Analyze these Wi-Fi network security risks and provide specific technical recommendations:\n\n"
+            f"{risk_analysis}\n\n"
+            "Format your response with:\n"
+            "1. Summary of key risks\n"
+            "2. Specific mitigation steps for each risk\n"
+            "3. Recommended configuration changes\n"
+        )
+        print("\n[DEBUG] Final Prompt to AI:\n" + prompt)
+
+        def generate():
+            for chunk in call_ai_stream(prompt):
+                yield chunk
+
+        return Response(stream_with_context(generate()), content_type='text/plain')
+    except Exception as e:
+        print(f"Error in get-wifi-ai-insight: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    
 @app.route('/download-report/<report_type>')
 def download_report(report_type):
     try:
@@ -572,7 +666,8 @@ def convert_text_to_pdf(text_file, pdf_file):
         with open(text_file, "r", encoding="utf-8") as file:
             for line in file:
                 line = line.rstrip()
-
+                line = line.encode('latin-1', 'ignore').decode('latin-1')
+                
                 # Handle ASCII table lines
                 if line.startswith("+"):
                     if pdf.get_y() + 4.5 > pdf.h - 12:
@@ -884,7 +979,6 @@ def wifi_analyze():
             "Encryption Type": "Unknown"
         }
 
-        # Re-scan Wi-Fi networks to get encryption and signal info
         scanned_df = scan_wifi_networks_nmcli()
         if scanned_df is not None:
             match = scanned_df[
@@ -896,11 +990,10 @@ def wifi_analyze():
         else:
             print("WARN: Failed to perform nmcli scan to get current signal/encryption.")
 
-        # Step 3: Analyze vulnerabilities
         vuln_df = analyze_network_vulnerabilities(pd.DataFrame([selected_network]))
         if vuln_df is None or vuln_df.empty:
-             print("WARN: Vulnerability analysis returned no results.")
-             vulnerability_info = {"ssid": ssid, "bssid": bssid, "error": "Analysis failed"}
+            print("WARN: Vulnerability analysis returned no results.")
+            vulnerability_info = {"ssid": ssid, "bssid": bssid, "error": "Analysis failed"}
         else:
             vuln_row = vuln_df.iloc[0]
             vulnerability_info = {
@@ -911,23 +1004,19 @@ def wifi_analyze():
                 "risk": vuln_row["Risk Analysis"]
             }
 
-        # --- Add Rogue AP Detection for context ---
         rogue_report_json = {"summary": [], "detailed_log": "Rogue AP scan skipped or failed."}
         if scanned_df is not None:
             try:
                 print("INFO: Running Rogue AP detection...")
-                # Pass the full scan results to the rogue detection
                 rogue_df = detect_rogue_access_points(scanned_df)
-                rogue_report_json = process_rogue_data_for_json(rogue_df) # Use the helper
+                rogue_report_json = process_rogue_data_for_json(rogue_df)
                 print("INFO: Rogue AP detection completed.")
             except Exception as rogue_err:
                 print(f"ERROR: Failed during Rogue AP detection: {rogue_err}")
                 rogue_report_json["detailed_log"] = f"Error during Rogue AP scan: {rogue_err}"
         else:
             print("WARN: Skipping Rogue AP detection as initial nmcli scan failed.")
-        # --- End Rogue AP Detection ---
 
-        # Step 4: Construct Target Identification Info (Gateway MAC)
         signal_val = 0
         try:
             signal_str = str(selected_network["Signal Strength"])
@@ -935,19 +1024,19 @@ def wifi_analyze():
             if numeric_part:
                 signal_val = int(numeric_part.group(0))
             else:
-                 print(f"WARN: Could not parse numeric value from signal strength: {signal_str}")
+                print(f"WARN: Could not parse numeric value from signal strength: {signal_str}")
         except Exception as e:
-             print(f"WARN: Error parsing signal strength '{selected_network['Signal Strength']}': {e}")
+            print(f"WARN: Error parsing signal strength '{selected_network['Signal Strength']}': {e}")
 
         signal_suffix = ""
         if signal_val >= -67:
             signal_suffix = " (Very Strong)"
         elif signal_val >= -70:
-             signal_suffix = " (Strong)"
+            signal_suffix = " (Strong)"
         elif signal_val >= -80:
-             signal_suffix = " (Okay)"
+            signal_suffix = " (Okay)"
         else:
-             signal_suffix = " (Weak)"
+            signal_suffix = " (Weak)"
 
         encryption_type = str(selected_network["Encryption Type"])
         encryption_suffix = " (Mixed Mode)" if "WPA1" in encryption_type else ""
@@ -960,30 +1049,51 @@ def wifi_analyze():
             "Channel": get_channel_for_network(selected_network["SSID"], selected_network["BSSID"])
         }
 
-        # --- Generate and Save Report (Moved BEFORE final return) --- #
         report_base_filename = None
         analysis_data_for_report = {
-                "target_info": target_info,
-                "vulnerability": vulnerability_info,
-                "rogue_report": rogue_report_json
+            "target_info": target_info,
+            "vulnerability": vulnerability_info,
+            "rogue_report": rogue_report_json
         }
 
         try:
             report_text = format_wifi_analysis_text(analysis_data_for_report)
             timestamp = datetime.now().strftime("%d%m%y_%H%M%S")
-            safe_bssid = bssid.replace(':', '-').replace(' ', '_') # Basic sanitization
+            safe_bssid = bssid.replace(':', '-').replace(' ', '_')
             report_base_filename = f"wifi_analysis_{safe_bssid}_{timestamp}"
-            print(f"DEBUG: Generated report_base_filename: {report_base_filename}")
             text_report_path = os.path.join(REPORTS_DIR, f"{report_base_filename}.txt")
             with open(text_report_path, "w", encoding="utf-8") as f:
                 f.write(report_text)
             print(f"INFO: Saved Wi-Fi analysis report: {text_report_path}")
         except Exception as report_err:
-             print(f"ERROR: Failed to generate/save Wi-Fi analysis report: {report_err}")
-             report_base_filename = None # Reset on error
-        # --- End Report Generation --- #
+            print(f"ERROR: Failed to generate/save Wi-Fi analysis report: {report_err}")
+            report_base_filename = None
 
-        # Construct the final JSON response including the report filename
+        # --- Generate Final Combined Report (ordered + cracked result) ---
+        try:
+            cracked_password = None
+            for task in crack_tasks.values():
+                if task["status"] == "success" and task["ssid"] == ssid:
+                    cracked_password = task["result"]
+                    break
+        
+
+            full_report_path = wifi_vuln_report(
+                report_dir=REPORTS_DIR,
+                ssid=ssid,
+                bssid=bssid,
+                target_info=target_info,
+                vuln_info=vulnerability_info,
+                rogue_info=rogue_report_json,
+                crack_result=cracked_password,
+                all_networks_df=scanned_df if scanned_df is not None else pd.DataFrame()
+            )
+            print(f"[+] Full Wi-Fi report written to: {full_report_path}")
+            full_report_name = os.path.basename(full_report_path)
+        except Exception as full_report_error:
+            print(f"[!] Failed to generate full Wi-Fi report: {full_report_error}")
+            full_report_name = None
+
         response_json = {
             "status": "success",
             "ssid": ssid,
@@ -992,18 +1102,41 @@ def wifi_analyze():
             "vulnerability": vulnerability_info,
             "target_info": target_info,
             "rogue_report": rogue_report_json,
-            "report_base_filename": report_base_filename
+            "report_base_filename": report_base_filename,
+            "wifi_report_file": full_report_name
         }
 
         print(f"DEBUG: Returning JSON: {response_json}")
         return jsonify(response_json)
 
     except Exception as e:
-         print(f"ERROR: Exception during wifi_analyze for {ssid}/{bssid}: {e}")
-         # Include traceback for detailed debugging if possible
-         import traceback
-         traceback.print_exc()
-         return jsonify({"error": f"An unexpected error occurred during analysis: {e}"}), 500
+        print(f"ERROR: Exception during wifi_analyze for {ssid}/{bssid}: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"An unexpected error occurred during analysis: {e}"}), 500
+
+
+@app.route('/save_cracked_password', methods=['POST'])
+def save_cracked_password():
+    data = request.get_json()
+    password = data.get('password')
+    base_filename = data.get('base_filename')  # must be passed from frontend
+
+    if not password or not base_filename:
+        return jsonify({"error": "Missing required data"}), 400
+
+    report_path = os.path.join(REPORTS_DIR, base_filename)
+    with open(report_path, "a") as f:
+        f.write(f"\n[✔] Cracked Password: {password}\n")
+
+    return jsonify({"status": "saved"})
+
+
+@app.route('/scan_connected_devices', methods=['POST'])
+def scan_connected_devices_route():
+    interface = request.json.get("interface", "wlan1")
+    devices = scan_connected_devices(interface)
+    return jsonify(devices)
 
 
 @app.route('/wifi-crack', methods=['POST'])
