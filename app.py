@@ -35,6 +35,8 @@ from scripts.wifi_tool import (
     crack_wifi_password,
     process_rogue_data_for_json
 )
+from scripts.wifi_report import wifi_vuln_report
+
 from werkzeug.utils import secure_filename
 import uuid
 import zipfile
