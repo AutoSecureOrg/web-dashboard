@@ -8,10 +8,34 @@ import json
 import re
 from datetime import datetime
 from dotenv import load_dotenv
-from scripts.portExploit import nmap_scan, connect_to_metasploit, search_and_run_exploit, get_local_ip, port_exploit_report, query_nvd_api, clean_version_info, format_description
-from scripts.web_scanner import login_sql_injection, xss_only, command_only, html_only, complete_scan, sql_only,test_brute_force
+from scripts.portExploit import (
+    nmap_scan,
+    connect_to_metasploit,
+    search_and_run_exploit,
+    get_local_ip,
+    port_exploit_report,
+    query_nvd_api,
+    clean_version_info,
+    format_description
+)
+from scripts.web_scanner import (
+    login_sql_injection,
+    xss_only,
+    command_only,
+    html_only,
+    complete_scan,
+    sql_only,
+    test_brute_force
+)
 from scripts.web_report import web_vuln_report
-from scripts.wifi_tool import *
+from scripts.wifi_tool import (
+    scan_wifi_networks_nmcli,
+    analyze_network_vulnerabilities,
+    get_channel_for_network,
+    detect_rogue_access_points,
+    crack_wifi_password,
+    process_rogue_data_for_json
+)
 from werkzeug.utils import secure_filename
 import uuid
 import zipfile
@@ -68,133 +92,8 @@ test_status = {"complete": False}
 custom_exploit_results = {} # New global for custom results
 mobile_scan_results = {} # Global for mobile scan results
 
-# --- Helper Function for Rogue Data Formatting ---
-def process_rogue_data_for_json(rogue_df):
-    """Formats the rogue AP DataFrame into a dict for JSON response."""
-    summary_list = []
-    detailed_log_lines = []
-    detailed_log_lines.append("📄 Rogue Access Point Detection Report\n")
-
-    if rogue_df is None or rogue_df.empty:
-        detailed_log_lines.append("✅ No rogue APs detected or scan failed.")
-        return {"summary": [], "detailed_log": "\n".join(detailed_log_lines)}
-
-    for index, row in rogue_df.iterrows():
-        summary_list.append({
-            "SSID": row['SSID'],
-            "Status": row['Status'],
-            "Severity": row['Severity'],
-            "Rogue Indicators": row['Rogue Indicators']
-        })
-
-        # Reconstruct detailed log entry for this SSID
-        detailed_log_lines.append("\n" + "\u2550" * 60) # Top border (using unicode double line)
-        detailed_log_lines.append(f"🔍 SSID: {row['SSID']}\n")
-        if isinstance(row['BSSIDs'], list):
-            for bssid in row['BSSIDs']:
-                detailed_log_lines.append(f"    ➤ BSSID: {bssid}")
-        else:
-            detailed_log_lines.append(f"    ➤ BSSIDs: {row['BSSIDs']}") # Fallback if not list
-
-        # Try to get signal/encryption info if available (might require joining data earlier)
-        # detailed_log_lines.append(f"       Signal: {row.get('Signal Strength', 'N/A')}") # Example if data was joined
-        # detailed_log_lines.append(f"       Encryption: {row.get('Encryption Type', 'N/A')}")
-
-        detailed_log_lines.append(f"\nStatus: {row['Status']}")
-        detailed_log_lines.append(f"Severity: {row['Severity']}")
-        detailed_log_lines.append(f"Indicators: {row['Rogue Indicators']}")
-        detailed_log_lines.append("\u2550" * 60 + "\n") # Bottom border
-
-    return {
-        "summary": summary_list,
-        "detailed_log": "\n".join(detailed_log_lines)
-    }
-# --- End Helper Function ---
-
-# --- Helper to Format WiFi Analysis Data for Text Report ---
-def format_wifi_analysis_text(analysis_data):
-    lines = []
-    lines.append("=======================================")
-    lines.append("     Wi-Fi Network Analysis Report     ")
-    lines.append("=======================================")
-    lines.append(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-
-    # Target Info
-    target_info = analysis_data.get('target_info', {})
-    lines.append("--- Target Identification ---")
-    lines.append(f"SSID:             {target_info.get('SSID', 'N/A')}")
-    lines.append(f"BSSID:            {target_info.get('BSSID', 'N/A')}")
-    lines.append(f"Encryption Type:  {target_info.get('Encryption Type', 'N/A')}")
-    lines.append(f"Signal Strength:  {target_info.get('Signal Strength', 'N/A')}")
-    lines.append(f"Channel:          {target_info.get('Channel', 'N/A')}")
-    lines.append(f"Subnet:           {target_info.get('Subnet', 'N/A')}")
-    lines.append(f"Gateway MAC:      {target_info.get('Gateway MAC', 'N/A')}\n")
-
-    # Vulnerability Info
-    vuln_info = analysis_data.get('vulnerability', {})
-    lines.append("--- Encryption & Risk Analysis ---")
-    lines.append(f"Risk Details:")
-    lines.append(vuln_info.get('risk', 'N/A'))
-    lines.append("\n")
-
-    # Connected Devices
-    devices = analysis_data.get('devices', [])
-    lines.append("--- Connected Devices Fingerprinting ---")
-    if devices:
-        device_df = pd.DataFrame(devices)
-        # Select relevant columns for text report
-        device_df_text = device_df[['IP Address', 'MAC Address', 'Vendor', 'OS', 'Open Ports', 'Detected Activity']]
-        lines.append(tabulate(device_df_text, headers='keys', tablefmt='grid'))
-    else:
-        lines.append("No connected devices found or analysis failed.")
-    lines.append("\n")
-
-    # --- Add Device Vulnerability Summary Table ---
-    lines.append("--- Device Vulnerability Summary ---")
-    if devices:
-        vuln_summary_data = []
-        for dev in devices:
-            ports = (dev.get('Open Ports', '') or '').lower()
-            risk = "✅ Low"
-            reason = "No high-risk open ports detected"
-            if "23/tcp" in ports or "21/tcp" in ports:
-                risk = "❌ Critical"
-                reason = "Exposed Telnet or FTP services (unencrypted)"
-            elif ("80/tcp" in ports and "443/tcp" not in ports) or \
-                 any(p in ports for p in ["unknown", "9100", "22/tcp", "3306", "8000", "8080", "9010", "9020", "50100"]):
-                risk = "⚠️ Medium"
-                reason = "Potentially vulnerable/exposed services detected"
-
-            vuln_summary_data.append({
-                'IP Address': dev.get('IP Address', 'N/A'),
-                'MAC Address': dev.get('MAC Address', 'N/A'),
-                'Vendor': dev.get('Vendor', 'N/A'),
-                'Risk Level': risk,
-                'Reason': reason
-            })
-
-        if vuln_summary_data:
-            vuln_df = pd.DataFrame(vuln_summary_data)
-            lines.append(tabulate(vuln_df, headers='keys', tablefmt='grid'))
-        else:
-            lines.append("No device vulnerability data to display.")
-    else:
-        lines.append("Device vulnerability analysis skipped (no devices found).")
-    lines.append("\n")
-    # --- End Device Vulnerability Summary ---
-
-    # ARP Flood Output
-    lines.append("--- ARP Replay Flood Report ---")
-    lines.append(analysis_data.get('arp_flood_output', 'N/A'))
-    lines.append("\n")
-
-    # Router Checks - These are fetched async, might not be in initial data
-    # You might need a separate way to include these if required in the static report.
-    lines.append("--- Router Checks (Snapshot) ---")
-    lines.append("(Router Admin and UPnP checks are performed asynchronously and may not be included here)")
-
-    return "\n".join(lines)
-# --- End Report Formatting Helper ---
+# Global dictionary to store wifi cracking task status and results
+crack_tasks = {}
 
 # Helper function for allowed file extensions
 def allowed_file(filename):
@@ -488,7 +387,7 @@ def get_system_ai_insight():
     prompt = (
         f"Compact short technical security recommendations for {service} {version}. {vuln}\n\n"
         "1. Mitigation steps\n"
-        "2. Patch availability (& commits)\n"
+        "2. Patch availability\n"
         "3. Detection methods (& CLI commands)\n\n"
     )
 
@@ -939,8 +838,6 @@ def upload_payload():
 
         return '', 200
 
-    return "❌ Invalid upload", 400
-
 
 #------------------------------------------------------------------------------wifi---------------------------------
 @app.route("/check-upnp")
@@ -991,17 +888,6 @@ def wifi_analyze():
     print(f"INFO: Analyzing network SSID: {ssid}, BSSID: {bssid}")
 
     try:
-        # Step 1: Scan subnet and devices
-        subnet = detect_subnet_from_gateway()
-        if not subnet:
-             print("WARN: Could not detect subnet.")
-             # Decide if this is fatal or proceed with defaults
-             return jsonify({"error": "Could not detect network subnet."}), 500
-
-        devices_df = scan_connected_devices(subnet)
-        fp_df = fingerprint_devices(devices_df)
-
-        # Step 2: Create a DataFrame from the selected target
         selected_network = {
             "SSID": ssid,
             "BSSID": bssid,
@@ -1036,7 +922,23 @@ def wifi_analyze():
                 "risk": vuln_row["Risk Analysis"]
             }
 
-        # Step 4: Construct Target Identification Info
+        # --- Add Rogue AP Detection for context ---
+        rogue_report_json = {"summary": [], "detailed_log": "Rogue AP scan skipped or failed."}
+        if scanned_df is not None:
+            try:
+                print("INFO: Running Rogue AP detection...")
+                # Pass the full scan results to the rogue detection
+                rogue_df = detect_rogue_access_points(scanned_df)
+                rogue_report_json = process_rogue_data_for_json(rogue_df) # Use the helper
+                print("INFO: Rogue AP detection completed.")
+            except Exception as rogue_err:
+                print(f"ERROR: Failed during Rogue AP detection: {rogue_err}")
+                rogue_report_json["detailed_log"] = f"Error during Rogue AP scan: {rogue_err}"
+        else:
+            print("WARN: Skipping Rogue AP detection as initial nmcli scan failed.")
+        # --- End Rogue AP Detection ---
+
+        # Step 4: Construct Target Identification Info (Gateway MAC)
         signal_val = 0
         try:
             signal_str = str(selected_network["Signal Strength"])
@@ -1066,73 +968,45 @@ def wifi_analyze():
             "BSSID": selected_network["BSSID"],
             "Encryption Type": f"{encryption_type}{encryption_suffix}",
             "Signal Strength": f"{selected_network['Signal Strength']}{signal_suffix}",
-            "Channel": get_channel_for_network(selected_network["SSID"], selected_network["BSSID"]), # Assuming this helper exists and works
-            "Subnet": subnet,
-            "Gateway MAC": get_gateway_mac() or "Unknown"
+            "Channel": get_channel_for_network(selected_network["SSID"], selected_network["BSSID"])
         }
 
-        # Step 5: Trigger ARP flood in background (don't wait for it)
-        arp_flood_output = "ARP flood initiation failed or was skipped."
-        try:
-            # Run synchronously now to get the result string
-            arp_flood_output = auto_arp_replay_flood(interface="wlan0")
-            print("INFO: ARP flood analysis completed.")
-        except Exception as e:
-            print(f"ERROR: Failed to run ARP flood: {e}")
-            arp_flood_output = f"Error running ARP flood analysis: {e}"
-
-        # Return all collected data as JSON
-        return jsonify({
-            "status": "success",
-            "ssid": ssid,
-            "bssid": bssid,
-            "subnet": subnet,
-            "devices": fp_df.to_dict(orient="records") if fp_df is not None else [],
-            "vulnerability": vulnerability_info,
-            "target_info": target_info,
-            "arp_flood_output": arp_flood_output # Placeholder or initial status
-        })
-
-        # --- Generate and Save Report --- #
+        # --- Generate and Save Report (Moved BEFORE final return) --- #
         report_base_filename = None
-        # Construct the data payload specifically for the report function
         analysis_data_for_report = {
                 "target_info": target_info,
                 "vulnerability": vulnerability_info,
-                "devices": fp_df.to_dict(orient="records") if fp_df is not None else [],
-                "arp_flood_output": arp_flood_output # Include the actual ARP report string
+                "rogue_report": rogue_report_json
         }
+
         try:
             report_text = format_wifi_analysis_text(analysis_data_for_report)
             timestamp = datetime.now().strftime("%d%m%y_%H%M%S")
-            # Sanitize BSSID for filename
             safe_bssid = bssid.replace(':', '-').replace(' ', '_') # Basic sanitization
             report_base_filename = f"wifi_analysis_{safe_bssid}_{timestamp}"
-            print(f"DEBUG: Generated report_base_filename: {report_base_filename}") # <-- ADD DEBUG PRINT
+            print(f"DEBUG: Generated report_base_filename: {report_base_filename}")
             text_report_path = os.path.join(REPORTS_DIR, f"{report_base_filename}.txt")
             with open(text_report_path, "w", encoding="utf-8") as f:
                 f.write(report_text)
             print(f"INFO: Saved Wi-Fi analysis report: {text_report_path}")
         except Exception as report_err:
              print(f"ERROR: Failed to generate/save Wi-Fi analysis report: {report_err}")
-             # Set report_base_filename to None or add an error indicator if saving failed
-             report_base_filename = None # Indicate report saving failed
+             report_base_filename = None # Reset on error
         # --- End Report Generation --- #
 
-        # Construct the final JSON response separately
+        # Construct the final JSON response including the report filename
         response_json = {
             "status": "success",
             "ssid": ssid,
             "bssid": bssid,
-            "subnet": subnet,
-            "devices": fp_df.to_dict(orient="records") if fp_df is not None else [],
+            "devices": [],
             "vulnerability": vulnerability_info,
             "target_info": target_info,
-            "arp_flood_output": arp_flood_output,
-            "report_base_filename": report_base_filename # Will be None if saving failed
+            "rogue_report": rogue_report_json,
+            "report_base_filename": report_base_filename
         }
 
-        print(f"DEBUG: Returning JSON: {response_json}") # <-- ADD DEBUG PRINT
+        print(f"DEBUG: Returning JSON: {response_json}")
         return jsonify(response_json)
 
     except Exception as e:
@@ -1142,6 +1016,66 @@ def wifi_analyze():
          traceback.print_exc()
          return jsonify({"error": f"An unexpected error occurred during analysis: {e}"}), 500
 
+
+@app.route('/wifi-crack', methods=['POST'])
+def wifi_crack_start():
+    data = request.json
+    ssid = data.get("ssid")
+    limit = int(data.get("limit", 5))
+
+    if not ssid:
+        return jsonify({"status": "error", "message": "SSID is required."}), 400
+
+    task_id = str(uuid.uuid4())
+    print(f"INFO: Queuing password crack task {task_id} for SSID: {ssid} (Limit: {limit})")
+
+    # Store initial status
+    crack_tasks[task_id] = {"status": "pending", "result": None}
+
+    # Define the function to run in the background
+    def run_crack(app_context, current_task_id, current_ssid, current_limit):
+        with app_context: # Need app context for potential Flask operations inside the function if any
+            print(f"INFO: Background thread started for task {current_task_id}")
+            try:
+                crack_result_dict = crack_wifi_password(current_ssid, A=current_limit)
+                if crack_result_dict:
+                    print(f"SUCCESS: Password analysis complete for {current_ssid} (Task: {current_task_id})")
+                    crack_tasks[current_task_id] = {"status": "success", "result": crack_result_dict} # Store the whole dict
+                else:
+                    print(f"INFO: Password not found for {current_ssid} within limit (Task: {current_task_id}).")
+                    crack_tasks[current_task_id] = {"status": "fail", "result": f"Password not found within the first {current_limit} attempts."}
+            except Exception as e:
+                print(f"ERROR: Exception during cracking (Task: {current_task_id}): {e}")
+                crack_tasks[current_task_id] = {"status": "error", "result": f"An error occurred during cracking: {e}"}
+            print(f"INFO: Background thread finished for task {current_task_id}")
+
+    # Start the background thread
+    thread = threading.Thread(target=run_crack, args=(app.app_context(), task_id, ssid, limit))
+    thread.daemon = True # Allows app to exit even if threads are running
+    thread.start()
+
+    # Immediately return pending status and task ID
+    return jsonify({"status": "pending", "task_id": task_id})
+
+# --- Endpoint to CHECK Password Cracking Status --- #
+@app.route('/wifi-crack-status/<task_id>', methods=['GET'])
+def wifi_crack_status(task_id):
+    print(f"INFO: Checking status for crack task {task_id}")
+    task = crack_tasks.get(task_id)
+    if not task:
+        print(f"WARN: Invalid task ID requested: {task_id}")
+        return jsonify({"status": "error", "message": "Invalid task ID"}), 404
+
+    # Return the current status and result
+    if task["status"] == "success":
+        # Return the entire result dictionary
+        return jsonify({"status": "success", "result": task["result"]})
+    elif task["status"] == "fail":
+        return jsonify({"status": "fail", "message": task["result"]})
+    elif task["status"] == "error":
+         return jsonify({"status": "error", "message": task["result"]})
+    else: # Pending
+        return jsonify({"status": "pending"})
 
 @app.route('/attack', methods=['POST'])
 def launch_attack():
