@@ -202,6 +202,29 @@ def analyze_network_vulnerabilities(networks_df):
         # 🎭 Suspicious BSSID format
         if bssid.endswith(":00") or bssid.startswith("00:00"):
             risk_list.append("⚠️ Suspicious BSSID Format — may be spoofed or misconfigured")
+        # 🚨 Vendor-based Weaknesses
+        exploit_prone_vendors = ["TP-LINK", "DLink", "Tenda", "Zyxel", "Ubiquiti"]
+        if any(v.lower() in ssid.lower() for v in exploit_prone_vendors):
+            risk_list.append("❌ Vendor has known CVEs — review firmware and patch status")
+
+        # 📶 SSID Clone Detection
+        if (networks_df["SSID"] == ssid).sum() > 3:
+            risk_list.append("🚨 SSID seen in >3 APs — possible Beacon Flood or SSID Cloning")
+
+        # 🔓 Default SSID with weak signal
+        if ssid.lower() in ["homewifi", "guest", "default", "admin"]:
+            risk_list.append("❌ Common SSID — likely to have weak/default password")
+
+        # 🛑 Suspicious BSSID format
+        if bssid.endswith(":00") or bssid.startswith("00:00"):
+            risk_list.append("⚠️ Suspicious BSSID Format — may be spoofed")
+        if "Open" in encryption and signal_strength <= 25:
+            risk_list.append("🚨 Open network with weak signal — likely bait AP for sniffing")
+
+
+        # 💬 Add known weak naming patterns
+        if re.search(r"1234|abcd|test|demo", ssid.lower()):
+            risk_list.append("⚠️ Weak naming pattern in SSID — predictable or lazy configuration")
 
         # Compile result
         risk_text = "\n".join(risk_list)
