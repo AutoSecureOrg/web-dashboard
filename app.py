@@ -24,7 +24,8 @@ from scripts.web_scanner import (
     command_only,
     html_only,
     complete_scan,
-    sql_only
+    sql_only,
+    test_brute_force
 )
 from scripts.web_report import web_vuln_report
 from scripts.wifi_tool import (
@@ -756,6 +757,8 @@ def website_scanner():
                     results = html_only(target_url)
                 elif scan_type == "command_injection":
                     results = command_only(target_url)
+                elif scan_type == "brute_force":
+                    results = test_brute_force(target_url)
                 else:
                     results = "Invalid scan type selected."
                     all_errors[target_url] = "Invalid scan type selected."
@@ -807,6 +810,14 @@ def website_scanner():
     return render_template('website_scanner.html')
 
 #custom payloads upload
+@app.route("/test_bruteforce", methods=["POST"])
+def test_bruteforce():
+    url = request.form.get("url")
+    session = requests.Session()
+
+    results = test_brute_force(url, session)
+    return render_template("result.html", results=results)
+
 @app.route('/upload_payload', methods=['POST'])
 def upload_payload():
     payload_type = request.form.get("type")
