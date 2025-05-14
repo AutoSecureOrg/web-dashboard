@@ -23,25 +23,12 @@
         <div class="grain-overlay" id="grain-overlay"></div>
     </div>
 
-    <div class="top-bar">
-        <div class="logo">
-            <a href="{{ url_for('home') }}">
-                <img src="{{ url_for('static', filename='assets/autosecure-logo-white.png') }}" alt="AutoSecure Logo">
-            </a>
-        </div>
-        <div class="top-title" id="title-trigger">AutoSecure
-            <div class="info-card">
-                <h3>AutoSecure</h3>
-                <p>An advanced cybersecurity pentesting toolkit that automates complex security assessments, streamlining time-intensive tasks for faster and more efficient vulnerability detection and analysis.</p>
-            </div>
-        </div>
-        <div class="top-year">2025</div>
-    </div>
+    {% include '_top_bar.html' %}
 
     <div class="container">
         <nav class="feature-nav">
             <ul>
-                <li><a href="#" data-target="system-testing" data-url="{{ url_for('network_scanner') }}">System Testing</a></li>
+                <li><a href="#" data-target="system-testing" data-url="{{ url_for('system_testing') }}">System Testing</a></li>
                 <li><a href="#" data-target="web-testing" data-url="{{ url_for('website_scanner') }}">Web Application Testing</a></li>
                 <li><a href="#" data-target="wifi-testing" data-url="{{ url_for('wifi_page') }}">WiFi Network Testing</a></li>
                 <li><a href="#" data-target="mobile-testing" data-url="{{ url_for('mobile_scan') }}">Mobile Application Testing</a></li>

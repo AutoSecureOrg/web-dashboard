@@ -8,7 +8,7 @@ import json
 import re
 from datetime import datetime
 from dotenv import load_dotenv
-from scripts.portExploit import (
+from scripts.system_testing import (
     nmap_scan,
     connect_to_metasploit,
     search_and_run_exploit,
@@ -108,8 +108,8 @@ def home():
     return render_template('home.html')
 
 
-@app.route('/network-scanner', methods=['GET', 'POST'])
-def network_scanner():
+@app.route('/system-testing', methods=['GET', 'POST'])
+def system_testing():
     global services_found, targets, nmap_results, exploitation_results, test_status, custom_exploit_results
     if request.method == 'POST':
         # Clear all global variables at the start of a new scan
@@ -176,7 +176,7 @@ def network_scanner():
             print(f"ERROR during Nmap scan: {e}")
             return jsonify({"error": f"Nmap scan failed: {e}"}), 500
 
-    return render_template('network_scanner.html')
+    return render_template('system_testing.html')
 
 
 @app.route('/run-tests', methods=['POST'])
@@ -426,7 +426,7 @@ def get_web_ai_insight():
     except Exception as e:
         print(f"Error in get-web-ai-insight: {str(e)}")
         return jsonify({"error": str(e)}), 500
-    
+
 @app.route('/get-mobile-ai-insight', methods=['POST'])
 def get_mobile_ai_insight():
     try:
@@ -435,16 +435,16 @@ def get_mobile_ai_insight():
         top_crimes = crimes[:5]
 
         print("\n[DEBUG] Received mobile AI insight request with", len(crimes), "crime entries")
-        
+
         # Handle raw output analysis
         has_raw_output = any(c.get('rawOutput') for c in top_crimes)
-        
+
         summarized = []
         if has_raw_output:
             # Extract the raw output for analysis
             raw_crime = next((c for c in top_crimes if c.get('rawOutput')), None)
             print("[DEBUG] Processing raw output analysis")
-            
+
             raw_output = raw_crime.get('output', '')
             if raw_output:
                 # Create a specialized prompt for raw output
@@ -454,7 +454,7 @@ def get_mobile_ai_insight():
                     "short remediation for these issues:\n\n"
                     + raw_output
                 )
-                
+
                 print("\n[DEBUG] Raw output analysis prompt created with", len(raw_output), "characters")
             else:
                 print("\n⚠️ [DEBUG] Raw output flag set but no output data found")
@@ -499,7 +499,7 @@ def get_wifi_ai_insight():
     try:
         data = request.get_json()
         risk_analysis = data.get('risk_analysis', '').strip()
-        
+
         if not risk_analysis:
             return jsonify({"error": "No risk analysis provided"}), 400
 
@@ -521,7 +521,7 @@ def get_wifi_ai_insight():
     except Exception as e:
         print(f"Error in get-wifi-ai-insight: {str(e)}")
         return jsonify({"error": str(e)}), 500
-    
+
 @app.route('/download-report/<report_type>')
 def download_report(report_type):
     try:
@@ -670,7 +670,7 @@ def convert_text_to_pdf(text_file, pdf_file):
             for line in file:
                 line = line.rstrip()
                 line = line.encode('latin-1', 'ignore').decode('latin-1')
-                
+
                 # Handle ASCII table lines
                 if line.startswith("+"):
                     if pdf.get_y() + 4.5 > pdf.h - 12:
@@ -1089,7 +1089,7 @@ def wifi_analyze():
                 if task["status"] == "success" and task["ssid"] == ssid:
                     cracked_password = task["result"]
                     break
-        
+
 
             full_report_path = wifi_vuln_report(
                 report_dir=REPORTS_DIR,
@@ -1235,10 +1235,6 @@ def launch_attack():
 
         elif attack_type == "mitm":
             mitm_sniffing_http_credentials()  # Already uses interface internally
-        elif attack_type == "arp-flood":
-            output = auto_arp_replay_flood(interface="wlan0", spoof_replies=True, randomize_mac=True)
-            return jsonify({"status": "success", "output": output})
-
 
         else:
             return jsonify({"status": "error", "message": f"Unknown attack type: {attack_type}"}), 400
@@ -1247,15 +1243,6 @@ def launch_attack():
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
-
-
-@app.route('/arp-flood', methods=['POST'])
-def trigger_arp_flood():
-    try:
-        result = auto_arp_replay_flood(interface="wlan0")
-        return jsonify({"status": "success", "output": result})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)})
 
 
 def program_exists(program):

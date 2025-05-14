@@ -51,6 +51,7 @@ header {
     object-fit: contain; /* Prevent distortion */
     border-radius: 8px;
     padding: 3rem;
+    margin-right: 6rem;
 }
 
 /* === Input Card === */
