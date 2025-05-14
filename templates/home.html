@@ -78,27 +78,82 @@
             <div class="detail-header">FEATURE PROFILE</div>
             <h2>Web Application Testing</h2>
             <div class="detail-body">
-                <p>Dedicated module for uncovering web vulnerabilities:</p>
+                <p>Comprehensive web application security testing with automated vulnerability detection:</p>
                 <ul>
-                    <li>Detects common flaws like SQL Injection, Cross-Site Scripting (XSS), Command Injection, and HTML Injection.</li>
-                    <li>Supports uploading custom payloads to test for specific vulnerabilities or bypass filters.</li>
+                    <li>Login Detection & Authentication Bypass:
+                        <ul>
+                            <li>Automatic login page detection</li>
+                            <li>SQL Injection attempts</li>
+                            <li>Brute-force attacks using local wordlists</li>
+                        </ul>
+                    </li>
+                    <li>Form & Input Field Parsing:
+                        <ul>
+                            <li>Extracts all forms and input fields using BeautifulSoup</li>
+                            <li>Analyzes action URLs, input names/types, and methods (GET/POST)</li>
+                        </ul>
+                    </li>
+                    <li>Vulnerability Detection Modules:
+                        <ul>
+                            <li>SQL Injection: Payloads, error-based detection, response diffing</li>
+                            <li>XSS: Reflective input tests using JavaScript payloads</li>
+                            <li>Command Injection: OS-specific command testing</li>
+                            <li>HTML Injection: Unfiltered tag testing</li>
+                        </ul>
+                    </li>
+                    <li>API Endpoint Detection:
+                        <ul>
+                            <li>Scans JavaScript files for fetch() and AJAX calls</li>
+                            <li>Tests discovered endpoints with known input keys</li>
+                        </ul>
+                    </li>
+                    <li>Standalone Testing Modes:
+                        <ul>
+                            <li>Individual module execution (xss_only, sql_only)</li>
+                            <li>Customizable payload management</li>
+                        </ul>
+                    </li>
                 </ul>
-             </div>
+            </div>
         </div>
 
         <div class="feature-details" id="wifi-testing">
             <div class="detail-header">FEATURE PROFILE</div>
             <h2>WiFi Network Testing</h2>
             <div class="detail-body">
-                <p>Comprehensive wireless network security assessment toolkit featuring advanced detection and analysis capabilities:</p>
+                <p>Advanced wireless network security assessment and analysis:</p>
                 <ul>
-                    <li>Network Discovery & Analysis: Advanced scanning engine identifies all nearby wireless networks, providing detailed encryption protocols and security configurations.</li>
-                    <li>Security Threat Detection: Sophisticated algorithms detect malicious access points, including SSID spoofing attempts and vendor mismatches that could indicate potential honeypots.</li>
-                    <li>Encryption Vulnerability Assessment: In-depth analysis of network security protocols, highlighting networks using deprecated standards like WEP or weak WPA configurations.</li>
-                    <li>Network Device Enumeration: Multi-protocol device discovery using advanced techniques including ARP scanning, Nmap integration, and wireless packet analysis.</li>
-                    <li>Advanced Device Profiling: Detailed fingerprinting system reveals operating systems, device categories, active services, and manufacturer information of connected devices.</li>
-                    <li>ARP Security Analysis: Identifies devices susceptible to ARP-based attacks, including spoofing vulnerabilities and potential hijacking vectors.</li>
-                    <li>Router Security Assessment: Comprehensive evaluation of network infrastructure, including admin interface security, port scanning, and authentication strength testing.</li>
+                    <li>Wi-Fi Scanning:
+                        <ul>
+                            <li>Comprehensive network discovery</li>
+                            <li>Signal strength analysis</li>
+                            <li>BSSID and encryption details</li>
+                        </ul>
+                    </li>
+                    <li>Rogue AP Detection:
+                        <ul>
+                            <li>SSID spoofing identification</li>
+                            <li>Signal anomaly detection</li>
+                            <li>MAC prefix reuse analysis</li>
+                            <li>Vendor mismatch verification</li>
+                        </ul>
+                    </li>
+                    <li>Encryption Risk Analysis:
+                        <ul>
+                            <li>Weak protocol detection (WEP, WPA1)</li>
+                            <li>Open network identification</li>
+                            <li>Default SSID flagging</li>
+                            <li>Signal strength vulnerability assessment</li>
+                        </ul>
+                    </li>
+                    <li>Password Security:
+                        <ul>
+                            <li>Brute-force attempts using wordlists</li>
+                            <li>Connection verification via nmcli</li>
+                            <li>Password leak checking via HaveIBeenPwned API</li>
+                            <li>Strength analysis and improvement suggestions</li>
+                        </ul>
+                    </li>
                 </ul>
             </div>
         </div>

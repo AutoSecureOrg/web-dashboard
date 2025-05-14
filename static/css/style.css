@@ -19,9 +19,7 @@
 
 html, body {
     height: 100%;
-    /* Remove gradient background */
     background-color: var(--bg-color);
-    /* background-image: repeating-linear-gradient(...) removed */
 }
 
 body {
