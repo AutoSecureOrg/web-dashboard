@@ -3,7 +3,7 @@
     </br></br>
 
 # AutoSecure    
-Preview Landing Page: <a href="autosecureorg.github.io">AutoSecure</a>
+Preview Landing Page: <a href="https://autosecureorg.github.io">AutoSecure</a>
 </div>
 
 ## Introduction
