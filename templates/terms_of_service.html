@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service - Security Testing Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tools.css') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='assets/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='assets/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='assets/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='assets/site.webmanifest') }}">
+</head>
+<body>
+    {% include '_top_bar.html' %}
+
+    <div class="container tool-container">
+        <header>
+            <div class="header-text">
+                <h2>Terms of Service</h2>
+            </div>
+        </header>
+
+        <div class="input-card">
+            <h3>Security Testing Platform Terms of Service</h3>
+
+            <div class="terms-content">
+                <h4>1. Acceptance of Terms</h4>
+                <p>By accessing and using this security testing platform, you agree to be bound by these Terms of Service.</p>
+
+                <h4>2. Authorized Use</h4>
+                <p>You agree to only use this platform for security testing on systems and networks that you own or have explicit permission to test. Unauthorized testing of systems is strictly prohibited.</p>
+
+                <h4>3. Legal Compliance</h4>
+                <p>You must comply with all applicable laws and regulations while using this platform. This includes but is not limited to:</p>
+                <ul>
+                    <li>Computer Fraud and Abuse Act</li>
+                    <li>Electronic Communications Privacy Act</li>
+                    <li>Relevant state and international laws</li>
+                </ul>
+
+                <h4>4. Prohibited Activities</h4>
+                <p>The following activities are strictly prohibited:</p>
+                <ul>
+                    <li>Testing systems without explicit permission</li>
+                    <li>Attempting to breach or compromise systems</li>
+                    <li>Using the platform for malicious purposes</li>
+                    <li>Sharing or distributing test results without authorization</li>
+                </ul>
+
+                <h4>5. Liability</h4>
+                <p>This platform is provided "as is" without any warranties. Users are solely responsible for their actions and any consequences that may arise from their use of the platform.</p>
+
+                <h4>6. Data Privacy</h4>
+                <p>We take data privacy seriously. All test results and data are handled according to our Privacy Policy. However, users are responsible for ensuring they have the right to process any data they submit for testing.</p>
+
+                <h4>7. Termination</h4>
+                <p>We reserve the right to terminate or suspend access to the platform for any user who violates these terms.</p>
+
+                <h4>8. Changes to Terms</h4>
+                <p>We reserve the right to modify these terms at any time. Continued use of the platform after changes constitutes acceptance of the modified terms.</p>
+
+                <h4>9. Contact</h4>
+                <p>For questions about these terms, please contact our support team.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

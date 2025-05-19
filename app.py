@@ -108,6 +108,11 @@ def home():
     return render_template('home.html')
 
 
+@app.route('/terms-of-service')
+def terms_of_service():
+    return render_template('terms_of_service.html')
+
+
 @app.route('/system-testing', methods=['GET', 'POST'])
 def system_testing():
     global services_found, targets, nmap_results, exploitation_results, test_status, custom_exploit_results

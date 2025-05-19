@@ -16,8 +16,6 @@
     <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='assets/favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='assets/favicon-16x16.png') }}">
     <link rel="manifest" href="{{ url_for('static', filename='assets/site.webmanifest') }}">
-    
-
 </head>
 <body>
     {% include '_top_bar.html' %}
@@ -58,6 +56,13 @@
 
                 <p id="loading" style="display:none; color: orange;">Targeting vulnerabilities ...</p>
 
+                <div class="checkbox-container">
+                    <input type="checkbox" id="authorized" name="authorized" required>
+                    <label for="authorized">
+                        I agree to the <a href="{{ url_for('terms_of_service') }}">Terms of Service</a>.
+                    </label>
+                </div>
+
                 <br><br>
                 <button type="submit" onclick="showLoading()">Start Assessment</button>
             </form>
@@ -68,9 +73,9 @@
         <div class="">
           <h2 class="feature-title">Select Payload Type</h2>
           <p class="feature-desc">Upload a <code>.txt</code> file containing custom payloads for a specific test:</p>
-      
+
           <input type="file" id="fileInput" accept=".txt" multiple required class="neon-input"><br><br>
-      
+
           <!-- Buttons row -->
           <div class="payload-button-row">
             <button type="button" class="modal-button test-btn" onclick="uploadPayload('xss')">XSS</button>
@@ -81,13 +86,11 @@
           <br>
           <!-- Close button -->
           <button type="button" class="modal-button close-btn" onclick="closeCustomPayloadModal()">CLOSE</button>
-      
+
           <!-- Uploaded filenames -->
           <pre id="uploadedFileName" style="color: #bbb; font-size: 0.85rem; margin-top: 1rem;"></pre>
         </div>
       </div>
-      
-      
 
     {# Include main script for top bar interactions #}
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
@@ -115,7 +118,7 @@
             loadingElement.style.display = "block";
         }
     }
-    
+
     function openCustomPayloadModal() {
     document.getElementById('customPayloadModal').classList.remove('hidden');
     }

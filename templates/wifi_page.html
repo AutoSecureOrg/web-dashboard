@@ -27,6 +27,12 @@
 
         <div class="input-card">
                 <h3>🛡️ Wi-Fi Security Scanner</h3>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="authorized" name="authorized" required>
+                    <label for="authorized">
+                        I agree to the <a href="{{ url_for('terms_of_service') }}">Terms of Service</a>.
+                    </label>
+                </div>
                 <button id="start-wifi-scan-btn" class="scan-button">Start Network Scan</button>
                 <div id="scan-loading" style="display: none; text-align: center; margin-top: 15px;">
                     <div class="spinner"></div>
