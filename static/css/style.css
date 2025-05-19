@@ -326,27 +326,34 @@ pre {
 
 /* Modal Content Card */
 .modal-content {
-    background-color: var(--modal-bg);
-    padding: 2rem; /* Padding inside the card */
-    border: 1px solid var(--border-color);
-    border-radius: 1rem;
-    max-width: 700px; /* Max width of the card */
-    width: 100%; /* Responsive width */
+    background: var(--modal-bg, #1a1a1a);
+    border-radius: 8px;
+    width: 90%;
+    max-width: 700px;
     position: relative;
-    max-height: 85vh; /* Limit height */
-    overflow-y: auto; /* Scroll if content overflows */
-    transform: scale(0.95);
-    transition: transform 0.4s ease;
-    padding-bottom: 5rem; /* Add padding at the bottom for buttons */
+    transform: translateY(-20px) scale(0.95);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    opacity: 0;
+    pointer-events: none;
+
+    /* --- Added for sticky buttons --- */
+    display: flex;
+    flex-direction: column;
+    max-height: 85vh;
+    padding: 0;
+    /* --- End added for sticky buttons --- */
 }
 
 .details-modal.active .modal-content {
-    transform: scale(1);
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
 }
 
 .modal-button {
     position: absolute;
-    bottom: 1.5rem; /* Position buttons at the bottom */
+    bottom: 1.5rem;
     background: none;
     border: 1px solid var(--secondary-text);
     color: var(--secondary-text);
@@ -362,7 +369,7 @@ pre {
 .modal-button:hover {
     color: var(--text-color);
     border-color: var(--text-color);
-    background-color: rgba(255, 255, 255, 0.1); /* close button */
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .close-btn {
@@ -371,20 +378,22 @@ pre {
 }
 
 .test-btn {
-    left: 1.5rem; /* Position test button */
+    left: 1.5rem;
     color: var(--accent-color);
     border-color: var(--accent-color);
 }
 
 .test-btn:hover {
-    color: var(--bg-color);
     background-color: var(--accent-color);
-    border-color: var(--accent-color);
+    color: var(--modal-bg);
 }
 
 /* Details Content Styling inside Modal */
 #details-content-container {
-     padding-right: 1rem;
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 2rem;
+    min-height: 100px;
 }
 
 .detail-header {
@@ -398,7 +407,7 @@ pre {
 
 #details-content-container h2 {
     font-size: clamp(1.5rem, 3vw, 2rem);
-    color: var(--text-color); /* White title in modal */
+    color: var(--text-color);
     margin-bottom: 1em;
     font-weight: 700;
 }
@@ -456,12 +465,13 @@ pre {
         padding: 5rem 1rem 1rem 1rem;
     }
     .modal-content {
-        padding: 1.5rem;
         max-height: 90vh;
-        padding-bottom: 4.5rem;
     }
     #details-content-container {
-         padding-right: 1rem;
+        padding: 1.5rem;
+    }
+    .modal-actions {
+        padding: 0.75rem 1.5rem;
     }
     .modal-button {
         bottom: 1rem;
@@ -493,8 +503,12 @@ pre {
         padding: 1rem;
     }
      .modal-content {
-        padding: 1.5rem 1rem;
-        padding-bottom: 4rem;
+    }
+    #details-content-container {
+        padding: 1rem;
+    }
+    .modal-actions {
+        padding: 0.5rem 1rem;
     }
     .modal-button {
         padding: 0.2em 0.6em;
@@ -536,7 +550,7 @@ pre {
 }
 
 .container {
-    z-index: 10; /* Ensure this is above the background-layers */
+    z-index: 10;
 }
 
 /* Mobile Touch Specific Styles */
@@ -579,7 +593,6 @@ pre {
         pointer-events: auto;
     }
 
-    /* Ensure info card is hidden when not showing */
     .info-card {
         pointer-events: none !important;
     }
@@ -604,12 +617,12 @@ pre {
 /* Action Buttons */
 .action-buttons {
     margin-top: 40px;
-    text-align: center; /* Center buttons horizontally */
+    text-align: center;
 }
 
 .action-buttons a {
-    display: inline-block; /* Prevent line breaks */
-    margin: 10px 15px; /* Add space between buttons */
+    display: inline-block;
+    margin: 10px 15px;
 }
 
 .action-buttons button {
@@ -618,3 +631,22 @@ pre {
     border-radius: 8px;
     cursor: pointer;
 }
+
+/* --- Styles for sticky modal buttons --- */
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    border-top: 1px solid var(--border-color, #333);
+    flex-shrink: 0;
+    background-color: var(--modal-bg, #1a1a1a);
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.modal-actions .modal-button {
+    position: static;
+    margin: 0;
+}
+/* --- End Styles for sticky modal buttons --- */

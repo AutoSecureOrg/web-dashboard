@@ -161,7 +161,19 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.log("Test button clicked, redirecting to:", targetUrl);
                             window.location.href = targetUrl; // Use the URL from data-url
                         };
-                        modalContent.appendChild(testBtn);
+                        const modalActions = modalContent.querySelector('.modal-actions');
+                        if (modalActions) {
+                            const closeButton = modalActions.querySelector('#close-btn');
+                            if (closeButton) {
+                                modalActions.insertBefore(testBtn, closeButton);
+                            } else {
+                                modalActions.appendChild(testBtn); // Fallback
+                            }
+                            console.log("Added new test button to modal-actions."); // Debug log
+                        } else {
+                            console.error(".modal-actions not found, appending test button to modalContent as fallback.");
+                            modalContent.appendChild(testBtn); // Fallback to old behavior
+                        }
                          console.log("Added new test button."); // Debug log
                     } else {
                         console.log("No target URL found, Test button not added."); // Debug log
