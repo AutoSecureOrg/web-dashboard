@@ -351,13 +351,14 @@ pre {
     transform: translateY(0) scale(1);
 }
 
+/* Modal Button - Base Styles */
 .modal-button {
     position: absolute;
     bottom: 1.5rem;
     background: none;
     border: 1px solid var(--secondary-text);
     color: var(--secondary-text);
-    padding: 0.3em 0.8em;
+    padding: 0.6rem 1rem; /* Increased from 0.3em 0.8em for better touch targets */
     cursor: pointer;
     font-size: 0.8rem;
     font-weight: 600;
@@ -463,9 +464,11 @@ pre {
     }
     .container {
         padding: 5rem 1rem 1rem 1rem;
+        justify-content: center; /* Center content on smaller screens */
     }
     .modal-content {
         max-height: 90vh;
+        width: 95%; /* Slightly wider on tablets */
     }
     #details-content-container {
         padding: 1.5rem;
@@ -484,56 +487,173 @@ pre {
     }
     .logo {
         top: 0.5rem;
-        left: 0.1rem;
+        left: 1rem;
     }
     .logo img {
-        height: 5rem;
+        height: 2.5rem; /* More appropriate size for tablets */
     }
     .info-card {
         max-width: 250px;
         padding: 1rem;
     }
+
+    /* Adjust Feature Nav spacing for tablets */
+    .feature-nav {
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .feature-nav li {
+        margin-bottom: 1.2em; /* More space between nav items */
+    }
 }
 
 @media (max-width: 480px) {
-    .feature-nav a {
-       line-height: 1.3;
+    /* Top bar adjustments */
+    .top-bar {
+        padding: 0.7rem 0.5rem;
     }
-    .details-modal {
-        padding: 1rem;
+
+    .top-title {
+        font-size: 0.7rem; /* Slightly smaller title */
     }
-     .modal-content {
+
+    .top-year {
+        right: 0.5rem;
+        font-size: 0.7rem;
     }
-    #details-content-container {
-        padding: 1rem;
+
+    /* Logo placement */
+    .logo {
+        top: 0.4rem;
+        left: 0.5rem;
     }
-    .modal-actions {
-        padding: 0.5rem 1rem;
-    }
-    .modal-button {
-        padding: 0.2em 0.6em;
-    }
-     #details-content-container h2 {
-        margin-bottom: 0.8em;
-     }
-     .detail-body p, .detail-body li {
-        font-size: 0.9rem;
-     }
+
     .logo img {
-        height: 5rem;
+        height: 2rem; /* Consistent, appropriate size for mobile */
     }
-    .feature-nav a:hover {
-        transform: translateX(5px);
+
+    /* Main container */
+    .container {
+        padding: 4rem 0.75rem 1rem 0.75rem;
     }
+
+    /* Feature navigation */
+    .feature-nav {
+        text-align: center;
+    }
+
+    .feature-nav a {
+        font-size: clamp(1.2rem, 5vw, 1.8rem); /* Smaller font on mobile */
+        line-height: 1.3;
+    }
+
+    .feature-nav li {
+        margin-bottom: 1em;
+    }
+
+    /* Modal adjustments */
+    .details-modal {
+        padding: 0.5rem;
+    }
+
+    .modal-content {
+        border-radius: 6px;
+        width: 100%;
+    }
+
+    #details-content-container {
+        padding: 1rem 0.75rem;
+    }
+
+    .modal-actions {
+        padding: 0.75rem 0.75rem;
+        border-bottom-left-radius: 6px;
+        border-bottom-right-radius: 6px;
+    }
+
+    /* Button improvements */
+    .modal-actions .modal-button {
+        min-height: 2.5rem; /* Ensure minimum touch target height */
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+    }
+
+    /* Content adjustments */
+    #details-content-container h2 {
+        margin-bottom: 0.8em;
+        font-size: 1.3rem;
+    }
+
+    .detail-body p, .detail-body li {
+        font-size: 0.9rem;
+    }
+
+    /* Info card adjustments */
     .info-card {
         max-width: 200px;
         font-size: 0.8rem;
+        padding: 0.75rem;
     }
+
     .info-card h3 {
         font-size: 0.9rem;
     }
+
     .info-card p {
         font-size: 0.8rem;
+    }
+
+    /* Hover animation adjustment */
+    .feature-nav a:hover {
+        transform: translateX(5px);
+    }
+}
+
+/* Even smaller screens - phone portrait */
+@media (max-width: 360px) {
+    .container {
+        padding: 3.5rem 0.5rem 0.5rem 0.5rem;
+    }
+
+    .feature-nav a {
+        font-size: 1.1rem;
+    }
+
+    #details-content-container {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .modal-actions {
+        padding: 0.5rem;
+    }
+
+    .modal-actions .modal-button {
+        font-size: 0.7rem;
+        padding: 0.4rem 0.6rem;
+    }
+
+    .detail-body p, .detail-body li {
+        font-size: 0.85rem;
+    }
+}
+
+/* Tools page responsiveness */
+@media (max-width: 768px) {
+    .tool-container {
+        padding-top: 3.5rem;
+    }
+
+    .input-card, .results-card {
+        padding: 1rem;
+        width: 100%;
+    }
+
+    .input-card input[type="text"],
+    .input-card input[type="file"],
+    .input-card select {
+        width: 100%;
     }
 }
 

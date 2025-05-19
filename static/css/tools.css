@@ -313,11 +313,13 @@ button.scan-button {
 
     .header-image {
         max-width: 60%; /* Adjust image size */
-        margin-left: 0;
+        margin-right: 0;
+        padding: 1.5rem;
     }
 
     .tool-container {
         margin-top: 80px;
+        padding: 10px;
     }
 
     #range-scan {
@@ -325,12 +327,53 @@ button.scan-button {
         gap: 0;
     }
 
-     #toggle-results {
+    #toggle-results {
         margin-left: 0;
         margin-top: 10px;
         display: block;
     }
 
+    /* Improve form elements */
+    input[type="text"],
+    input[type="number"],
+    input[type="file"],
+    select {
+        padding: 12px;
+        font-size: 16px; /* Prevent zoom on iOS */
+    }
+
+    /* Improve button touch targets */
+    button {
+        min-height: 44px; /* Apple's recommended minimum */
+    }
+
+    /* Adjust radio groups for better spacing */
+    .radio-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .radio-group label {
+        margin-bottom: 10px;
+    }
+
+    /* Improve checkbox alignment */
+    .checkbox-container {
+        align-items: flex-start;
+    }
+
+    .checkbox-container input[type="checkbox"] {
+        margin-top: 3px;
+    }
+
+    /* Results table responsiveness */
+    .results-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
 }
 
 @media (max-width: 480px) {
@@ -344,21 +387,230 @@ button.scan-button {
 
     .header-image {
         max-width: 70%;
+        padding: 1rem;
     }
 
     .input-card {
-        padding: 20px;
+        padding: 15px;
     }
 
     button {
         font-size: 0.95rem;
         padding: 10px 15px;
+        width: 100%; /* Full width buttons on small screens */
+        margin-top: 15px;
     }
 
+    /* Keep submit buttons prominent */
     form button[type="submit"] {
         padding: 12px;
+        margin-top: 20px;
     }
 
+    /* Adjust label and input spacing */
+    label {
+        font-size: 0.95rem;
+        margin-top: 12px;
+    }
+
+    /* Custom modal adjustments */
+    #customPayloadModal {
+        width: 90%;
+        max-width: 350px;
+        padding: 20px;
+    }
+
+    .payload-button-row {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .payload-button-row button {
+        width: 100%;
+        margin: 0;
+    }
+
+    /* Adjust checkbox container */
+    .checkbox-container {
+        flex-wrap: wrap;
+    }
+
+    .checkbox-container label {
+        margin-top: 0;
+        font-size: 0.85rem;
+    }
+
+    /* Better spacing for the alert boxes */
+    .alert {
+        padding: 12px 15px;
+        font-size: 0.9rem;
+    }
+
+    /* Results area with better spacing */
+    .results-card {
+        padding: 15px;
+    }
+
+    #results-content {
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+}
+
+/* Even smaller screens - phone portrait */
+@media (max-width: 360px) {
+    .tool-container {
+        margin-top: 70px;
+        padding: 5px;
+    }
+
+    .header-text h2 {
+        font-size: 1.6rem;
+    }
+
+    .header-image {
+        max-width: 80%;
+        padding: 0.5rem;
+    }
+
+    .input-card, .results-card {
+        padding: 12px;
+        border-radius: 8px;
+    }
+
+    .input-card h3, .results-card h3 {
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+    }
+
+    /* Adjust form elements for very small screens */
+    input[type="text"],
+    input[type="number"],
+    input[type="file"],
+    select {
+        padding: 10px;
+        font-size: 15px;
+    }
+
+    /* Reduce padding for better space usage */
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    label {
+        font-size: 0.9rem;
+        margin-top: 10px;
+        margin-bottom: 4px;
+    }
+
+    /* Better button sizing */
+    button {
+        font-size: 0.9rem;
+        padding: 8px 12px;
+    }
+
+    /* Spinner adjustments */
+    .spinner {
+        width: 25px;
+        height: 25px;
+        border-width: 3px;
+    }
+
+    #scanning-icon p {
+        font-size: 0.9rem;
+    }
+}
+
+/* Fix for custom payload modal on all screens */
+#customPayloadModal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #111;
+    color: #fff;
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 0 20px rgba(0,255,255,0.3);
+    z-index: 9999;
+    width: 90%;
+    max-width: 450px;
+    text-align: center;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.payload-button-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Responsive tables for all tool pages */
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.results-table th,
+.results-table td {
+    padding: 8px;
+    text-align: left;
+    border: 1px solid var(--border-color, #333);
+}
+
+.results-table th {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 600px) {
+    /* Convert tables to a more mobile-friendly layout */
+    .results-table,
+    .results-table thead,
+    .results-table tbody,
+    .results-table th,
+    .results-table td,
+    .results-table tr {
+        display: block;
+    }
+
+    .results-table thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    .results-table tr {
+        border: 1px solid var(--border-color, #333);
+        margin-bottom: 15px;
+    }
+
+    .results-table td {
+        border: none;
+        border-bottom: 1px solid var(--border-color, #333);
+        position: relative;
+        padding-left: 50%;
+        white-space: normal;
+        text-align: left;
+    }
+
+    .results-table td:before {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: bold;
+        content: attr(data-title);
+    }
+
+    /* Last item in row doesn't need border */
+    .results-table tr td:last-child {
+        border-bottom: 0;
+    }
 }
 
 .form-group {
@@ -451,25 +703,3 @@ button[data-type="danger"]:hover {
 .alert strong {
     font-weight: 700;
 }
-
-#customPayloadModal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #111;
-    color: #fff;
-    padding: 30px 40px;
-    border-radius: 16px;
-    box-shadow: 0 0 20px rgba(0,255,255,0.3);
-    z-index: 9999;
-    width: 450px;
-    text-align: center;
-  }
-
-  .payload-button-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
