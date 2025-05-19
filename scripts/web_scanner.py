@@ -719,7 +719,7 @@ def xss_only(target_url):
 
     results = []
     session = create_session()
-    test_login_url = detect_login_via_redirect(target_url, session)
+    test_login_url = detect_login_page(target_url, session)
     login_url = detect_login_page(target_url, session)
     print(f"Location returned {login_url}")
 
@@ -1179,7 +1179,7 @@ def complete_scan(target_url):
         # Check if any API endpoints were detected
         if endpoints:
             print("[DEBUG] API Endpoints found — performing API-based testing only.")
-            results.append("[+] API Endpoints found — performing API-based testing only.")
+            results.append("[+] API Endpoints found — performing API-based testing now.")
 
             # Test ONLY the API endpoints
             results.extend(test_sql_injection(target_url, session, is_api=True, api_endpoints=endpoints))
@@ -1188,7 +1188,7 @@ def complete_scan(target_url):
             results.extend(test_html_injection(target_url, session, is_api=True, api_endpoints=endpoints))
 
         else:
-            results.append("[-] No API endpoints found — performing standard form-based testing.")
+            #results.append("[-] No API endpoints found — performing standard form-based testing.")
             print("[DEBUG] No API Endpoints found — standard form-based testing.")
 
             # Test standard forms
