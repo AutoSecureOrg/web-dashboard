@@ -45,15 +45,6 @@ header {
     margin: 0;
 }
 
-.header-image {
-    max-width: 35%;
-    height: auto;
-    object-fit: contain; /* Prevent distortion */
-    border-radius: 8px;
-    padding: 3rem;
-    margin-right: 6rem;
-}
-
 /* === Input Card === */
 .input-card {
     display: block;
@@ -311,12 +302,6 @@ button.scan-button {
         margin-bottom: 20px;
     }
 
-    .header-image {
-        max-width: 60%; /* Adjust image size */
-        margin-right: 0;
-        padding: 1.5rem;
-    }
-
     .tool-container {
         margin-top: 80px;
         padding: 10px;
@@ -383,11 +368,6 @@ button.scan-button {
 
     .header-text p {
         font-size: 0.9rem;
-    }
-
-    .header-image {
-        max-width: 70%;
-        padding: 1rem;
     }
 
     .input-card {
@@ -466,11 +446,6 @@ button.scan-button {
 
     .header-text h2 {
         font-size: 1.6rem;
-    }
-
-    .header-image {
-        max-width: 80%;
-        padding: 0.5rem;
     }
 
     .input-card, .results-card {
