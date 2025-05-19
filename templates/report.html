@@ -126,31 +126,131 @@
         }
 
         /* AI Response Box (within table) */
-        .ai-response-box-web {
-            /* Similar to .ai-response-box from tools.css but tailored */
-            margin: 10px auto;
+        .ai-response-box {
+            margin: 10px 0;
             padding: 15px;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(17, 17, 17, 0.8);
             border: 1px solid var(--border-color, #444);
             border-radius: 6px;
-            max-width: 90%; /* Limit width inside cell */
-            text-align: left;
+            width: 100%;
+            box-sizing: border-box;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            word-break: break-word;
         }
-        .ai-response-box-web .spinner {
-            width: 16px;
-            height: 16px;
-            border-width: 2px;
+
+        .ai-response-box .spinner {
             display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent-color, #00ffff);
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
             vertical-align: middle;
-            margin: 0 8px 0 0;
         }
-        .ai-response-box-web .ai-text {
+
+        .ai-response-box .ai-text {
             white-space: pre-wrap;
-            display: block;
             font-family: Consolas, Monaco, monospace;
             font-size: 0.9rem;
             line-height: 1.6;
-            overflow-x: auto;  /* Only scroll horizontally if needed */
+            margin-top: 10px;
+            color: var(--text-color, #fff);
+            width: 100%;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            word-break: break-word;
+        }
+
+        /* Ensure table cells don't expand beyond their container */
+        .results-table td {
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        /* Ensure the section title cell maintains its width */
+        .section-heading td.section-title {
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        /* Button styling */
+        .ai-button {
+            background-color: var(--secondary-bg, #262e3d);
+            color: var(--text-color, #fff);
+            border: 1px solid var(--border-color, #4b566b);
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .ai-button:hover {
+            background-color: var(--accent-color, #00ffff);
+            color: #000;
+        }
+
+        .ai-button i {
+            margin-right: 5px;
+        }
+
+        /* Make sure the payload column can wrap long text */
+        .payload-col pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-width: 400px;
+            overflow-x: auto;
+        }
+
+        /* Section heading styles */
+        .section-heading td.section-title {
+            background-color: #262e3d;
+            font-weight: bold;
+            padding: 10px 15px;
+            font-size: 1.1rem;
+            position: relative;
+        }
+
+        .section-heading .ai-button {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.85rem;
+            padding: 5px 10px;
+            background-color: #00a8e8;
+            color: white;
+            border-color: #007bff;
+            font-weight: bold;
+        }
+
+        .section-heading .ai-button:hover {
+            background-color: #0056b3;
+            box-shadow: 0 0 8px rgba(0, 255, 255, 0.7);
+        }
+
+        /* AI Response Container */
+        .ai-response-container {
+            background-color: rgba(17, 17, 17, 0.8);
+            border: 1px solid var(--border-color, #444);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 95%;
+        }
+
+        .ai-response-container h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: var(--accent-color, #00ffff);
+        }
+
+        .scan-type-title {
+            font-weight: bold;
         }
     </style>
 </head>
@@ -158,7 +258,6 @@
     {% include '_top_bar.html' %}
     <div style="margin-top: 60px;"></div>
     <h1><i class="fas fa-shield-alt" style="margin-right: 10px; padding-top: 20px;"></i>Web Vulnerability Scan Report</h1>
-
 
     <div class="container tool-container">
         {# Display errors first, if any #}
@@ -182,42 +281,122 @@
                         <thead>
                             <tr>
                                 <th>Payload/Details</th>
-                                <th>AI Fix</th>
                             </tr>
                         </thead>
                         <tbody>
+                            {% set scan_types = {'SQL Injection': False, 'Cross-Site Scripting': False, 'HTML Injection': False, 'Command Injection': False} %}
+
+                            {# First pass: Check if each scan type has any successful tests [+] or [~] #}
                             {% for item in results_list %}
-                            <tr>
-                                <td><pre>{{ item.payload }}</pre></td>
-                                <td>
-                                    {% if item.status == 'Vulnerable' and item.payload != 'N/A' %}
-                                        {# Pass payload to AI insight function #}
-                                        <button class="ai-button ai-insight-btn"
-                                            data-payload="{{ item.payload | replace('\n', '\\n') | replace('"', '&quot;') }}">
-                                            Fix With AI
-                                        </button>
-                                    {% else %}
-                                        -
+                                {% if item.payload and ('[+]' in item.payload or '[~]' in item.payload) %}
+                                    {% if 'SQL Injection' in item.type or 'SQL Injection' in item.payload %}
+                                        {% if not scan_types['SQL Injection'] %}
+                                            <script>console.log("Found SQL Injection vulnerability");</script>
+                                        {% endif %}
+                                        {% set _ = scan_types.update({'SQL Injection': True}) %}
+                                    {% elif 'Cross-Site Scripting' in item.type or 'Cross-Site Scripting' in item.payload %}
+                                        {% if not scan_types['Cross-Site Scripting'] %}
+                                            <script>console.log("Found XSS vulnerability");</script>
+                                        {% endif %}
+                                        {% set _ = scan_types.update({'Cross-Site Scripting': True}) %}
+                                    {% elif 'HTML Injection' in item.type or 'HTML Injection' in item.payload %}
+                                        {% if not scan_types['HTML Injection'] %}
+                                            <script>console.log("Found HTML Injection vulnerability");</script>
+                                        {% endif %}
+                                        {% set _ = scan_types.update({'HTML Injection': True}) %}
+                                    {% elif 'Command Injection' in item.type or 'Command Injection' in item.payload %}
+                                        {% if not scan_types['Command Injection'] %}
+                                            <script>console.log("Found Command Injection vulnerability");</script>
+                                        {% endif %}
+                                        {% set _ = scan_types.update({'Command Injection': True}) %}
                                     {% endif %}
-                                </td>
-                            </tr>
-                            {# AI response row (hidden initially) #}
-                            {% if item.status == 'Vulnerable' and item.payload != 'N/A' %}
-                            <tr class="ai-row" style="display: none;">
-                                <td colspan="4">
-                                    <div class="ai-response-box">
-                                        <strong>AI Insight:</strong>
-                                        <div class="spinner" role="status"></div>
-                                        <span class="ai-text">Thinking...</span>
-                                    </div>
-                                </td>
+                                {% endif %}
+                            {% endfor %}
+
+                            <script>
+                                console.log("Scan types detected:", JSON.parse('{{ scan_types|tojson }}'));
+                            </script>
+
+                            {# Second pass: Display results with AI buttons next to section headings if needed #}
+                            {% set current_section = '' %}
+                            {% for item in results_list %}
+                                {% if item.payload and '===========================' in item.payload %}
+                                    {# This is a section heading #}
+                                    <tr class="section-heading">
+                                        <td class="section-title">
+                                            {% set clean_heading = item.payload.replace('===========================', '').replace(':', '').strip() %}
+                                            {{ clean_heading }}
+                                            {% if 'SQL Injection' in item.payload %}
+                                                {% if scan_types['SQL Injection'] %}
+                                                <button class="ai-button ai-insight-btn" data-scan-type="SQL Injection"
+                                                    data-payload="SQL Injection vulnerabilities detected in this scan">
+                                                    <i class="fas fa-robot"></i> Fix With AI
+                                                </button>
+                                                <div class="ai-response-box" style="display: none;">
+                                                    <div class="spinner" role="status"></div>
+                                                    <div class="ai-text">Waiting for analysis...</div>
+                                                </div>
+                                                {% endif %}
+                                            {% elif 'Cross-Site Scripting' in item.payload %}
+                                                {% if scan_types['Cross-Site Scripting'] %}
+                                                <button class="ai-button ai-insight-btn" data-scan-type="XSS"
+                                                    data-payload="Cross-Site Scripting vulnerabilities detected in this scan">
+                                                    <i class="fas fa-robot"></i> Fix With AI
+                                                </button>
+                                                <div class="ai-response-box" style="display: none;">
+                                                    <div class="spinner" role="status"></div>
+                                                    <div class="ai-text">Waiting for analysis...</div>
+                                                </div>
+                                                {% endif %}
+                                            {% elif 'HTML Injection' in item.payload %}
+                                                {% if scan_types['HTML Injection'] %}
+                                                <button class="ai-button ai-insight-btn" data-scan-type="HTML Injection"
+                                                    data-payload="HTML Injection vulnerabilities detected in this scan">
+                                                    <i class="fas fa-robot"></i> Fix With AI
+                                                </button>
+                                                <div class="ai-response-box" style="display: none;">
+                                                    <div class="spinner" role="status"></div>
+                                                    <div class="ai-text">Waiting for analysis...</div>
+                                                </div>
+                                                {% endif %}
+                                            {% elif 'Command Injection' in item.payload %}
+                                                {% if scan_types['Command Injection'] %}
+                                                <button class="ai-button ai-insight-btn" data-scan-type="Command Injection"
+                                                    data-payload="Command Injection vulnerabilities detected in this scan">
+                                                    <i class="fas fa-robot"></i> Fix With AI
+                                                </button>
+                                                <div class="ai-response-box" style="display: none;">
+                                                    <div class="spinner" role="status"></div>
+                                                    <div class="ai-text">Waiting for analysis...</div>
+                                                </div>
+                                                {% endif %}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% if 'SQL Injection' in item.payload %}
+                                        {% set current_section = 'SQL Injection' %}
+                                    {% elif 'Cross-Site Scripting' in item.payload %}
+                                        {% set current_section = 'Cross-Site Scripting' %}
+                                    {% elif 'HTML Injection' in item.payload %}
+                                        {% set current_section = 'HTML Injection' %}
+                                    {% elif 'Command Injection' in item.payload %}
+                                        {% set current_section = 'Command Injection' %}
+                                    {% else %}
+                                        {% set current_section = '' %}
+                                    {% endif %}
+                                {% elif item.payload and item.payload.strip() %}
+                                    {# Regular payload rows #}
+                                    <tr>
+                                        <td class="payload-col"><pre>{{ item.payload }}</pre></td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if not results_list %}
+                            <tr>
+                                <td>No specific results found for this URL.</td>
                             </tr>
                             {% endif %}
-                            {% else %}
-                            <tr>
-                                <td colspan="4">No specific results found for this URL.</td>
-                            </tr>
-                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -244,7 +423,101 @@
     {# Include necessary scripts #}
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     {# Include AI insight script if using the AI Fix button #}
-    <script src="{{ url_for('static', filename='js/ai-insight.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // AI insight buttons for web scan sections
+            document.querySelectorAll('.ai-insight-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const scanType = this.getAttribute('data-scan-type');
+                    const payload = this.getAttribute('data-payload');
+                    const responseBox = this.nextElementSibling; // Get the response box right after the button
+
+                    // Find all successful payloads for this scan type
+                    const allPayloads = [];
+                    let inCorrectSection = false;
+
+                    // Get all payload rows from the results table
+                    const rows = document.querySelectorAll('.results-table tr');
+
+                    // Loop through the rows to find successful payloads in the correct section
+                    for (let i = 0; i < rows.length; i++) {
+                        const row = rows[i];
+                        const cellText = row.querySelector('td')?.textContent || '';
+
+                        // Check if we're entering the section for this scan type
+                        if (cellText.includes('===') && cellText.includes(scanType)) {
+                            inCorrectSection = true;
+                            continue;
+                        }
+
+                        // Check if we're leaving this section (entering another section)
+                        if (inCorrectSection && cellText.includes('===') && !cellText.includes(scanType)) {
+                            inCorrectSection = false;
+                            break;
+                        }
+
+                        // If we're in the correct section, collect successful payloads
+                        if (inCorrectSection) {
+                            if (cellText.includes('[+]') || cellText.includes('[~]')) {
+                                allPayloads.push(cellText.trim());
+                            }
+                        }
+                    }
+
+                    // Show the response box
+                    responseBox.style.display = 'block';
+
+                    // Get the response elements
+                    const spinner = responseBox.querySelector('.spinner');
+                    const responseText = responseBox.querySelector('.ai-text');
+
+                    // Show spinner and clear previous text
+                    spinner.style.display = 'inline-block';
+                    responseText.textContent = 'Analyzing vulnerabilities...';
+
+                    // Scroll to the response box
+                    responseBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+                    // Use just the scan type for the prompt
+                    const completePayload = scanType;
+
+
+                    // Call the API with just the scan type
+                    fetch('/get-web-ai-insight', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ payload: completePayload })
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder();
+
+                        function read() {
+                            reader.read().then(({ done, value }) => {
+                                if (done) {
+                                    spinner.style.display = 'none';
+                                    return;
+                                }
+                                // Clear "Analyzing vulnerabilities..." on first response chunk
+                                if (responseText.textContent === 'Analyzing vulnerabilities...') {
+                                    responseText.textContent = '';
+                                }
+                                responseText.textContent += decoder.decode(value);
+                                read();
+                            });
+                        }
+                        read();
+                    })
+                    .catch(err => {
+                        spinner.style.display = 'none';
+                        responseText.textContent = "Error loading AI response: " + err.message;
+                        console.error(err);
+                    });
+                });
+            });
+        });
+    </script>
 
 </body>
 </html>

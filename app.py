@@ -880,13 +880,43 @@ def website_scanner():
                                 "payload": res.get("payload", "N/A")
                             })
                         else:
-                            current_results_list.append({"type": "General", "status": "Info", "payload": str(res)})
+                            # Set type based on scan_type or section headers in the payload
+                            res_type = "General"
+                            if scan_type == "sql_injection" or ("===" in str(res) and "SQL Injection" in str(res)):
+                                res_type = "SQL Injection"
+                            elif scan_type == "xss" or ("===" in str(res) and "Cross-Site Scripting" in str(res)):
+                                res_type = "Cross-Site Scripting"
+                            elif scan_type == "html_injection" or ("===" in str(res) and "HTML Injection" in str(res)):
+                                res_type = "HTML Injection"
+                            elif scan_type == "command_injection" or ("===" in str(res) and "Command Injection" in str(res)):
+                                res_type = "Command Injection"
+
+                            # Set status based on payload markers
+                            status = "Info"
+                            if "[+]" in str(res):
+                                status = "Vulnerable"
+                            elif "[~]" in str(res):
+                                status = "Suspicious"
+                            elif "[-]" in str(res):
+                                status = "Safe"
+
+                            print(f"DEBUG: Adding result - Type: {res_type}, Status: {status}, Payload: {str(res)[:50]}...")
+                            current_results_list.append({
+                                "type": res_type,
+                                "status": status,
+                                "payload": str(res)
+                            })
 
                 # Store formatted results for this URL
                 if not current_results_list and not all_errors.get(target_url):
                      all_results[target_url] = [{"type": "No vulnerabilities found", "status": "Safe", "payload": "N/A"}]
                 elif current_results_list:
                      all_results[target_url] = current_results_list
+
+                # Print debug information about scan results
+                print(f"DEBUG: Completed scan for {target_url} with {len(current_results_list)} results")
+                vuln_count = len([r for r in current_results_list if r.get("status") == "Vulnerable"])
+                print(f"DEBUG: Found {vuln_count} vulnerabilities")
 
             except Exception as e:
                 error_msg = f"An error occurred scanning {target_url}: {str(e)}"
