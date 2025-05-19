@@ -181,8 +181,6 @@
                     <table class="results-table">
                         <thead>
                             <tr>
-                                <th>Type</th>
-                                <th>Status</th>
                                 <th>Payload/Details</th>
                                 <th>AI Fix</th>
                             </tr>
@@ -190,8 +188,6 @@
                         <tbody>
                             {% for item in results_list %}
                             <tr>
-                                <td>{{ item.type }}</td>
-                                <td class="{% if item.status == 'Vulnerable' or item.status == 'Failed' %}status-negative{% elif item.status == 'Safe' %}status-positive{% else %}status-info{% endif %}">{{ item.status }}</td>
                                 <td><pre>{{ item.payload }}</pre></td>
                                 <td>
                                     {% if item.status == 'Vulnerable' and item.payload != 'N/A' %}

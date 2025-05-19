@@ -58,6 +58,13 @@
                     <input type="file" id="app_file" name="app_file" accept=".zip" required>
                 </div>
 
+                <div class="checkbox-container">
+                    <input type="checkbox" id="authorized" name="authorized" required>
+                    <label for="authorized">
+                        I agree to the <a href="{{ url_for('terms_of_service') }}">Terms of Service</a>.
+                    </label>
+                </div>
+
                 <button type="submit">Scan Application</button>
             </form>
         </div>

@@ -124,8 +124,13 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             console.log("Link clicked:", link.dataset.target); // Debug log
 
-            // Only handle click for desktop or after animation for mobile
-            if (!isTouchDevice || link.classList.contains('show-card')) {
+            // Only handle click for desktop or if specifically triggered from touch handler
+            if (!isTouchDevice || link.__fromTouchEvent) {
+                // Reset the flag if it exists
+                if (link.__fromTouchEvent) {
+                    delete link.__fromTouchEvent;
+                }
+
                 console.log("Processing click..."); // Debug log
                 const targetId = link.getAttribute('data-target');
                 const sourceContentElement = document.getElementById(targetId);
@@ -161,7 +166,19 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.log("Test button clicked, redirecting to:", targetUrl);
                             window.location.href = targetUrl; // Use the URL from data-url
                         };
-                        modalContent.appendChild(testBtn);
+                        const modalActions = modalContent.querySelector('.modal-actions');
+                        if (modalActions) {
+                            const closeButton = modalActions.querySelector('#close-btn');
+                            if (closeButton) {
+                                modalActions.insertBefore(testBtn, closeButton);
+                            } else {
+                                modalActions.appendChild(testBtn); // Fallback
+                            }
+                            console.log("Added new test button to modal-actions."); // Debug log
+                        } else {
+                            console.error(".modal-actions not found, appending test button to modalContent as fallback.");
+                            modalContent.appendChild(testBtn); // Fallback to old behavior
+                        }
                          console.log("Added new test button."); // Debug log
                     } else {
                         console.log("No target URL found, Test button not added."); // Debug log
@@ -204,9 +221,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // After glitch animation, show card
                 touchTimeout = setTimeout(() => {
                     link.classList.remove('glitch-only');
-                    link.classList.add('show-card');
-                    console.log("Show card class added, triggering click..."); // Debug log
-                    // Trigger click event after showing card
+                    // Add flag to bypass isTouchDevice check
+                    link.__fromTouchEvent = true;
+                    // Directly trigger click event
                     link.click();
                 }, 500); // 500ms delay for glitch effect
             });

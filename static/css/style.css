@@ -326,31 +326,39 @@ pre {
 
 /* Modal Content Card */
 .modal-content {
-    background-color: var(--modal-bg);
-    padding: 2rem; /* Padding inside the card */
-    border: 1px solid var(--border-color);
-    border-radius: 1rem;
-    max-width: 700px; /* Max width of the card */
-    width: 100%; /* Responsive width */
+    background: var(--modal-bg, #1a1a1a);
+    border-radius: 8px;
+    width: 90%;
+    max-width: 700px;
     position: relative;
-    max-height: 85vh; /* Limit height */
-    overflow-y: auto; /* Scroll if content overflows */
-    transform: scale(0.95);
-    transition: transform 0.4s ease;
-    padding-bottom: 5rem; /* Add padding at the bottom for buttons */
+    transform: translateY(-20px) scale(0.95);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    opacity: 0;
+    pointer-events: none;
+
+    /* --- Added for sticky buttons --- */
+    display: flex;
+    flex-direction: column;
+    max-height: 85vh;
+    padding: 0;
+    /* --- End added for sticky buttons --- */
 }
 
 .details-modal.active .modal-content {
-    transform: scale(1);
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
 }
 
+/* Modal Button - Base Styles */
 .modal-button {
     position: absolute;
-    bottom: 1.5rem; /* Position buttons at the bottom */
+    bottom: 1.5rem;
     background: none;
     border: 1px solid var(--secondary-text);
     color: var(--secondary-text);
-    padding: 0.3em 0.8em;
+    padding: 0.6rem 1rem; /* Increased from 0.3em 0.8em for better touch targets */
     cursor: pointer;
     font-size: 0.8rem;
     font-weight: 600;
@@ -362,7 +370,7 @@ pre {
 .modal-button:hover {
     color: var(--text-color);
     border-color: var(--text-color);
-    background-color: rgba(255, 255, 255, 0.1); /* close button */
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .close-btn {
@@ -371,20 +379,22 @@ pre {
 }
 
 .test-btn {
-    left: 1.5rem; /* Position test button */
+    left: 1.5rem;
     color: var(--accent-color);
     border-color: var(--accent-color);
 }
 
 .test-btn:hover {
-    color: var(--bg-color);
     background-color: var(--accent-color);
-    border-color: var(--accent-color);
+    color: var(--modal-bg);
 }
 
 /* Details Content Styling inside Modal */
 #details-content-container {
-     padding-right: 1rem;
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 2rem;
+    min-height: 100px;
 }
 
 .detail-header {
@@ -398,7 +408,7 @@ pre {
 
 #details-content-container h2 {
     font-size: clamp(1.5rem, 3vw, 2rem);
-    color: var(--text-color); /* White title in modal */
+    color: var(--text-color);
     margin-bottom: 1em;
     font-weight: 700;
 }
@@ -454,14 +464,17 @@ pre {
     }
     .container {
         padding: 5rem 1rem 1rem 1rem;
+        justify-content: center; /* Center content on smaller screens */
     }
     .modal-content {
-        padding: 1.5rem;
         max-height: 90vh;
-        padding-bottom: 4.5rem;
+        width: 95%; /* Slightly wider on tablets */
     }
     #details-content-container {
-         padding-right: 1rem;
+        padding: 1.5rem;
+    }
+    .modal-actions {
+        padding: 0.75rem 1.5rem;
     }
     .modal-button {
         bottom: 1rem;
@@ -474,52 +487,173 @@ pre {
     }
     .logo {
         top: 0.5rem;
-        left: 0.1rem;
+        left: 1rem;
     }
     .logo img {
-        height: 5rem;
+        height: 2.5rem; /* More appropriate size for tablets */
     }
     .info-card {
         max-width: 250px;
         padding: 1rem;
     }
+
+    /* Adjust Feature Nav spacing for tablets */
+    .feature-nav {
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .feature-nav li {
+        margin-bottom: 1.2em; /* More space between nav items */
+    }
 }
 
 @media (max-width: 480px) {
-    .feature-nav a {
-       line-height: 1.3;
+    /* Top bar adjustments */
+    .top-bar {
+        padding: 0.7rem 0.5rem;
     }
-    .details-modal {
-        padding: 1rem;
+
+    .top-title {
+        font-size: 0.7rem; /* Slightly smaller title */
     }
-     .modal-content {
-        padding: 1.5rem 1rem;
-        padding-bottom: 4rem;
+
+    .top-year {
+        right: 0.5rem;
+        font-size: 0.7rem;
     }
-    .modal-button {
-        padding: 0.2em 0.6em;
+
+    /* Logo placement */
+    .logo {
+        top: 0.4rem;
+        left: 0.5rem;
     }
-     #details-content-container h2 {
-        margin-bottom: 0.8em;
-     }
-     .detail-body p, .detail-body li {
-        font-size: 0.9rem;
-     }
+
     .logo img {
-        height: 5rem;
+        height: 2rem; /* Consistent, appropriate size for mobile */
     }
-    .feature-nav a:hover {
-        transform: translateX(5px);
+
+    /* Main container */
+    .container {
+        padding: 4rem 0.75rem 1rem 0.75rem;
     }
+
+    /* Feature navigation */
+    .feature-nav {
+        text-align: center;
+    }
+
+    .feature-nav a {
+        font-size: clamp(1.2rem, 5vw, 1.8rem); /* Smaller font on mobile */
+        line-height: 1.3;
+    }
+
+    .feature-nav li {
+        margin-bottom: 1em;
+    }
+
+    /* Modal adjustments */
+    .details-modal {
+        padding: 0.5rem;
+    }
+
+    .modal-content {
+        border-radius: 6px;
+        width: 100%;
+    }
+
+    #details-content-container {
+        padding: 1rem 0.75rem;
+    }
+
+    .modal-actions {
+        padding: 0.75rem 0.75rem;
+        border-bottom-left-radius: 6px;
+        border-bottom-right-radius: 6px;
+    }
+
+    /* Button improvements */
+    .modal-actions .modal-button {
+        min-height: 2.5rem; /* Ensure minimum touch target height */
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+    }
+
+    /* Content adjustments */
+    #details-content-container h2 {
+        margin-bottom: 0.8em;
+        font-size: 1.3rem;
+    }
+
+    .detail-body p, .detail-body li {
+        font-size: 0.9rem;
+    }
+
+    /* Info card adjustments */
     .info-card {
         max-width: 200px;
         font-size: 0.8rem;
+        padding: 0.75rem;
     }
+
     .info-card h3 {
         font-size: 0.9rem;
     }
+
     .info-card p {
         font-size: 0.8rem;
+    }
+
+    /* Hover animation adjustment */
+    .feature-nav a:hover {
+        transform: translateX(5px);
+    }
+}
+
+/* Even smaller screens - phone portrait */
+@media (max-width: 360px) {
+    .container {
+        padding: 3.5rem 0.5rem 0.5rem 0.5rem;
+    }
+
+    .feature-nav a {
+        font-size: 1.1rem;
+    }
+
+    #details-content-container {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .modal-actions {
+        padding: 0.5rem;
+    }
+
+    .modal-actions .modal-button {
+        font-size: 0.7rem;
+        padding: 0.4rem 0.6rem;
+    }
+
+    .detail-body p, .detail-body li {
+        font-size: 0.85rem;
+    }
+}
+
+/* Tools page responsiveness */
+@media (max-width: 768px) {
+    .tool-container {
+        padding-top: 3.5rem;
+    }
+
+    .input-card, .results-card {
+        padding: 1rem;
+        width: 100%;
+    }
+
+    .input-card input[type="text"],
+    .input-card input[type="file"],
+    .input-card select {
+        width: 100%;
     }
 }
 
@@ -536,7 +670,7 @@ pre {
 }
 
 .container {
-    z-index: 10; /* Ensure this is above the background-layers */
+    z-index: 10;
 }
 
 /* Mobile Touch Specific Styles */
@@ -579,7 +713,6 @@ pre {
         pointer-events: auto;
     }
 
-    /* Ensure info card is hidden when not showing */
     .info-card {
         pointer-events: none !important;
     }
@@ -604,12 +737,12 @@ pre {
 /* Action Buttons */
 .action-buttons {
     margin-top: 40px;
-    text-align: center; /* Center buttons horizontally */
+    text-align: center;
 }
 
 .action-buttons a {
-    display: inline-block; /* Prevent line breaks */
-    margin: 10px 15px; /* Add space between buttons */
+    display: inline-block;
+    margin: 10px 15px;
 }
 
 .action-buttons button {
@@ -618,3 +751,22 @@ pre {
     border-radius: 8px;
     cursor: pointer;
 }
+
+/* --- Styles for sticky modal buttons --- */
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    border-top: 1px solid var(--border-color, #333);
+    flex-shrink: 0;
+    background-color: var(--modal-bg, #1a1a1a);
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.modal-actions .modal-button {
+    position: static;
+    margin: 0;
+}
+/* --- End Styles for sticky modal buttons --- */
