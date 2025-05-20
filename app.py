@@ -392,11 +392,13 @@ def get_system_ai_insight():
     vuln = re.search(r'CVE-\d{4}-\d{4,7}', data.get('vuln', '')).group(0) if re.search(r'CVE-\d{4}-\d{4,7}', data.get('vuln', '')) else 'UNKNOWN-CVE'
 
     prompt = (
-        f"Compact short technical security recommendations for {service} {version}. {vuln}\n\n"
-        "1. Mitigation steps\n"
-        "2. Patch availability\n"
-        "3. Detection methods (& CLI commands)\n\n"
+        f"Short bulleted technical security recommendations for {service} {version}. {vuln}\n\n"
+        "Mitigation steps\n"
+        "Patch availability\n"
+        "Detection methods (& CLI commands)\n\n"
     )
+
+    print("Prompt to AI: ", prompt)
 
     def generate():
         for chunk in call_ai_stream(prompt):
