@@ -480,14 +480,15 @@ def get_mobile_ai_insight():
                 summarized.append(entry)
 
             prompt = (
-                # "Summarize the following Android app security issues. "
-                # "Explain why each matters and provide a short, technical remediation for each:\n\n"
-                "Provide a single, very short summary and techincal remediation suggestion for these but not limited to Android app security risks"
-                "\n"
-                + "\n".join(summarized)
+                "Analyze these Android app security risks and provide short technical recommendations:\n"
+                + "\n".join(summarized) + "\n"
+                "Format your response IN SHORT with:\n"
+                "Mitigation steps\n"
+                "Recommended code and configuration changes\n"
+                "Best practices to implement"
             )
 
-        print("\n[DEBUG] Final Prompt to AI (first 500 chars):\n" + prompt[:500] + ("..." if len(prompt) > 500 else ""))
+        print("\n[DEBUG] Final Prompt to AI:\n", prompt)
 
         def generate():
             for chunk in call_ai_stream(prompt):
@@ -512,8 +513,8 @@ def get_wifi_ai_insight():
             return jsonify({"error": "No risk analysis provided"}), 400
 
         prompt = (
-            "Analyze these Wi-Fi network security risks and provide specific technical recommendations:\n\n"
-            f"{risk_analysis}\n\n"
+            "Analyze these Wi-Fi network security risks and provide specific technical recommendations: "
+            f"{risk_analysis}\n"
             "Format your response with:\n"
             "1. Summary of key risks\n"
             "2. Specific mitigation steps for each risk\n"
