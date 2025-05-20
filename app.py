@@ -416,12 +416,13 @@ def get_web_ai_insight():
         if not payload:
             return jsonify({"No vulnerability payload provided"}), 400
 
-        print(f"Web AI insight request received with payload: {payload[:100]}...")  # Log first 100 chars
+        print(f"Web AI insight request received with payload: {payload}...") 
 
         prompt = (
-            "Give compact technical buletted remediation steps for these web vulnerabilities:\n"
+            "Give short technical 3 buletted remediation steps only for this web vulnerability: "
             f"{payload}\n\n"
         )
+        print(f"Web AI insight prompt: {prompt}")
 
         def generate():
             for chunk in call_ai_stream(prompt):

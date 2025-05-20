@@ -216,16 +216,16 @@
         }
 
         .section-heading .ai-button {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
+            position: static;
+            margin-top: 10px;
             font-size: 0.85rem;
             padding: 5px 10px;
             background-color: #00a8e8;
             color: white;
             border-color: #007bff;
             font-weight: bold;
+            display: block;
+            width: fit-content;
         }
 
         .section-heading .ai-button:hover {
@@ -294,7 +294,7 @@
                                             <script>console.log("Found SQL Injection vulnerability");</script>
                                         {% endif %}
                                         {% set _ = scan_types.update({'SQL Injection': True}) %}
-                                    {% elif 'Cross-Site Scripting' in item.type or 'Cross-Site Scripting' in item.payload %}
+                                    {% elif 'Cross-Site Scripting' in item.type or 'Cross-Site Scripting' in item.payload or 'XSS' in item.type or 'XSS' in item.payload %}
                                         {% if not scan_types['Cross-Site Scripting'] %}
                                             <script>console.log("Found XSS vulnerability");</script>
                                         {% endif %}
@@ -337,7 +337,7 @@
                                                     <div class="ai-text">Waiting for analysis...</div>
                                                 </div>
                                                 {% endif %}
-                                            {% elif 'Cross-Site Scripting' in item.payload %}
+                                            {% elif 'Cross-Site Scripting' in item.payload or 'XSS' in item.payload %}
                                                 {% if scan_types['Cross-Site Scripting'] %}
                                                 <button class="ai-button ai-insight-btn" data-scan-type="XSS"
                                                     data-payload="Cross-Site Scripting vulnerabilities detected in this scan">
@@ -375,7 +375,7 @@
                                     </tr>
                                     {% if 'SQL Injection' in item.payload %}
                                         {% set current_section = 'SQL Injection' %}
-                                    {% elif 'Cross-Site Scripting' in item.payload %}
+                                    {% elif 'Cross-Site Scripting' in item.payload or 'XSS' in item.payload %}
                                         {% set current_section = 'Cross-Site Scripting' %}
                                     {% elif 'HTML Injection' in item.payload %}
                                         {% set current_section = 'HTML Injection' %}
@@ -429,12 +429,12 @@
             document.querySelectorAll('.ai-insight-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     const scanType = this.getAttribute('data-scan-type');
-                    const payload = this.getAttribute('data-payload');
                     const responseBox = this.nextElementSibling; // Get the response box right after the button
 
                     // Find all successful payloads for this scan type
                     const allPayloads = [];
                     let inCorrectSection = false;
+                    let sectionPayloads = [];
 
                     // Get all payload rows from the results table
                     const rows = document.querySelectorAll('.results-table tr');
@@ -445,22 +445,20 @@
                         const cellText = row.querySelector('td')?.textContent || '';
 
                         // Check if we're entering the section for this scan type
-                        if (cellText.includes('===') && cellText.includes(scanType)) {
-                            inCorrectSection = true;
-                            continue;
-                        }
-
-                        // Check if we're leaving this section (entering another section)
-                        if (inCorrectSection && cellText.includes('===') && !cellText.includes(scanType)) {
-                            inCorrectSection = false;
-                            break;
+                        if (cellText.includes('===')) {
+                            if (cellText.includes(scanType) || 
+                                (scanType === 'XSS' && (cellText.includes('Cross-Site Scripting') || cellText.includes('XSS')))) {
+                                inCorrectSection = true;
+                                continue;
+                            } else {
+                                inCorrectSection = false;
+                                continue;
+                            }
                         }
 
                         // If we're in the correct section, collect successful payloads
-                        if (inCorrectSection) {
-                            if (cellText.includes('[+]') || cellText.includes('[~]')) {
-                                allPayloads.push(cellText.trim());
-                            }
+                        if (inCorrectSection && (cellText.includes('[+]') || cellText.includes('[~]'))) {
+                            sectionPayloads.push(cellText.trim());
                         }
                     }
 
@@ -478,15 +476,16 @@
                     // Scroll to the response box
                     responseBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-                    // Use just the scan type for the prompt
-                    const completePayload = scanType;
+                    // Create a formatted payload string with all vulnerabilities for this section
+                    const formattedPayload = sectionPayloads.join('\n');
 
-
-                    // Call the API with just the scan type
+                    // Call the API with the section-specific payloads
                     fetch('/get-web-ai-insight', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ payload: completePayload })
+                        body: JSON.stringify({ 
+                            payload: formattedPayload || scanType // Fallback to scan type if no payloads found
+                        })
                     })
                     .then(response => {
                         if (!response.ok) throw new Error(`HTTP ${response.status}`);
