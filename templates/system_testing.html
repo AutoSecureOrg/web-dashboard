@@ -84,6 +84,64 @@
 
     {# Include main script for top bar interactions#}
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ai-insight.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle scan form submission
+            const form = document.getElementById('scanner-form');
+            const scanningIcon = document.getElementById('scanning-icon');
+            const results = document.getElementById('results');
+            const resultsContent = document.getElementById('results-content');
+            const toggleResults = document.getElementById('toggle-results');
 
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                scanningIcon.classList.remove('hidden');
+                results.classList.add('hidden');
+                resultsContent.classList.add('hidden');
+                toggleResults.classList.add('hidden');
+
+                const formData = new FormData(form);
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(data => {
+                    scanningIcon.classList.add('hidden');
+                    results.classList.remove('hidden');
+                    resultsContent.classList.remove('hidden');
+                    toggleResults.classList.remove('hidden');
+                    resultsContent.querySelector('pre').textContent = data;
+                })
+                .catch(error => {
+                    scanningIcon.classList.add('hidden');
+                    console.error('Error:', error);
+                });
+            });
+
+            // Handle toggle results button
+            toggleResults.addEventListener('click', function() {
+                const isHidden = resultsContent.classList.contains('hidden');
+                resultsContent.classList.toggle('hidden');
+                this.textContent = isHidden ? 'Hide Results' : 'Show Results';
+            });
+
+            // Handle scan type change
+            const scanType = document.getElementById('scan_type');
+            const singleScan = document.getElementById('single-scan');
+            const rangeScan = document.getElementById('range-scan');
+
+            scanType.addEventListener('change', function() {
+                if (this.value === 'single') {
+                    singleScan.style.display = 'block';
+                    rangeScan.style.display = 'none';
+                } else {
+                    singleScan.style.display = 'none';
+                    rangeScan.style.display = 'block';
+                }
+            });
+        });
+    </script>
 </body>
 </html>
