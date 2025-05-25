@@ -36,53 +36,10 @@
             white-space: pre-wrap; /* Wrap long lines */
             word-break: break-all; /* Break long words */
         }
-        .ai-button {
-            background-color: #262e3d;
-            color: #fff;
-            border: 1px solid #4b566b;
-            padding: 6px 12px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
-            margin-bottom: 10px;
-        }
-
-        .ai-button:hover {
-            background-color: #3a455a;
-        }
-
-        .ai-button-inline:hover {
-            background-color: #3a455a !important;
-        }
-
-        .ai-response-box {
-            background-color: #1d1f23;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #444;
-            margin-top: 10px;
-            width: 100%;
-        }
-
-        .spinner-border {
-            display: inline-block;
-            width: 1rem;
-            height: 1rem;
-            border: 0.15em solid currentColor;
-            border-right-color: transparent;
-            border-radius: 50%;
-            animation: spinner-border 0.75s linear infinite;
-        }
-
-        @keyframes spinner-border {
-            100% {
-                transform: rotate(360deg);
-            }
-        }
+        /* AI-related styles (.ai-button, .ai-response-box, .spinner-border) are now in tools.css */
     </style>
     <script src="{{ url_for('static', filename='js/ai-insight.js') }}"></script>
-    
+
 </head>
 <body>
     {% include '_top_bar.html' %}

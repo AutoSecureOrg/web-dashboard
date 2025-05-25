@@ -367,20 +367,35 @@ def call_ai_stream(prompt: str):
     Generator: yields raw text chunks from the socket AI server.
     """
     payload = json.dumps({"prompt": prompt}).encode('utf-8')
+    sock = None
     try:
-        with socket.socket() as sock:
-            sock.settimeout(5)  # Set a timeout for connection
-            sock.connect((AI_HOST, AI_PORT))
-            sock.sendall(payload)
-            sock.settimeout(None)  # Reset timeout for receiving
-            while True:
+        sock = socket.socket()
+        sock.settimeout(5)  # Set a timeout for connection
+        sock.connect((AI_HOST, AI_PORT))
+        sock.sendall(payload)
+        sock.settimeout(None)  # Reset timeout for receiving
+        while True:
+            try:
                 chunk = sock.recv(4096)
                 if not chunk:
                     break
                 yield chunk
+            except socket.error as e:
+                print(f"Socket error while receiving data: {e}")
+                break
     except (socket.timeout, ConnectionRefusedError, OSError) as e:
         print(f"AI server connection error: {str(e)}")
         yield f"Error connecting to AI server: {str(e)}".encode('utf-8')
+    except Exception as e:
+        print(f"Unexpected error in AI stream: {str(e)}")
+        yield f"Unexpected error: {str(e)}".encode('utf-8')
+    finally:
+        # Always ensure socket is closed properly
+        if sock:
+            try:
+                sock.close()
+            except:
+                pass
 
 
 @app.route('/get-system-ai-insight', methods=['POST'])
@@ -418,7 +433,7 @@ def get_web_ai_insight():
         if not payload:
             return jsonify({"No vulnerability payload provided"}), 400
 
-        print(f"Web AI insight request received with payload: {payload}...") 
+        print(f"Web AI insight request received with payload: {payload}...")
 
         prompt = (
             "Give short technical 3 buletted remediation steps only for this web vulnerability: "
