@@ -1,0 +1,45 @@
+name: Python Code Formatter
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          # We need to fetch the history and refs to allow commits back to the repo
+          fetch-depth: 0
+          # This token is provided by Actions, you do not need to create your own token
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.x' # Use a recent Python version
+
+      - name: Install autopep8 formatter
+        run: pip install autopep8
+
+      - name: Run autopep8 to format files
+        # --in-place: modify files directly
+        # --recursive: search directories recursively
+        # .: apply to all files in the current directory and subdirectories
+        run: autopep8 --in-place --recursive .
+
+      - name: Commit changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -A
+          # Check if there are any changes to commit
+          if ! git diff --staged --quiet; then
+            git commit -m "Automated code formatting by autopep8 (PEP 8)"
+            git push
+          else
+            echo "No formatting changes to commit."
+          fi
