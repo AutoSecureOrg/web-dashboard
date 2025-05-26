@@ -169,10 +169,7 @@ This tool is intended for educational purposes and authorized security testing o
 
 ## Authors
 
-<a href="https://github.com/daimbk">Daim Bin Khalid</a>
-</br>
-<a href="https://github.com/Emeika">Hafsah Shahbaz</a>
-</br>
-<a href="https://github.com/manalammad">Syeda Manal Ammad</a>
-</br>
-<a href="https://github.com/kiranQaiser">Kiran Qaiser</a>
+* [Daim Bin Khalid](https://github.com/daimbk)
+* [Hafsah Shahbaz](https://github.com/Emeika)
+* [Syeda Manal Ammad](https://github.com/manalammad)
+* [Kiran Qaiser](https://github.com/kiranQaiser)
