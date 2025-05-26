@@ -10,21 +10,18 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: none
-      actions: read
+      pull-requests: write
     steps:
       - name: Check out code
         uses: actions/checkout@v3
         with:
-          # We need to fetch the history and refs to allow commits back to the repo
+          # fetch the history and refs to allow commits back to the repo
           fetch-depth: 0
-          # This token is provided by Actions, you do not need to create your own token
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: '3.x' # Use a recent Python version
+          python-version: '3.x'
 
       - name: Install autopep8 formatter
         run: pip install autopep8
@@ -35,15 +32,24 @@ jobs:
         # .: apply to all files in the current directory and subdirectories
         run: autopep8 --in-place --recursive .
 
-      - name: Commit changes
+      - name: Commit and Push changes to a new branch
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add -A
           # Check if there are any changes to commit
-          if ! git diff --staged --quiet; then
+          if ! git diff --quiet HEAD;
+          then # If there are changes
+            echo "Formatting changes detected."
+            # Get the current branch name
+            BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+            NEW_BRANCH_NAME="autopep8-formatting/${BRANCH_NAME}-$(date +%s)" # Unique branch name with timestamp
+            echo "Creating new branch: ${NEW_BRANCH_NAME}"
+            git checkout -b ${NEW_BRANCH_NAME}
+            git add -A
             git commit -m "Automated code formatting by autopep8 (PEP 8)"
-            git push
+            echo "Pushing changes to ${NEW_BRANCH_NAME}..."
+            git push origin ${NEW_BRANCH_NAME}
+            echo "Changes pushed to new branch."
           else
             echo "No formatting changes to commit."
           fi
