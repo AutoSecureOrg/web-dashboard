@@ -50,7 +50,8 @@ def parse_input_fields(url, session):
                 input_name = input_tag.get("name") or input_tag.get("id")
                 input_type = input_tag.get("type", "text")
                 if input_name:
-                    form_details["inputs"].append({"name": input_name, "type": input_type})
+                    form_details["inputs"].append(
+                        {"name": input_name, "type": input_type})
 
             if form_details["inputs"]:
                 forms.append(form_details)
@@ -65,7 +66,8 @@ def parse_input_fields(url, session):
                 input_name = input_tag.get("name") or input_tag.get("id")
                 input_type = input_tag.get("type", "text")
                 if input_name:
-                    print(f"[DEBUG] Standalone input detected: {input_name} (type={input_type})")
+                    print(
+                        f"[DEBUG] Standalone input detected: {input_name} (type={input_type})")
                     input_tags.append({
                         "name": input_name,
                         "type": input_type,
@@ -102,7 +104,8 @@ def load_payloads(vuln_type):
     base_dir = os.path.dirname(__file__)
     default_file = os.path.join(base_dir, "payload_texts", f"{vuln_type}.txt")
 
-    custom_file  = os.path.join(base_dir, "custom_payloads", f"{vuln_type}_custom.txt")
+    custom_file = os.path.join(
+        base_dir, "custom_payloads", f"{vuln_type}_custom.txt")
 
     if os.path.exists(default_file):
         with open(default_file, "r", encoding="utf-8") as f:
@@ -114,6 +117,7 @@ def load_payloads(vuln_type):
             payloads.extend([line.strip() for line in f if line.strip()])
 
     return list(set(payloads))  # Deduplicate
+
 
 def detect_login_page(target_url, session):
     """
@@ -132,11 +136,13 @@ def detect_login_page(target_url, session):
 
     print(f"[*] Detecting login page from: {target_url}")
     headers = {"User-Agent": "Mozilla/5.0"}
-    base_url = "/".join(target_url.split("/")[:3])  # keeps scheme + domain + port
+    # keeps scheme + domain + port
+    base_url = "/".join(target_url.split("/")[:3])
 
     # === Step 1: Follow redirection logic ===
     try:
-        response = session.get(target_url, headers=headers, timeout=10, allow_redirects=False, verify=False)
+        response = session.get(target_url, headers=headers,
+                               timeout=10, allow_redirects=False, verify=False)
         if response.status_code in [301, 302, 303]:
             location = response.headers.get("Location", "")
             if location:
@@ -150,10 +156,12 @@ def detect_login_page(target_url, session):
 
     # === Step 2: Check if target URL itself contains login form ===
     try:
-        response = session.get(target_url, headers=headers, timeout=10, verify=False)
+        response = session.get(
+            target_url, headers=headers, timeout=10, verify=False)
         soup = BeautifulSoup(response.text, "html.parser")
         for form in soup.find_all("form"):
-            inputs = [i.get("name", "").lower() for i in form.find_all("input")]
+            inputs = [i.get("name", "").lower()
+                      for i in form.find_all("input")]
             if any("user" in i for i in inputs) and any("pass" in i for i in inputs):
                 print(f"[🔐] Login form found on current page: {target_url}")
                 return target_url
@@ -163,7 +171,7 @@ def detect_login_page(target_url, session):
     # === Step 3: Fallback to common login paths ===
     print("[*] Scanning for actual login page...")
     possible_paths = [
-        "/", "/login","/login.php", "/signin", "/auth", "/index", "/home", "/admin", "/account/login"
+        "/", "/login", "/login.php", "/signin", "/auth", "/index", "/home", "/admin", "/account/login"
     ]
 
     headers = {"User-Agent": "Mozilla/5.0"}
@@ -171,11 +179,13 @@ def detect_login_page(target_url, session):
         full_url = base_url.rstrip("/") + path
         print(f"[DEBUG] Checking: {full_url}")
         try:
-            r = session.get(full_url, headers=headers, timeout=10, verify=False)
+            r = session.get(full_url, headers=headers,
+                            timeout=10, verify=False)
             soup = BeautifulSoup(r.text, "html.parser")
 
             for form in soup.find_all("form"):
-                inputs = [i.get("name", "").lower() for i in form.find_all("input")]
+                inputs = [i.get("name", "").lower()
+                          for i in form.find_all("input")]
                 if any("user" in i or "email" in i or "login" in i for i in inputs) and any("pass" in i for i in inputs):
                     print(f"[+] Login page identified at: {full_url}")
                     return full_url
@@ -184,7 +194,6 @@ def detect_login_page(target_url, session):
 
     print("[-] Could not detect login page automatically.")
     return base_url  # fallback to base
-
 
 
 '''sql_payloads = [
@@ -215,31 +224,33 @@ def test_sql_injection(base_url, session, is_api=False, api_endpoints=[]):
 
     results = []
     sql_error_signatures = [
-    "sql syntax",
-    "unclosed quotation mark",
-    "quoted string not properly terminated",
-    "you have an error in your sql syntax",
-    "warning: mysql",
-    "warning: pg_",
-    "fatal error",
-    "odbc sql",
-    "syntax error",
-    "near '",
-    "unterminated string constant",
-    "sqlstate",
-    "microsoft jet database",
-    "unknown column",
-    "Invalid",
-    "not found"
-]
+        "sql syntax",
+        "unclosed quotation mark",
+        "quoted string not properly terminated",
+        "you have an error in your sql syntax",
+        "warning: mysql",
+        "warning: pg_",
+        "fatal error",
+        "odbc sql",
+        "syntax error",
+        "near '",
+        "unterminated string constant",
+        "sqlstate",
+        "microsoft jet database",
+        "unknown column",
+        "Invalid",
+        "not found"
+    ]
 
     results.append(" ")
-    results.append("=========================== SQL Injection ===========================")
+    results.append(
+        "=========================== SQL Injection ===========================")
 
     # Load SQL Injection payloads
     raw_payloads = load_payloads("sql_injection")
     if not raw_payloads:
-        results.append("[-] No SQLi payloads found. Check payload_texts/sql_injection.txt")
+        results.append(
+            "[-] No SQLi payloads found. Check payload_texts/sql_injection.txt")
         return results
 
     # API Endpoint testing
@@ -267,15 +278,19 @@ def test_sql_injection(base_url, session, is_api=False, api_endpoints=[]):
 
                     # error
                     if any(err in r.text.lower() for err in sql_error_signatures) or r.status_code == 500:
-                        results.append(f"[~] SQL error-based injection detected with payload: {payload}")
+                        results.append(
+                            f"[~] SQL error-based injection detected with payload: {payload}")
                     # echo back / reflected payload
                     elif payload.lower() in r.text.lower():
-                        results.append(f"[-] Input reflected but no SQL error: {payload}")
-                    #no change
+                        results.append(
+                            f"[-] Input reflected but no SQL error: {payload}")
+                    # no change
                     elif response_length == base_len:
-                        results.append(f"[-] No output change (same response length) for payload: {payload}")
+                        results.append(
+                            f"[-] No output change (same response length) for payload: {payload}")
                     else:
-                        results.append(f"[+] Potential SQL Injection vulnerability detected with payload: {payload}")
+                        results.append(
+                            f"[+] Potential SQL Injection vulnerability detected with payload: {payload}")
 
                 except Exception as e:
                     results.append(f"[!] Error testing {endpoint}: {e}")
@@ -314,7 +329,8 @@ def test_sql_injection(base_url, session, is_api=False, api_endpoints=[]):
         if num_cols == 0:
             return results
 
-        sql_payloads = [inject_column_placeholders(p, num_cols) for p in raw_payloads] if num_cols > 0 else raw_payloads
+        sql_payloads = [inject_column_placeholders(
+            p, num_cols) for p in raw_payloads] if num_cols > 0 else raw_payloads
 
         for input_field in form["inputs"]:
             name = input_field["name"]
@@ -330,9 +346,11 @@ def test_sql_injection(base_url, session, is_api=False, api_endpoints=[]):
                         for inp in form["inputs"]
                     }
                     if form["method"] == "post":
-                        baseline = session.post(form_action, data=baseline_data)
+                        baseline = session.post(
+                            form_action, data=baseline_data)
                     else:
-                        baseline = session.get(form_action, params=baseline_data)
+                        baseline = session.get(
+                            form_action, params=baseline_data)
                     base_len = len(baseline.text)
                 except:
                     base_len = 0
@@ -341,20 +359,26 @@ def test_sql_injection(base_url, session, is_api=False, api_endpoints=[]):
                     if form["method"] == "post":
                         r = session.post(form_action, data=data)
                         response_length = len(r.text)
-                    total = base_len  + len(payload)
-                    length_diff = abs(response_length - (base_len + len(payload)))
+                    total = base_len + len(payload)
+                    length_diff = abs(response_length -
+                                      (base_len + len(payload)))
                     print("Payload = ", payload, "Response code", r.status_code)
-                    print(f"Base length :   {base_len}, Response length :   {response_length}, payload : {len(payload)} + base = {total} ")
+                    print(
+                        f"Base length :   {base_len}, Response length :   {response_length}, payload : {len(payload)} + base = {total} ")
                     # echo back / reflected payload
                     if payload.lower() in r.text.lower():
-                        results.append(f"[-] Input reflected but no SQL error: {payload}")
+                        results.append(
+                            f"[-] Input reflected but no SQL error: {payload}")
                     elif any(err in r.text.lower() for err in sql_error_signatures) or r.status_code == 500:
-                        results.append(f"[~] SQL error-based injection detected with payload: {payload}")
-                    #no change
-                    elif length_diff < 10 :
-                        results.append(f"[-] No output change (same response length) for payload: {payload}")
+                        results.append(
+                            f"[~] SQL error-based injection detected with payload: {payload}")
+                    # no change
+                    elif length_diff < 10:
+                        results.append(
+                            f"[-] No output change (same response length) for payload: {payload}")
                     else:
-                        results.append(f"[+] Potential SQL Injection vulnerability detected with payload: {payload}")
+                        results.append(
+                            f"[+] Potential SQL Injection vulnerability detected with payload: {payload}")
                 except Exception as e:
                     results.append(f"[!] Error testing {payload}: {e}")
 
@@ -380,18 +404,24 @@ def test_sql_injection(base_url, session, is_api=False, api_endpoints=[]):
                 r = session.get(base_url, params={name: payload})
                 response_length = len(r.text)
                 if payload.lower() in r.text.lower():
-                        results.append(f"[-] Input reflected but no SQL error: {payload}")
+                    results.append(
+                        f"[-] Input reflected but no SQL error: {payload}")
                 elif any(err in r.text.lower() for err in sql_error_signatures) or r.status_code == 500:
-                        results.append(f"[~] SQL error-based injection detected with payload: {payload}")
-                    #no change
+                    results.append(
+                        f"[~] SQL error-based injection detected with payload: {payload}")
+                    # no change
                 elif response_length == base_len:
-                    results.append(f"[-] No output change (same response length) for payload: {payload}")
+                    results.append(
+                        f"[-] No output change (same response length) for payload: {payload}")
                 else:
-                    results.append(f"[+] Potential SQL Injection vulnerability detected with payload: {payload}")
+                    results.append(
+                        f"[+] Potential SQL Injection vulnerability detected with payload: {payload}")
             except Exception as e:
                 results.append(f"[!] Error testing {name} → {e}")
 
     return results
+
+
 def test_xss(base_url, session, is_api=False, api_endpoints=[]):
     """
     Tests for Cross-Site Scripting (XSS) vulnerabilities across forms, standalone inputs, and optional API endpoints.
@@ -408,11 +438,13 @@ def test_xss(base_url, session, is_api=False, api_endpoints=[]):
 
     results = []
     results.append(" ")
-    results.append("=========================== Cross-Site Scripting (XSS) Test Results: ===========================")
+    results.append(
+        "=========================== Cross-Site Scripting (XSS) Test Results: ===========================")
 
     payloads = load_payloads("xss")
     if not payloads:
-        results.append("[-] No XSS payloads found. Check payload_texts/xss.txt")
+        results.append(
+            "[-] No XSS payloads found. Check payload_texts/xss.txt")
         return results
 
     # === FORMS and STANDALONE INPUTS ===
@@ -426,17 +458,20 @@ def test_xss(base_url, session, is_api=False, api_endpoints=[]):
         for form_index, form in enumerate(forms):
             form_action = form["action"]
             if not form_action.startswith("http"):
-                form_action = base_url.rstrip("/") + "/" + form_action.lstrip("/")
+                form_action = base_url.rstrip(
+                    "/") + "/" + form_action.lstrip("/")
 
             for input_field in form["inputs"]:
                 input_name = input_field["name"]
                 input_type = input_field["type"]
 
-                results.append(f"\nForm {form_index + 1} → Input: {input_name}")
+                results.append(
+                    f"\nForm {form_index + 1} → Input: {input_name}")
 
                 for payload in payloads:
                     data = {
-                        field["name"]: (payload if field["name"] == input_name and field["type"] in ["text", "textarea"] else "test")
+                        field["name"]: (payload if field["name"] == input_name and field["type"] in [
+                                        "text", "textarea"] else "test")
                         for field in form["inputs"] if field["name"]
                     }
 
@@ -447,11 +482,14 @@ def test_xss(base_url, session, is_api=False, api_endpoints=[]):
                             r = session.get(form_action, params=data)
 
                         if payload in r.text:
-                            results.append(f"[+] XSS confirmed with payload: {payload}")
+                            results.append(
+                                f"[+] XSS confirmed with payload: {payload}")
                         else:
-                            results.append(f"[-] Payload not executed: {payload}")
+                            results.append(
+                                f"[-] Payload not executed: {payload}")
                     except Exception as e:
-                        results.append(f"[!] Error on input '{input_name}' with payload '{payload}': {e}")
+                        results.append(
+                            f"[!] Error on input '{input_name}' with payload '{payload}': {e}")
 
     # --- Standalone Input Tags ---
     if input_tags:
@@ -463,16 +501,20 @@ def test_xss(base_url, session, is_api=False, api_endpoints=[]):
             results.append(f"\n Input Field: {field_name}")
 
             for payload in payloads:
-                params = {field_name: payload if field_type in ["text", "textarea"] else "test"}
+                params = {field_name: payload if field_type in [
+                    "text", "textarea"] else "test"}
 
                 try:
                     r = session.get(base_url, params=params)
                     if payload in r.text:
-                        results.append(f"[+] XSS detected on standalone input using payload: {payload}")
+                        results.append(
+                            f"[+] XSS detected on standalone input using payload: {payload}")
                     else:
-                        results.append(f"[-] Payload not executed on input: {payload}")
+                        results.append(
+                            f"[-] Payload not executed on input: {payload}")
                 except Exception as e:
-                    results.append(f"[!] Error on input '{field_name}' with payload '{payload}': {e}")
+                    results.append(
+                        f"[!] Error on input '{field_name}' with payload '{payload}': {e}")
 
     # === API Endpoints ===
     if is_api and api_endpoints:
@@ -483,13 +525,16 @@ def test_xss(base_url, session, is_api=False, api_endpoints=[]):
                 try:
                     r = session.get(endpoint, params={"q": payload})
                     if payload in r.text:
-                        results.append(f"[+] XSS likely using payload: {payload}")
+                        results.append(
+                            f"[+] XSS likely using payload: {payload}")
                     else:
                         results.append(f"[-] Payload not reflected: {payload}")
                 except Exception as e:
-                    results.append(f"[!] Error testing {endpoint} with payload {payload}: {e}")
+                    results.append(
+                        f"[!] Error testing {endpoint} with payload {payload}: {e}")
 
     return results
+
 
 def test_command_injection(base_url, session, is_api=False, api_endpoints=[]):
     """
@@ -506,14 +551,17 @@ def test_command_injection(base_url, session, is_api=False, api_endpoints=[]):
     """
     results = []
     results.append(" ")
-    results.append("=========================== Command Injection ===========================")
+    results.append(
+        "=========================== Command Injection ===========================")
 
     # Select payload file based on OS
-    payload_file = "command_injection_windows" if platform.system().lower() == "windows" else "command_injection_linux"
+    payload_file = "command_injection_windows" if platform.system(
+    ).lower() == "windows" else "command_injection_linux"
     raw_payloads = load_payloads(payload_file)
 
     if not raw_payloads:
-        results.append(f"[-] No Command Injection payloads found. Check payload_texts/{payload_file}.txt")
+        results.append(
+            f"[-] No Command Injection payloads found. Check payload_texts/{payload_file}.txt")
         return results
 
     print(f"[DEBUG] Loaded {len(raw_payloads)} Command Injection payloads.")
@@ -545,7 +593,8 @@ def test_command_injection(base_url, session, is_api=False, api_endpoints=[]):
         for input_field in form["inputs"]:
             input_name = input_field["name"]
             input_type = input_field["type"]
-            results.append(f"\n Form {form_index + 1} → Input Field '{input_name}':")
+            results.append(
+                f"\n Form {form_index + 1} → Input Field '{input_name}':")
             for command, indicator in payloads:
                 data = {
                     inp["name"]: command if inp["name"] == input_name and inp["type"] == "text" else "test"
@@ -589,7 +638,6 @@ def test_command_injection(base_url, session, is_api=False, api_endpoints=[]):
                 results.append(f"[!] Error on payload {command}: {e}")
     print("stand alone done ")
 
-
     # === 3. API Endpoint Testing ===
     if is_api and api_endpoints:
         results.append("\n API Endpoints:")
@@ -624,7 +672,8 @@ def test_html_injection(base_url, session, is_api=False, api_endpoints=[]):
 
     results = []
     results.append(" ")
-    results.append("=========================== HTML Injection ===========================")
+    results.append(
+        "=========================== HTML Injection ===========================")
 
     # Load payloads
     payloads = load_payloads("html_injection")
@@ -641,7 +690,8 @@ def test_html_injection(base_url, session, is_api=False, api_endpoints=[]):
     results.append("\n Forms:")
     for form_index, form in enumerate(forms):
         if not isinstance(form, dict):
-            results.append(f" Skipping malformed form at index {form_index}: {form}")
+            results.append(
+                f" Skipping malformed form at index {form_index}: {form}")
             continue
         form_action = form.get("action")
         if not form_action:
@@ -652,10 +702,12 @@ def test_html_injection(base_url, session, is_api=False, api_endpoints=[]):
         for input_field in form["inputs"]:
             input_name = input_field["name"]
             input_type = input_field["type"]
-            results.append(f"\n Form {form_index + 1} → Input Field '{input_name}':")
+            results.append(
+                f"\n Form {form_index + 1} → Input Field '{input_name}':")
             for payload in payloads:
                 data = {
-                    inp["name"]: payload if inp["name"] == input_name and inp["type"] in ["text", "textarea"] else "test"
+                    inp["name"]: payload if inp["name"] == input_name and inp["type"] in [
+                        "text", "textarea"] else "test"
                     for inp in form["inputs"]
                 }
                 try:
@@ -666,7 +718,8 @@ def test_html_injection(base_url, session, is_api=False, api_endpoints=[]):
                     if payload in r.text:
                         results.append(f"[+] Payload succeeded → {payload}")
                     else:
-                        results.append(f"[-] Payload not reflected → {payload}")
+                        results.append(
+                            f"[-] Payload not reflected → {payload}")
                 except Exception as e:
                     results.append(f"[!] Error testing payload {payload}: {e}")
 
@@ -685,7 +738,8 @@ def test_html_injection(base_url, session, is_api=False, api_endpoints=[]):
                 else:
                     results.append(f"[-] Payload not reflected → {payload}")
             except Exception as e:
-                results.append(f"[!] Error testing {payload} on input '{input_name}': {e}")
+                results.append(
+                    f"[!] Error testing {payload} on input '{input_name}': {e}")
 
     # === 3. API Endpoint Testing ===
     if is_api and api_endpoints:
@@ -698,9 +752,11 @@ def test_html_injection(base_url, session, is_api=False, api_endpoints=[]):
                     if payload in r.text:
                         results.append(f"[+] Payload succeeded → {payload}")
                     else:
-                        results.append(f"[-] Payload not reflected → {payload}")
+                        results.append(
+                            f"[-] Payload not reflected → {payload}")
                 except Exception as e:
-                    results.append(f"[!] Error testing endpoint {endpoint} with {payload}: {e}")
+                    results.append(
+                        f"[!] Error testing endpoint {endpoint} with {payload}: {e}")
 
     return results
 
@@ -723,27 +779,33 @@ def xss_only(target_url):
     login_url = detect_login_page(target_url, session)
     print(f"Location returned {login_url}")
 
-    #login_url = "/".join(target_url.split("/")[:3])
+    # login_url = "/".join(target_url.split("/")[:3])
     login_required = is_login_required(target_url, session)
 
     if login_required:
-        results.append(f"[+] Attempting SQL Injection on login page: {login_url}...")
+        results.append(
+            f"[+] Attempting SQL Injection on login page: {login_url}...")
         sql_results = login_sql_injection(login_url, session)
         results.extend(sql_results)
 
         if any("[+]" in result for result in sql_results):
-            results.append(f"[+] Login successful! Proceeding to the target page...")
+            results.append(
+                f"[+] Login successful! Proceeding to the target page...")
             results.extend(test_xss(target_url, session))
         else:
-            results.append("[-] SQL Injection failed. Attempting brute-force...")
+            results.append(
+                "[-] SQL Injection failed. Attempting brute-force...")
             creds = brute_force_login(login_url, session)
             if creds:
-                results.append(f"[+] Brute-force success → Username: {creds[0]} | Password: {creds[1]}")
-                results.append(f"[+] Login successful! Proceeding to the target page...")
+                results.append(
+                    f"[+] Brute-force success → Username: {creds[0]} | Password: {creds[1]}")
+                results.append(
+                    f"[+] Login successful! Proceeding to the target page...")
                 results.extend(test_xss(target_url, session))
             else:
-                results.append("[-] Both SQLi and Brute-force login failed. Skipping XSS test.")
-    else :
+                results.append(
+                    "[-] Both SQLi and Brute-force login failed. Skipping XSS test.")
+    else:
         # no login required
         results.extend(test_xss(target_url, session))
     return results
@@ -765,26 +827,32 @@ def command_only(target_url):
     session = create_session()
     login_url = detect_login_page(target_url, session)
     print(f"Location returned {login_url}")
-    #login_url = "/".join(target_url.split("/")[:3])
+    # login_url = "/".join(target_url.split("/")[:3])
     login_required = is_login_required(target_url, session)
 
     if login_required:
-        results.append(f"[+] Attempting SQL Injection on login page: {login_url}...")
+        results.append(
+            f"[+] Attempting SQL Injection on login page: {login_url}...")
         sql_results = login_sql_injection(login_url, session)
         results.extend(sql_results)
 
         if any("[+]" in result for result in sql_results):
-            results.append(f"[+] Login successful! Proceeding to the target page...")
+            results.append(
+                f"[+] Login successful! Proceeding to the target page...")
             results.extend(test_command_injection(target_url, session))
         else:
-            results.append("[-] SQL Injection failed. Attempting brute-force...")
+            results.append(
+                "[-] SQL Injection failed. Attempting brute-force...")
             creds = brute_force_login(login_url, session)
             if creds:
-                results.append(f"[+] Brute-force success → Username: {creds[0]} | Password: {creds[1]}")
-                results.append(f"[+] Login successful! Proceeding to the target page...")
+                results.append(
+                    f"[+] Brute-force success → Username: {creds[0]} | Password: {creds[1]}")
+                results.append(
+                    f"[+] Login successful! Proceeding to the target page...")
                 results.extend(test_command_injection(target_url, session))
             else:
-                results.append("[-] Both SQLi and Brute-force login failed. Skipping Command Injection test.")
+                results.append(
+                    "[-] Both SQLi and Brute-force login failed. Skipping Command Injection test.")
     else:
         results.extend(test_command_injection(target_url, session))
     return results
@@ -806,26 +874,32 @@ def html_only(target_url):
     session = create_session()
     login_url = detect_login_page(target_url, session)
     print(f"Location returned {login_url}")
-    #login_url = "/".join(target_url.split("/")[:3])
+    # login_url = "/".join(target_url.split("/")[:3])
     login_required = is_login_required(target_url, session)
 
-    if login_required :
-        results.append(f"[+] Attempting SQL Injection on login page: {login_url}...")
+    if login_required:
+        results.append(
+            f"[+] Attempting SQL Injection on login page: {login_url}...")
         sql_results = login_sql_injection(login_url, session)
         results.extend(sql_results)
 
         if any("[+]" in result for result in sql_results):
-            results.append(f"[+] Login successful! Proceeding to the target page...")
+            results.append(
+                f"[+] Login successful! Proceeding to the target page...")
             results.extend(test_html_injection(target_url, session))
         else:
-            results.append("[-] SQL Injection failed. Attempting brute-force...")
+            results.append(
+                "[-] SQL Injection failed. Attempting brute-force...")
             creds = brute_force_login(login_url, session)
             if creds:
-                results.append(f"[+] Brute-force success → Username: {creds[0]} | Password: {creds[1]}")
-                results.append(f"[+] Login successful! Proceeding to the target page...")
+                results.append(
+                    f"[+] Brute-force success → Username: {creds[0]} | Password: {creds[1]}")
+                results.append(
+                    f"[+] Login successful! Proceeding to the target page...")
                 results.extend(test_html_injection(target_url, session))
             else:
-                results.append("[-] Both SQLi and Brute-force login failed. Skipping HTML Injection test.")
+                results.append(
+                    "[-] Both SQLi and Brute-force login failed. Skipping HTML Injection test.")
     else:
         results.extend(test_html_injection(target_url, session))
     return results
@@ -847,26 +921,32 @@ def sql_only(target_url):
     session = create_session()
     login_url = detect_login_page(target_url, session)
     print(f"Location returned {login_url}")
-    #login_url = "/".join(target_url.split("/")[:3])
+    # login_url = "/".join(target_url.split("/")[:3])
     login_required = is_login_required(target_url, session)
 
     if login_required:
-        results.append(f"[+] Attempting SQL Injection on login page: {login_url}...")
+        results.append(
+            f"[+] Attempting SQL Injection on login page: {login_url}...")
         sql_results = login_sql_injection(login_url, session)
         results.extend(sql_results)
 
         if any("[+]" in result for result in sql_results):
-            results.append(f"[+] Login successful! Proceeding to the target page...")
+            results.append(
+                f"[+] Login successful! Proceeding to the target page...")
             results.extend(test_sql_injection(target_url, session))
         else:
-            results.append("[-] SQL Injection failed. Attempting brute-force...")
+            results.append(
+                "[-] SQL Injection failed. Attempting brute-force...")
             creds = brute_force_login(login_url, session)
             if creds:
-                results.append(f"[+] Brute-force success → Username: {creds[0]} | Password: {creds[1]}")
-                results.append(f"[+] Login successful! Proceeding to the target page...")
+                results.append(
+                    f"[+] Brute-force success → Username: {creds[0]} | Password: {creds[1]}")
+                results.append(
+                    f"[+] Login successful! Proceeding to the target page...")
                 results.extend(test_sql_injection(target_url, session))
             else:
-                results.append("[-] Both SQLi and Brute-force login failed. Skipping SQL Injection test.")
+                results.append(
+                    "[-] Both SQLi and Brute-force login failed. Skipping SQL Injection test.")
     else:
         results.extend(test_sql_injection(target_url, session))
     return results
@@ -884,7 +964,7 @@ def login_sql_injection(base_url, session):
         list: Login attempt results.
     """
 
-    results=[]
+    results = []
     results.append(f" ")
     results.append(f"\n Login Using SQL Injection:")
 
@@ -897,7 +977,7 @@ def login_sql_injection(base_url, session):
         # Handle missing or empty form action
         form_action = form["action"]
         if not form_action:  # Default to the base URL if action is empty
-            #results.append(f"[DEBUG] Form {form_index + 1} has no action. Using base URL as form action.")
+            # results.append(f"[DEBUG] Form {form_index + 1} has no action. Using base URL as form action.")
             form_action = base_url
         elif not form_action.startswith("http"):  # Handle relative URLs
             form_action = base_url.rstrip("/") + "/" + form_action.lstrip("/")
@@ -925,6 +1005,7 @@ def login_sql_injection(base_url, session):
             results.append(f"[-] Error while testing SQL Injection: {e}")
     return results
 
+
 def is_login_required(url, session):
     """
     Determines whether the given URL requires login based on content keywords.
@@ -940,7 +1021,7 @@ def is_login_required(url, session):
     try:
         headers = {"User-Agent": "Mozilla/5.0"}
         r = session.get(url, headers=headers, timeout=10, verify=False)
-        print (r.text.lower())
+        print(r.text.lower())
 
         keywords = ["signin", "login", "password", "auth", "loginform"]
         found = False
@@ -975,7 +1056,7 @@ def brute_force_login(base_url, session):
 
     login_url = detect_login_page(base_url, session)
     print(f"Location returned {login_url}")
-    #login_url = base_url + "/login"
+    # login_url = base_url + "/login"
     print("URL in brute force func", login_url)
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -995,22 +1076,25 @@ def brute_force_login(base_url, session):
     for user in usernames:
         for pwd in passwords:
             try:
-                r = session.post(login_url, data={"username": user, "password": pwd}, allow_redirects=True, verify=False)
+                r = session.post(login_url, data={
+                                 "username": user, "password": pwd}, allow_redirects=True, verify=False)
                 for i in success:
                     if i in r.text.lower() or r.status_code in [200, 302]:
                         print(f"[+] Brute force success → {user}:{pwd}")
                         print("Keyword found : ", i)
-                        #print(r.text.lower())
+                        # print(r.text.lower())
 
                         if user == 'admin' and pwd == "password":
-                            #print("Response : ", r.text.lower() )
+                            # print("Response : ", r.text.lower() )
                             return (user, pwd)
 
             except Exception as e:
                 print(f"[!] Error on {user}:{pwd} → {e}")
     return None
 
-#brute force only function
+# brute force only function
+
+
 def test_brute_force(base_url):
     """
     Dynamically attempts brute-force login by parsing login form structure and trying credentials.
@@ -1027,15 +1111,17 @@ def test_brute_force(base_url):
     session = create_session()
     headers = {"User-Agent": "Mozilla/5.0"}
 
-    login = is_login_required(base_url,session)
+    login = is_login_required(base_url, session)
     print(login)
     if login:
         print(f"Login required ")
         results.append(f"Possible login form detected ")
         # Load credentials
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        usernames = open(os.path.join(base_dir, "usernames.txt")).read().splitlines()
-        passwords = open(os.path.join(base_dir, "passwords.txt")).read().splitlines()
+        usernames = open(os.path.join(
+            base_dir, "usernames.txt")).read().splitlines()
+        passwords = open(os.path.join(
+            base_dir, "passwords.txt")).read().splitlines()
 
         # Get form structure dynamically like SQLi does
         parsed = parse_input_fields(base_url, session)
@@ -1051,7 +1137,8 @@ def test_brute_force(base_url):
 
         print(f"[DEBUG] Form action: {form_action} | Method: {method}")
 
-        results.append("\n=============== Brute Force Login Test ===============")
+        results.append(
+            "\n=============== Brute Force Login Test ===============")
 
         for u in usernames:
             for p in passwords:
@@ -1066,9 +1153,11 @@ def test_brute_force(base_url):
 
                 try:
                     if method == "post":
-                        r = session.post(form_action, data=data, headers=headers, timeout=5, allow_redirects=False)
+                        r = session.post(
+                            form_action, data=data, headers=headers, timeout=5, allow_redirects=False)
                     else:
-                        r = session.get(form_action, params=data, headers=headers, timeout=5, allow_redirects=False)
+                        r = session.get(
+                            form_action, params=data, headers=headers, timeout=5, allow_redirects=False)
 
                     text = r.text.lower()
                     redirect = r.headers.get("Location", "").lower()
@@ -1076,9 +1165,11 @@ def test_brute_force(base_url):
 
                     success = (
                         code == 302 and "dashboard" in redirect or
-                        any(x in text for x in ["welcome", "success", "logged in"])
+                        any(x in text for x in [
+                            "welcome", "success", "logged in"])
                     )
-                    fail = any(x in text for x in ["invalid", "incorrect", "failed"])
+                    fail = any(x in text for x in [
+                               "invalid", "incorrect", "failed"])
 
                     if success and not fail:
                         results.append(f"[+] Valid → {u}:{p}")
@@ -1090,6 +1181,7 @@ def test_brute_force(base_url):
     else:
         results.append(f" No Login Required ")
     return results
+
 
 def complete_scan(target_url):
     """
@@ -1113,9 +1205,9 @@ def complete_scan(target_url):
     base_url = detect_login_page(target_url, session)
     print(f"Location returned {base_url}")
     # Extract base login URL (e.g., http://127.0.0.1:5000)
-    #base_url = "/".join(target_url.split("/")[:3])
-    #check if login is required using a flag
-    if is_login_required(base_url,session):
+    # base_url = "/".join(target_url.split("/")[:3])
+    # check if login is required using a flag
+    if is_login_required(base_url, session):
         login = False
         print("Login detected — trying SQLi...")
         results.append("Login detected — trying SQLi...")
@@ -1125,20 +1217,23 @@ def complete_scan(target_url):
 
         if any("[+]" in r for r in sql_results):
             print("[+] SQLi login successful.")
-            results.append(" [+] Login successful via SQL Injection! Proceeding to the target page...")
+            results.append(
+                " [+] Login successful via SQL Injection! Proceeding to the target page...")
             login = True
         else:
             print("[-] SQLi login failed.")
             results.append(" [-] SQL Injection failed.")
-            #trying brute force after failed SQLi
+            # trying brute force after failed SQLi
             creds = brute_force_login(base_url, session)
             print("brute force done")
             if creds:
                 print(f"[+] Brute-force success: {creds[0]}:{creds[1]}")
-                results.append(f" [+] Brute-force success → Username: {creds[0]} | Password: {creds[1]}")
+                results.append(
+                    f" [+] Brute-force success → Username: {creds[0]} | Password: {creds[1]}")
                 login = True
             else:
-                results.append(" [-] Login failed using both SQLi and brute-force. Skipping further tests.")
+                results.append(
+                    " [-] Login failed using both SQLi and brute-force. Skipping further tests.")
 
         # If login successful → run further vulnerability tests
         if login:
@@ -1147,16 +1242,22 @@ def complete_scan(target_url):
 
             # Check if any API endpoints were detected
             if endpoints:
-                results.append("[+] API Endpoints found — performing API-based testing only.")
+                results.append(
+                    "[+] API Endpoints found — performing API-based testing only.")
 
                 # Test ONLY the API endpoints
-                results.extend(test_sql_injection(target_url, session, is_api=True, api_endpoints=endpoints))
-                results.extend(test_xss(target_url, session, is_api=True, api_endpoints=endpoints))
-                results.extend(test_command_injection(target_url, session, is_api=True, api_endpoints=endpoints))
-                results.extend(test_html_injection(target_url, session, is_api=True, api_endpoints=endpoints))
+                results.extend(test_sql_injection(
+                    target_url, session, is_api=True, api_endpoints=endpoints))
+                results.extend(test_xss(target_url, session,
+                               is_api=True, api_endpoints=endpoints))
+                results.extend(test_command_injection(
+                    target_url, session, is_api=True, api_endpoints=endpoints))
+                results.extend(test_html_injection(
+                    target_url, session, is_api=True, api_endpoints=endpoints))
 
             else:
-                results.append("[-] No API endpoints found — performing standard form-based testing.")
+                results.append(
+                    "[-] No API endpoints found — performing standard form-based testing.")
 
                 # Test standard forms
                 results.extend(test_sql_injection(target_url, session))
@@ -1165,12 +1266,12 @@ def complete_scan(target_url):
                 results.extend(test_html_injection(target_url, session))
                 return results
 
-        #if login failed
+        # if login failed
         else:
             print("[-] Access denied — login required but not bypassed.")
-            return results # terminate
+            return results  # terminate
 
-    #no login required
+    # no login required
     else:
         print("No login required")
         # Scan for endpoints first
@@ -1179,16 +1280,21 @@ def complete_scan(target_url):
         # Check if any API endpoints were detected
         if endpoints:
             print("[DEBUG] API Endpoints found — performing API-based testing only.")
-            results.append("[+] API Endpoints found — performing API-based testing now.")
+            results.append(
+                "[+] API Endpoints found — performing API-based testing now.")
 
             # Test ONLY the API endpoints
-            results.extend(test_sql_injection(target_url, session, is_api=True, api_endpoints=endpoints))
-            results.extend(test_xss(target_url, session, is_api=True, api_endpoints=endpoints))
-            results.extend(test_command_injection(target_url, session, is_api=True, api_endpoints=endpoints))
-            results.extend(test_html_injection(target_url, session, is_api=True, api_endpoints=endpoints))
+            results.extend(test_sql_injection(
+                target_url, session, is_api=True, api_endpoints=endpoints))
+            results.extend(test_xss(target_url, session,
+                           is_api=True, api_endpoints=endpoints))
+            results.extend(test_command_injection(
+                target_url, session, is_api=True, api_endpoints=endpoints))
+            results.extend(test_html_injection(
+                target_url, session, is_api=True, api_endpoints=endpoints))
 
         else:
-            #results.append("[-] No API endpoints found — performing standard form-based testing.")
+            # results.append("[-] No API endpoints found — performing standard form-based testing.")
             print("[DEBUG] No API Endpoints found — standard form-based testing.")
 
             # Test standard forms
@@ -1197,10 +1303,10 @@ def complete_scan(target_url):
             results.extend(test_command_injection(target_url, session))
             results.extend(test_html_injection(target_url, session))
 
-
         print("[-] No login required.")
         print(results)
         return results
+
 
 def inject_column_placeholders(payload, num_cols):
     """
@@ -1259,6 +1365,7 @@ def inject_column_placeholders(payload, num_cols):
     nulls = ", ".join(["NULL"] * null_count)
     return payload.replace(placeholder, nulls)
 
+
 def detect_js_api_endpoints(url, session):
     """
     Scans embedded JavaScript files for fetch/AJAX API endpoints.
@@ -1282,7 +1389,8 @@ def detect_js_api_endpoints(url, session):
         extracted = extract_js_endpoints_from_scripts(url, soup)
         for ep in extracted:
             if not ep.startswith("http"):
-                ep = "/".join(url.split("/")[:3]) + ep if ep.startswith("/") else "/" + ep
+                ep = "/".join(url.split("/")[:3]) + \
+                    ep if ep.startswith("/") else "/" + ep
             endpoints.add(ep)
 
         if endpoints:
@@ -1315,11 +1423,13 @@ def extract_js_endpoints_from_scripts(url, soup):
     for tag in script_tags:
         js_url = tag["src"]
         if not js_url.startswith("http"):
-            js_url = base_url + js_url if js_url.startswith("/") else base_url + "/" + js_url
+            js_url = base_url + \
+                js_url if js_url.startswith("/") else base_url + "/" + js_url
         try:
             js_content = requests.get(js_url, timeout=5).text
             fetch_urls = re.findall(r"fetch\(['\"]([^'\"]+)['\"]", js_content)
-            ajax_urls = re.findall(r"url\s*:\s*['\"]([^'\"]+)['\"]", js_content)
+            ajax_urls = re.findall(
+                r"url\s*:\s*['\"]([^'\"]+)['\"]", js_content)
             endpoints.extend(fetch_urls + ajax_urls)
         except:
             continue
