@@ -678,3 +678,160 @@ button[data-type="danger"]:hover {
 .alert strong {
     font-weight: 700;
 }
+
+/* ─── AI STYLES ─────────────────────────────────────────────────────────────────── */
+
+/* General AI Button Styling */
+.ai-button {
+    background-color: var(--secondary-bg, #262e3d);
+    color: var(--text-color, #fff);
+    border: 1px solid var(--border-color, #4b566b);
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    display: inline-flex; /* For icon alignment */
+    align-items: center; /* For icon alignment */
+    justify-content: center; /* For icon alignment */
+}
+
+.ai-button:hover {
+    background-color: var(--accent-color, #00ffff);
+    color: #000;
+    border-color: var(--accent-color, #00ffff);
+}
+
+.ai-button i, /* Font Awesome icons */
+.ai-button .fas, /* Font Awesome icons */
+.ai-button .fab /* Font Awesome icons */
+{
+    margin-right: 7px; /* Space between icon and text */
+}
+
+/* AI Button within results tables (e.g., System Scan, Web Scan Report) */
+.results-table button.ai-button {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    background-color: #007bff; /* Bootstrap info blue */
+    color: #fff;
+    width: auto; /* Override any general button width */
+    margin: 0; /* Reset margin if any */
+}
+
+.results-table button.ai-button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* AI Button specifically for section headings in Web Scan Report */
+.section-heading .ai-button {
+    position: static; /* Overriding potential absolute positioning */
+    margin-top: 10px;
+    font-size: 0.85rem;
+    padding: 5px 10px;
+    background-color: #00a8e8; /* A slightly different blue for distinction */
+    color: white;
+    border-color: #007bff;
+    font-weight: bold;
+    display: block; /* Make it block to take its own line or fit-content based on container */
+    width: fit-content;
+}
+
+.section-heading .ai-button:hover {
+    background-color: #0056b3;
+    box-shadow: 0 0 8px rgba(0, 255, 255, 0.7); /* Glow effect */
+}
+
+/* AI Response Row in Tables */
+tr.ai-row td {
+    padding: 0 !important; /* Remove padding for the full-width box, ensure it overrides */
+    border: none !important; /* Remove border, ensure it overrides */
+    border-top: 1px solid var(--border-color, #444) !important; /* Keep top border for separation */
+}
+
+/* General AI Response Box (used in tables and standalone) */
+.ai-response-box {
+    background-color: rgba(0, 0, 0, 0.5); /* Darker for contrast */
+    padding: 15px;
+    font-size: 0.9rem; /* Slightly larger base font */
+    border: 1px solid var(--border-color, #444);
+    border-radius: 6px;
+    margin: 10px 0; /* Standard margin */
+    width: 100%;
+    box-sizing: border-box;
+    overflow-wrap: break-word;
+}
+
+.ai-response-box strong { /* For labels like "AI Insight:" */
+    color: var(--accent-color, #00ffff);
+    display: block;
+    margin-bottom: 8px; /* More space below the label */
+    font-weight: 600;
+}
+
+/* AI Text Content */
+.ai-text {
+    white-space: pre-wrap;
+    display: block;
+    margin-top: 5px;
+    font-family: Consolas, Monaco, 'Courier New', monospace;
+    line-height: 1.6;
+    color: var(--text-color, #fff);
+    font-size: 0.85em; /* Relative to parent .ai-response-box */
+}
+
+/* Spinner (reusing .spinner-border from Bootstrap-like naming for consistency) */
+.spinner-border {
+    display: inline-block;
+    width: 1.25rem; /* Standard size */
+    height: 1.25rem;
+    vertical-align: text-bottom;
+    border: .2em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    -webkit-animation: spinner-border .75s linear infinite;
+    animation: spinner-border .75s linear infinite;
+    margin: 0 8px 0 0;
+}
+
+/* Spinner animation (if not already globally defined) */
+@-webkit-keyframes spinner-border {
+    to { -webkit-transform: rotate(360deg); }
+}
+@keyframes spinner-border {
+    to { transform: rotate(360deg); }
+}
+
+/* AI Response Container (for standalone AI responses not in a table) */
+.ai-response-container {
+    background-color: rgba(17, 17, 17, 0.8); /* Consistent with .results-section */
+    border: 1px solid var(--border-color, #444);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 95%; /* Or match .tool-container width */
+}
+
+.ai-response-container h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--accent-color, #00ffff);
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+/* Specific spinner usage in AI response boxes (if different from .spinner-border general) */
+.ai-response-box .spinner { /* This was used in results.html, ensure it's covered or replaced by .spinner-border */
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+    /* display: inline-block; ALREADY IN .spinner-border */
+    /* vertical-align: middle; ALREADY IN .spinner-border */
+    /* margin: 0 8px 0 0; ALREADY IN .spinner-border */
+    /* Ensure animation and border colors are from .spinner-border or defined here if unique */
+    border: .2em solid var(--text-color, #fff); /* Example if it needs a different base color */
+    border-right-color: transparent;
+    border-radius: 50%;
+    -webkit-animation: spinner-border .75s linear infinite;
+    animation: spinner-border .75s linear infinite;
+}

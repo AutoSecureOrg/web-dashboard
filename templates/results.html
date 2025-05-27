@@ -59,7 +59,7 @@
         }
 
         table.results-table {
-            width: 800px;
+            width: 800px; /* Consider making this 100% for responsiveness */
             border-collapse: collapse;
             margin-top: 15px;
             color: var(--text-color, #fff);
@@ -91,56 +91,9 @@
             color: inherit;
         }
 
-        /* AI Insight Specific */
-        .results-table button.ai-button {
-             /* Use default button styles + modifications */
-            font-size: 0.8rem;
-            padding: 5px 10px;
-            background-color: #007bff; /* info blue */
-            color: #fff;
-            width: auto; /* Override form button width */
-            margin: 0;
-        }
-        .results-table button.ai-button:hover {
-            background-color: #0056b3;
-        }
+        /* Styles for .ai-button, .ai-row, .ai-response-box, .ai-text, .spinner are in tools.css */
 
-        tr.ai-row td {
-            padding: 0; /* Remove padding for the full-width box */
-            border: none; /* Maybe remove border or just top? */
-            border-top: 1px solid var(--border-color, #444);
-        }
-        .ai-response-box {
-            background-color: rgba(0, 0, 0, 0.5);
-            padding: 10px 15px;
-            font-size: 0.85rem;
-        }
-        .ai-response-box strong {
-             color: var(--accent-color, #00ffff);
-             display: block;
-             margin-bottom: 5px;
-        }
-        .ai-response-box .spinner {
-            /* Use spinner from tools.css, maybe smaller */
-            width: 16px;
-            height: 16px;
-            border-width: 2px;
-            display: inline-block; /* Align with text */
-            vertical-align: middle;
-            margin: 0 8px 0 0;
-        }
-        .ai-text {
-             white-space: pre-wrap;
-             display: block; /* Ensures pre-wrap works */
-             margin-top: 5px;
-             font-family: Consolas, Monaco, monospace;
-             line-height: 1.6;
-        }
-
-        .results-table thead, .results-table tbody tr {
-            table-layout: fixed; /* Force columns to obey widths more strictly */
-        }
-
+        /* Consider removing fixed widths or making them percentages for responsiveness */
         /* Define column widths explicitly for better control with table-layout: fixed */
         .results-table th:nth-child(1), .results-table td:nth-child(1) { width: 8%; }  /* Port */
         .results-table th:nth-child(2), .results-table td:nth-child(2) { width: 15%; } /* Service */
@@ -220,7 +173,7 @@
                         <td colspan="5">
                             <div class="ai-response-box">
                                 <strong>AI Insight:</strong>
-                                <div class="spinner" role="status"></div> {# Spinner from tools.css #}
+                                <div class="spinner-border" role="status"></div>
                                 <span class="ai-text">Thinking...</span>
                             </div>
                         </td>

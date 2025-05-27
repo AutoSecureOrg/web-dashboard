@@ -2,6 +2,7 @@ import os
 import datetime
 from prettytable import PrettyTable
 
+
 def web_vuln_report(directory, target_urls, all_results):
     """
     Generates a report for web vulnerability scanning results from multiple URLs.
@@ -21,12 +22,14 @@ def web_vuln_report(directory, target_urls, all_results):
     raw_timestamp = datetime.datetime.now().strftime("%d/%m/%y-%H:%M")
     sanitized_timestamp = raw_timestamp.replace("/", "_").replace(":", "-")
     # Create a more generic filename for multi-url reports
-    file_name = os.path.join(directory, f"web_scan_report_{sanitized_timestamp}.txt")
+    file_name = os.path.join(
+        directory, f"web_scan_report_{sanitized_timestamp}.txt")
 
     try:
         with open(file_name, "w", encoding="utf-8") as report_file:
             report_file.write("Web Vulnerability Scan Report\n")
-            report_file.write(f"Scan Time: {datetime.datetime.now().strftime('%d/%m/%y %H:%M:%S')}\n")
+            report_file.write(
+                f"Scan Time: {datetime.datetime.now().strftime('%d/%m/%y %H:%M:%S')}\n")
             report_file.write(f"Targets Scanned: {len(target_urls)}\n")
             report_file.write("\n" + "=" * 60 + "\n\n")
 
@@ -37,14 +40,17 @@ def web_vuln_report(directory, target_urls, all_results):
 
                     if vulnerabilities:
                         # Create a table for this URL's vulnerabilities
-                        vuln_table = PrettyTable(["Vulnerability Type", "Status", "Payload/Details"])
-                        vuln_table.align = "l" # Left align
-                        vuln_table.max_width["Payload/Details"] = 60 # Limit payload width
+                        vuln_table = PrettyTable(
+                            ["Vulnerability Type", "Status", "Payload/Details"])
+                        vuln_table.align = "l"  # Left align
+                        # Limit payload width
+                        vuln_table.max_width["Payload/Details"] = 60
 
                         for vuln in vulnerabilities:
                             payload = str(vuln.get("payload", "N/A"))
                             # Basic newline handling for prettytable
-                            payload_formatted = payload.replace('\n', '\n ') # Add space for better wrap
+                            payload_formatted = payload.replace(
+                                '\n', '\n ')  # Add space for better wrap
 
                             vuln_table.add_row([
                                 vuln.get("type", "Unknown"),
@@ -55,10 +61,12 @@ def web_vuln_report(directory, target_urls, all_results):
                         report_file.write(f"{vuln_table}\n\n")
                     else:
                         # Should not happen if app.py logic is correct, but handle defensively
-                        report_file.write("No specific vulnerability data found for this URL.\n\n")
+                        report_file.write(
+                            "No specific vulnerability data found for this URL.\n\n")
 
             else:
-                report_file.write("No scan results were generated for any URL.\n")
+                report_file.write(
+                    "No scan results were generated for any URL.\n")
 
             report_file.write("End of Report\n")
             report_file.write("=" * 60 + "\n")
@@ -69,5 +77,5 @@ def web_vuln_report(directory, target_urls, all_results):
     except Exception as e:
         print(f"[-] Failed to write web vulnerability report: {e}")
         import traceback
-        traceback.print_exc() # Print full traceback for debugging
-        return None # Return None on failure
+        traceback.print_exc()  # Print full traceback for debugging
+        return None  # Return None on failure
