@@ -994,7 +994,7 @@ def website_scanner():
                                 status = "Safe"
 
                             print(
-                                f"DEBUG: Adding result - Type: {res_type}, Status: {status}, Payload: {str(res)[:50]}...")
+                                f"DEBUG: Adding result - Payload: {str(res)[:50]}...")
                             current_results_list.append({
                                 "type": res_type,
                                 "status": status,

@@ -39,9 +39,10 @@ def parse_input_fields(url, session):
 
     try:
         response = session.get(url, headers=headers, timeout=10)
+        print("response: ", response.text)
         soup = BeautifulSoup(response.text, "html.parser")
 
-        # --- Parse <form> tags ---
+        # --- Parse <form> tags (with <input> or <textarea>) ---
         for form in soup.find_all("form"):
             form_details = {
                 "action": form.get("action") or url,
@@ -49,32 +50,33 @@ def parse_input_fields(url, session):
                 "inputs": []
             }
 
-            for input_tag in form.find_all("input"):
-                input_name = input_tag.get("name") or input_tag.get("id")
-                input_type = input_tag.get("type", "text")
-                # Skip non-user-input fields
+            for tag in form.find_all(["input", "textarea"]):
+                input_name = tag.get("name") or tag.get("id")
+                input_type = tag.get("type", "text") if tag.name == "input" else "textarea"
+                
                 if input_type in ["submit", "button", "reset", "image", "file"]:
-                    continue
-
+                    continue  # Skip non-input fields
+                
                 if input_name:
-                    form_details["inputs"].append(
-                        {"name": input_name, "type": input_type})
+                    form_details["inputs"].append({
+                        "name": input_name,
+                        "type": input_type
+                    })
 
             if form_details["inputs"]:
                 forms.append(form_details)
 
-        # --- Parse standalone <input> fields outside forms ---
+        # --- Parse standalone <input> and <textarea> fields outside <form> ---
         if not forms:
-            print(" No <form> tags found. Checking for standalone <input> fields...")
+            print("No <form> tags with valid inputs found. Checking standalone fields...")
 
-        for input_tag in soup.find_all("input"):
-            parent_form = input_tag.find_parent("form")
-            if not parent_form:  # Only consider inputs not inside forms
-                input_name = input_tag.get("name") or input_tag.get("id")
-                input_type = input_tag.get("type", "text")
+        for tag in soup.find_all(["input", "textarea"]):
+            parent_form = tag.find_parent("form")
+            if not parent_form:  # Only consider tags outside a form
+                input_name = tag.get("name") or tag.get("id")
+                input_type = tag.get("type", "text") if tag.name == "input" else "textarea"
                 if input_name:
-                    print(
-                        f"[DEBUG] Standalone input detected: {input_name} (type={input_type})")
+                    print(f"[DEBUG] Standalone input detected: {input_name} (type={input_type})")
                     input_tags.append({
                         "name": input_name,
                         "type": input_type,
@@ -169,6 +171,10 @@ def detect_login_page(target_url, session):
         for form in soup.find_all("form"):
             inputs = [i.get("name", "").lower()
                       for i in form.find_all("input")]
+            if "user" in inputs:
+                print(f"[DEBUG] Found 'user' input in form: {inputs}")
+            if "pass" in inputs or "password" in inputs:
+                print(f"[DEBUG] Found 'pass' input in form: {inputs}")
             if any("user" in i for i in inputs) and any("pass" in i for i in inputs):
                 print(f"[🔐] Login form found on current page: {target_url}")
                 return target_url
@@ -193,7 +199,7 @@ def detect_login_page(target_url, session):
             for form in soup.find_all("form"):
                 inputs = [i.get("name", "").lower()
                           for i in form.find_all("input")]
-                if any("user" in i or "email" in i or "login" in i for i in inputs) and any("pass" in i for i in inputs):
+                if any("user" in i or "email" in i or "login" in i for i in inputs) and any("pass" in i or "pswd" in i or "password" in i for i in inputs):
                     print(f"[+] Login page identified at: {full_url}")
                     return full_url
         except Exception as e:
@@ -1013,44 +1019,35 @@ def login_sql_injection(base_url, session):
 
 def is_login_required(url, session):
     """
-    Determines whether the given URL requires login based on content keywords.
+    Determines whether the given URL requires login based on actual form analysis.
 
     Args:
         url (str): Page URL to inspect.
         session (requests.Session): Active HTTP session.
 
     Returns:
-        bool: True if login-related keywords are found, False otherwise.
+        bool: True if login-related form is found, False otherwise.
     """
-
     try:
         headers = {"User-Agent": "Mozilla/5.0"}
         r = session.get(url, headers=headers, timeout=10, verify=False)
-        #print (r.text.lower())
+        soup = BeautifulSoup(r.text, "html.parser")
 
-        keywords = ["signin", "login", "password", "auth", "loginform"]
-        found = False
-
-        for k in keywords:
-            if k in r.text.lower():
+        for form in soup.find_all("form"):
+            inputs = [i.get("name", "").lower() for i in form.find_all("input")]
+            if any(k in i for i in inputs for k in ["user", "uname", "email", "login"]) and \
+               any(k in i for i in inputs for k in ["pass", "password"]):
                 print(f"[🔐] Login form detected at {url}")
-                print(f"[DEBUG] Keyword matched: '{k}'")
-                found = True
-                break
-            else:
-                print(f"[DEBUG] Keyword '{k}' not found in response.")
+                return True
 
-        return found
+        return False  # No valid login form found
 
     except Exception as e:
         print(f"[!] Error checking for login at {url}: {e}")
         return False
 
 
-
 # brute force only function
-
-
 def test_brute_force(base_url):
     """
     Dynamically attempts brute-force login by parsing login form structure and trying credentials.
@@ -1138,6 +1135,84 @@ def test_brute_force(base_url):
         results.append(f" No Login Required ")
     return results
 
+def is_security_level_configurable(session, base_url):
+    """
+    Detects if a web app has a configurable security level (e.g., DVWA).
+
+    Args:
+        session (requests.Session): Authenticated session.
+        base_url (str): Base URL of the target site.
+
+    Returns:
+        bool: True if a security level form is detected.
+    """
+    try:
+        url = urljoin(base_url, "security.php")
+        r = session.get(url, timeout=5)
+        soup = BeautifulSoup(r.text, "html.parser")
+
+        if soup.find("select", {"name": "security"}):
+            print("[+] Security level configuration detected.")
+            return True
+    except Exception as e:
+        print(f"[-] Security level check failed: {e}")
+    return False
+
+
+def set_dvwa_security_level(session, base_url, level):
+    """
+    Changes DVWA security level via security.php.
+
+    Args:
+        session (requests.Session): Authenticated session.
+        base_url (str): Base URL of DVWA (e.g., http://127.0.0.1/dvwa/).
+        level (str): 'low', 'medium', or 'high'.
+
+    Returns:
+        bool: True if level was changed successfully.
+    """
+    url = urljoin(base_url, "security.php")
+    payload = {"security": level}
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+    try:
+        r = session.post(url, data=payload, headers=headers, timeout=5)
+        print(f"[DEBUG] Changed security level to {level}. Current cookies: {session.cookies.get_dict()}")
+        return level in r.text
+    except Exception as e:
+        print(f"[!] Error changing security level: {e}")
+        return False
+
+
+def scan_dvwa_at_all_levels(target_url, session, endpoints=[]):
+    """
+    If DVWA-style security levels are present, scan at each level (low, medium, high).
+    
+    Args:
+        target_url (str): The target DVWA base URL.
+        session (requests.Session): Authenticated session.
+
+    Returns:
+        list: Combined results across all levels.
+    """
+    results = []
+    base_url = "/".join(target_url.split("/")[:4]) + "/"  # e.g., http://127.0.0.1/dvwa/
+
+    if is_security_level_configurable(session, base_url):
+        for level in ["low", "medium", "high"]:
+            results.append(f"\n=== Testing Security Level: {level.upper()} ===")
+            if set_dvwa_security_level(session, base_url, level):
+                results.append(f"[+] Security level set to {level}")
+                print(f"[+] Security level set to {level}")
+                results.extend(test_sql_injection(target_url, session, api_endpoints=endpoints))
+                results.extend(test_xss(target_url, session, api_endpoints=endpoints))
+                results.extend(test_command_injection(target_url, session, api_endpoints=endpoints))
+                results.extend(test_html_injection(target_url, session, api_endpoints=endpoints))
+            else:
+                results.append(f"[-] Could not set level to {level}")
+    else:
+        results.append("[-] Security level mechanism not detected.")
+    return results
+
 
 def complete_scan(target_url):
     """
@@ -1200,6 +1275,13 @@ def complete_scan(target_url):
             if endpoints:
                 results.append(
                     "[+] API Endpoints found — performing API-based testing only.")
+                
+                # If security level can be changed(DVWA)
+                if is_security_level_configurable(session, base_url):
+                    print("security level is configurable")
+                    results.append("[*] Detected DVWA-style security settings.")
+                    results.extend(scan_dvwa_at_all_levels(target_url, session, endpoints))
+                    return results  # Already scanned per level, skip redundant scan
 
                 # Test ONLY the API endpoints
                 results.extend(test_sql_injection(
@@ -1214,6 +1296,13 @@ def complete_scan(target_url):
             else:
                 results.append(
                     "[-] No API endpoints found — performing standard form-based testing.")
+                
+                # If security level can be changed(DVWA)
+                if is_security_level_configurable(session, base_url):
+                    print("security level is configurable")
+                    results.append("[*] Detected DVWA-style security settings.")
+                    results.extend(scan_dvwa_at_all_levels(target_url, session))
+                    return results  # Already scanned per level, skip redundant scan
 
                 # Test standard forms
                 results.extend(test_sql_injection(target_url, session))
@@ -1221,7 +1310,7 @@ def complete_scan(target_url):
                 results.extend(test_command_injection(target_url, session))
                 results.extend(test_html_injection(target_url, session))
                 return results
-
+            
         # if login failed
         else:
             print("[-] Access denied — login required but not bypassed.")
@@ -1260,6 +1349,13 @@ def complete_scan(target_url):
             results.extend(test_html_injection(target_url, session))
 
         print("[-] No login required.")
+
+        #if security level can be changed(DVWA)
+        if is_security_level_configurable(session, base_url):
+            results.append("[*] Detected DVWA-style security settings.")
+            results.extend(scan_dvwa_at_all_levels(target_url, session))
+            return results  # Already scanned per level, skip redundant scan
+        
         return results
 
 
