@@ -1075,74 +1075,80 @@ def test_brute_force(base_url):
     login = is_login_required(base_url,session)
     #print(login)
     if login:
-        print(f"Login required ")
-        results.append(f"Possible login form detected ")
-        # Load credentials
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        usernames = open(os.path.join(
-            base_dir, "usernames.txt")).read().splitlines()
-        passwords = open(os.path.join(
-            base_dir, "passwords.txt")).read().splitlines()
+        print(f"[*] Starting brute-force login on: {base_url}")
 
-        # Get form structure dynamically like SQLi does
-        parsed = parse_input_fields(base_url, session)
-        #print(parsed)
-        if not parsed["forms"]:
-            return ["[-] No login form found on target page."]
+    try:
+        resp = session.get(base_url, timeout=10)
+        soup = BeautifulSoup(resp.text, "html.parser")
+    except Exception as e:
+        print(f"[!] Failed to load login page: {e}")
+        return None
 
-        form = parsed["forms"][0]  # Use first form
-        form_action = form.get("action") or base_url
-        if not form_action.startswith("http"):
-            form_action = base_url.rstrip("/") + "/" + form_action.lstrip("/")
-        method = form.get("method", "post").lower()
+    form = soup.find("form")
+    if not form:
+        print("[-] No <form> found on the page.")
+        return None
 
-        print(f"[DEBUG] Form action: {form_action} | Method: {method}")
+    action = form.get("action")
+    print(" action",action )
+    form_action = urljoin(base_url, action) if action else base_url
+    print("form action, ", form_action)
+    method = form.get("method", "post").lower()
 
-        results.append(
-            "\n=============== Brute Force Login Test ===============")
+    inputs = form.find_all("input")
+    input_names = [i.get("name") for i in inputs if i.get("name")]
 
-        for u in usernames:
-            for p in passwords:
-                data = {}
-                for field in form["inputs"]:
-                    if "user" in field["name"].lower():
-                        data[field["name"]] = u
-                    elif "pass" in field["name"].lower():
-                        data[field["name"]] = p
-                    else:
-                        data[field["name"]] = "test"
+    # Load credentials
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    user_file = os.path.join(base_dir, "usernames.txt")
+    pass_file = os.path.join(base_dir, "passwords.txt")
 
-                try:
-                    if method == "post":
-                        r = session.post(
-                            form_action, data=data, headers=headers, timeout=5, allow_redirects=False)
-                    else:
-                        r = session.get(
-                            form_action, params=data, headers=headers, timeout=5, allow_redirects=False)
+    try:
+        with open(user_file, "r") as f:
+            usernames = [line.strip() for line in f if line.strip()]
+        with open(pass_file, "r") as f:
+            passwords = [line.strip() for line in f if line.strip()]
+    except FileNotFoundError:
+        print("[-] Username or password file not found.")
+        return None
 
-                    text = r.text.lower()
-                    redirect = r.headers.get("Location", "").lower()
-                    code = r.status_code
+    for username, password in product(usernames, passwords):
+        data = {}
+        for tag in inputs:
+            name = tag.get("name")
+            if not name:
+                continue
+            # Fill based on name heuristics
+            if any(k in name.lower() for k in ["user", "email", "uid", "login"]):
+                data[name] = username
+            elif any(k in name.lower() for k in ["pass", "pwd"]):
+                data[name] = password
+            else:
+                data[name] = tag.get("value", "test")  # Keep default or dummy
 
-                    success = (
-                        code == 302 and "dashboard" in redirect or
-                        any(x in text for x in [
-                            "welcome", "success", "logged in","hello"])
-                    )
-                    fail = any(x in text for x in [
-                               "invalid", "incorrect", "failed"])
+        print(f"Trying: {username} | {password}")
+        try:
+            if method == "post":
+                response = session.post(form_action, data=data, timeout=10)
+            else:
+                response = session.get(form_action, params=data, timeout=10)
+            # Debugging output
+            if username == "admin" and password == "admin":
+                print(f"[DEBUG] Status: {response.status_code} | URL: {response.url}")
+                print(f"[DEBUG] Response Snippet:\n{response.text}\n")
 
-                    if success and not fail:
-                        results.append(f"[+] Valid → {u}:{p}")
-                except Exception as e:
-                    results.append(f"[!] Error → {u}:{p} → {str(e)}")
+            text = response.text.lower()
 
-        if len(results) == 1:
-            results.append("[-] No valid credentials found.")
-    else:
-        results.append(f" No Login Required ")
+            if any(k in text for k in ["logout", "welcome", "dashboard", "you have logged in", "hello"]):
+                print(f"[+] Brute-force success: {username}:{password}")
+                results.append(f"[+] Brute-force success: {username}:{password}")
+                return results
+
+        except Exception as e:
+            print(f"[!] Error during attempt {username}:{password} → {e}")
+
+    print("[-] No valid credentials found.")
     return results
-
 def is_security_level_configurable(session, base_url):
     """
     Detects if a web app has a configurable security level (e.g., DVWA).
