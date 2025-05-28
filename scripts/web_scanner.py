@@ -5,9 +5,8 @@ import platform
 import os
 import re
 from itertools import product
-from scripts.login_bruteforce import brute_force_login
+from scripts.payload_texts.login_bruteforce import brute_force_login
 from urllib.parse import urljoin
-
 
 
 def create_session():
@@ -53,10 +52,10 @@ def parse_input_fields(url, session):
             for tag in form.find_all(["input", "textarea"]):
                 input_name = tag.get("name") or tag.get("id")
                 input_type = tag.get("type", "text") if tag.name == "input" else "textarea"
-                
+
                 if input_type in ["submit", "button", "reset", "image", "file"]:
                     continue  # Skip non-input fields
-                
+
                 if input_name:
                     form_details["inputs"].append({
                         "name": input_name,
@@ -1100,8 +1099,8 @@ def test_brute_force(base_url):
 
     # Load credentials
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    user_file = os.path.join(base_dir, "usernames.txt")
-    pass_file = os.path.join(base_dir, "passwords.txt")
+    user_file = os.path.join(base_dir, "payload_texts", "usernames.txt")
+    pass_file = os.path.join(base_dir, "payload_texts", "passwords.txt")
 
     try:
         with open(user_file, "r") as f:
@@ -1214,7 +1213,7 @@ def complete_scan(target_url):
             if endpoints:
                 results.append(
                     "[+] API Endpoints found — performing API-based testing only.")
-                
+
                 # Test ONLY the API endpoints
                 results.extend(test_sql_injection(
                     target_url, session, is_api=True, api_endpoints=endpoints))
@@ -1228,14 +1227,14 @@ def complete_scan(target_url):
             else:
                 results.append(
                     "[-] No API endpoints found — performing standard form-based testing.")
-                
+
                 # Test standard forms
                 results.extend(test_sql_injection(target_url, session))
                 results.extend(test_xss(target_url, session))
                 results.extend(test_command_injection(target_url, session))
                 results.extend(test_html_injection(target_url, session))
                 return results
-            
+
         # if login failed
         else:
             print("[-] Access denied — login required but not bypassed.")
