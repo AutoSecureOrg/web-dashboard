@@ -145,41 +145,26 @@ def detect_login_page(target_url, session):
 
     print(f"[*] Detecting login page from: {target_url}")
     headers = {"User-Agent": "Mozilla/5.0"}
-    #base_url = "/".join(target_url.split("/")[:3])  # keeps scheme + domain + port
     base_url = target_url  # Use the full URL as base
+
+    username_keywords = ["user", "username", "email", "uid"]
+    password_keywords = ["pass", "password", "pswd", "secret", "passw"]
 
     # === Step 1: Follow redirection logic ===
     try:
         response = session.get(target_url, headers=headers,
-                               timeout=10, allow_redirects=False, verify=False)
+                            timeout=10, allow_redirects=False, verify=False)
         if response.status_code in [301, 302, 303]:
             location = response.headers.get("Location", "")
             if location:
                 if not location.startswith("http"):
                     base = "/".join(target_url.split("/")[:3])
                     location = base + location
-                print(f" Redirected to login page at: {location}")
+                print(f"[→] Redirected to login page at: {location}")
                 return location
     except Exception as e:
         print(f"[!] Redirect detection failed: {e}")
 
-    # === Step 2: Check if target URL itself contains login form ===
-    try:
-        response = session.get(
-            target_url, headers=headers, timeout=10, verify=False)
-        soup = BeautifulSoup(response.text, "html.parser")
-        for form in soup.find_all("form"):
-            inputs = [i.get("name", "").lower()
-                      for i in form.find_all("input")]
-            if "user" in inputs:
-                print(f"[DEBUG] Found 'user' input in form: {inputs}")
-            if "pass" in inputs or "password" in inputs:
-                print(f"[DEBUG] Found 'pass' input in form: {inputs}")
-            if any("user" in i for i in inputs) and any("pass" in i for i in inputs):
-                print(f"[🔐] Login form found on current page: {target_url}")
-                return target_url
-    except Exception as e:
-        print(f"[!] HTML form detection failed: {e}")
 
     # === Step 3: Fallback to common login paths ===
     print("[*] Scanning for actual login page...")
@@ -206,6 +191,27 @@ def detect_login_page(target_url, session):
             print(f"[!] Error checking {full_url}: {e}")
 
     print("[-] Could not detect login page automatically.")
+
+    # === Step 2: Check if target URL itself contains login form ===
+    try:
+        response = session.get(target_url, headers=headers, timeout=10, verify=False)
+        soup = BeautifulSoup(response.text, "html.parser")
+        for form in soup.find_all("form"):
+            inputs = [i.get("name", "").lower() for i in form.find_all("input")]
+
+            found_user = any(any(keyword in i for keyword in username_keywords) for i in inputs)
+            found_pass = any(any(keyword in i for keyword in password_keywords) for i in inputs)
+
+            if found_user:
+                print(f"[DEBUG] Found username-related field in: {inputs}")
+            if found_pass:
+                print(f"[DEBUG] Found password-related field in: {inputs}")
+
+            if found_user and found_pass:
+                print(f"[🔐] Login form found on current page: {target_url}")
+                return target_url
+    except Exception as e:
+        print(f"[!] HTML form detection failed: {e}")
     return base_url  # fallback to base
 
 
@@ -693,6 +699,8 @@ def test_html_injection(base_url, session, is_api=False, api_endpoints=[]):
 
     # === 1. Form-based Testing ===
     parsed_inputs = parse_input_fields(base_url, session)
+    print(f"#################################################################")
+    print(f"[DEBUG] Target URL: {base_url}")
     forms = parsed_inputs["forms"]
     input_tags = parsed_inputs["input_tags"]
     results.append("\n Forms:")
@@ -1008,7 +1016,7 @@ def login_sql_injection(base_url, session):
             else:
                 response = session.get(form_action, params=payload)
 
-            if "Welcome" in response.text or "Dashboard" in response.text:
+            if "welcome" in response.text or "dashboard" in response.text.lower() or "hello" in response.text.lower():
                 results.append("[+] SQL Injection successful!")
             else:
                 results.append("[-] SQL Injection failed.")
@@ -1035,8 +1043,8 @@ def is_login_required(url, session):
 
         for form in soup.find_all("form"):
             inputs = [i.get("name", "").lower() for i in form.find_all("input")]
-            if any(k in i for i in inputs for k in ["user", "uname", "email", "login"]) and \
-               any(k in i for i in inputs for k in ["pass", "password"]):
+            if any(k in i for i in inputs for k in ["user", "uname", "email", "login","uid"]) and \
+               any(k in i for i in inputs for k in ["pass", "password","passw"]):
                 print(f"[🔐] Login form detected at {url}")
                 return True
 
@@ -1119,7 +1127,7 @@ def test_brute_force(base_url):
                     success = (
                         code == 302 and "dashboard" in redirect or
                         any(x in text for x in [
-                            "welcome", "success", "logged in"])
+                            "welcome", "success", "logged in","hello"])
                     )
                     fail = any(x in text for x in [
                                "invalid", "incorrect", "failed"])
@@ -1234,7 +1242,10 @@ def complete_scan(target_url):
     session = requests.Session()
     print(f"Target URL: {target_url}")
     base_url = detect_login_page(target_url, session)
+    print(f"#########################################################################")
     print(f"Location returned {base_url}")
+    print(f"Base URL: {base_url}")
+    print(f"Target URL: {target_url}")
     # Extract base login URL (e.g., http://127.0.0.1:5000)
     # base_url = "/".join(target_url.split("/")[:3])
     # check if login is required using a flag

