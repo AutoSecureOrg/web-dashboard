@@ -39,9 +39,10 @@ def parse_input_fields(url, session):
 
     try:
         response = session.get(url, headers=headers, timeout=10)
+        #print("response: ", response.text)
         soup = BeautifulSoup(response.text, "html.parser")
 
-        # --- Parse <form> tags ---
+        # --- Parse <form> tags (with <input> or <textarea>) ---
         for form in soup.find_all("form"):
             form_details = {
                 "action": form.get("action") or url,
@@ -49,32 +50,33 @@ def parse_input_fields(url, session):
                 "inputs": []
             }
 
-            for input_tag in form.find_all("input"):
-                input_name = input_tag.get("name") or input_tag.get("id")
-                input_type = input_tag.get("type", "text")
-                # Skip non-user-input fields
+            for tag in form.find_all(["input", "textarea"]):
+                input_name = tag.get("name") or tag.get("id")
+                input_type = tag.get("type", "text") if tag.name == "input" else "textarea"
+                
                 if input_type in ["submit", "button", "reset", "image", "file"]:
-                    continue
-
+                    continue  # Skip non-input fields
+                
                 if input_name:
-                    form_details["inputs"].append(
-                        {"name": input_name, "type": input_type})
+                    form_details["inputs"].append({
+                        "name": input_name,
+                        "type": input_type
+                    })
 
             if form_details["inputs"]:
                 forms.append(form_details)
 
-        # --- Parse standalone <input> fields outside forms ---
+        # --- Parse standalone <input> and <textarea> fields outside <form> ---
         if not forms:
-            print(" No <form> tags found. Checking for standalone <input> fields...")
+            print("No <form> tags with valid inputs found. Checking standalone fields...")
 
-        for input_tag in soup.find_all("input"):
-            parent_form = input_tag.find_parent("form")
-            if not parent_form:  # Only consider inputs not inside forms
-                input_name = input_tag.get("name") or input_tag.get("id")
-                input_type = input_tag.get("type", "text")
+        for tag in soup.find_all(["input", "textarea"]):
+            parent_form = tag.find_parent("form")
+            if not parent_form:  # Only consider tags outside a form
+                input_name = tag.get("name") or tag.get("id")
+                input_type = tag.get("type", "text") if tag.name == "input" else "textarea"
                 if input_name:
-                    print(
-                        f"[DEBUG] Standalone input detected: {input_name} (type={input_type})")
+                    print(f"[DEBUG] Standalone input detected: {input_name} (type={input_type})")
                     input_tags.append({
                         "name": input_name,
                         "type": input_type,
@@ -143,37 +145,26 @@ def detect_login_page(target_url, session):
 
     print(f"[*] Detecting login page from: {target_url}")
     headers = {"User-Agent": "Mozilla/5.0"}
-    #base_url = "/".join(target_url.split("/")[:3])  # keeps scheme + domain + port
     base_url = target_url  # Use the full URL as base
+
+    username_keywords = ["user", "username", "email", "uid"]
+    password_keywords = ["pass", "password", "pswd", "secret", "passw"]
 
     # === Step 1: Follow redirection logic ===
     try:
         response = session.get(target_url, headers=headers,
-                               timeout=10, allow_redirects=False, verify=False)
+                            timeout=10, allow_redirects=False, verify=False)
         if response.status_code in [301, 302, 303]:
             location = response.headers.get("Location", "")
             if location:
                 if not location.startswith("http"):
                     base = "/".join(target_url.split("/")[:3])
-                    location = base + location
-                print(f" Redirected to login page at: {location}")
+                    location = base +"/" + location
+                print(f"[→] Redirected to login page at: {location}")
                 return location
     except Exception as e:
         print(f"[!] Redirect detection failed: {e}")
 
-    # === Step 2: Check if target URL itself contains login form ===
-    try:
-        response = session.get(
-            target_url, headers=headers, timeout=10, verify=False)
-        soup = BeautifulSoup(response.text, "html.parser")
-        for form in soup.find_all("form"):
-            inputs = [i.get("name", "").lower()
-                      for i in form.find_all("input")]
-            if any("user" in i for i in inputs) and any("pass" in i for i in inputs):
-                print(f"[🔐] Login form found on current page: {target_url}")
-                return target_url
-    except Exception as e:
-        print(f"[!] HTML form detection failed: {e}")
 
     # === Step 3: Fallback to common login paths ===
     print("[*] Scanning for actual login page...")
@@ -192,14 +183,35 @@ def detect_login_page(target_url, session):
 
             for form in soup.find_all("form"):
                 inputs = [i.get("name", "").lower()
-                          for i in form.find_all("input")]
-                if any("user" in i or "email" in i or "login" in i for i in inputs) and any("pass" in i for i in inputs):
+                        for i in form.find_all("input")]
+                if any("user" in i or "email" in i or "login" in i for i in inputs) and any("pass" in i or "pswd" in i or "password" in i for i in inputs):
                     print(f"[+] Login page identified at: {full_url}")
                     return full_url
         except Exception as e:
             print(f"[!] Error checking {full_url}: {e}")
 
     print("[-] Could not detect login page automatically.")
+
+    # === Step 2: Check if target URL itself contains login form ===
+    try:
+        response = session.get(target_url, headers=headers, timeout=10, verify=False)
+        soup = BeautifulSoup(response.text, "html.parser")
+        for form in soup.find_all("form"):
+            inputs = [i.get("name", "").lower() for i in form.find_all("input")]
+
+            found_user = any(any(keyword in i for keyword in username_keywords) for i in inputs)
+            found_pass = any(any(keyword in i for keyword in password_keywords) for i in inputs)
+
+            if found_user:
+                print(f"[DEBUG] Found username-related field in: {inputs}")
+            if found_pass:
+                print(f"[DEBUG] Found password-related field in: {inputs}")
+
+            if found_user and found_pass:
+                print(f"[🔐] Login form found on current page: {target_url}")
+                return target_url
+    except Exception as e:
+        print(f"[!] HTML form detection failed: {e}")
     return base_url  # fallback to base
 
 
@@ -375,7 +387,7 @@ def test_sql_injection(base_url, session, is_api=False, api_endpoints=[]):
                             f"[-] Input reflected but no SQL error: {payload}")
                     elif any(err in r.text.lower() for err in sql_error_signatures) or r.status_code == 500:
                         results.append(
-                            f"[~] SQL error-based injection detected with payload: {payload}")
+                            f"[~] Possible SQL error-based injection detected with payload: {payload}")
                     # no change
                     elif length_diff < 10:
                         results.append(
@@ -687,6 +699,8 @@ def test_html_injection(base_url, session, is_api=False, api_endpoints=[]):
 
     # === 1. Form-based Testing ===
     parsed_inputs = parse_input_fields(base_url, session)
+    print(f"#################################################################")
+    print(f"[DEBUG] Target URL: {base_url}")
     forms = parsed_inputs["forms"]
     input_tags = parsed_inputs["input_tags"]
     results.append("\n Forms:")
@@ -1002,7 +1016,7 @@ def login_sql_injection(base_url, session):
             else:
                 response = session.get(form_action, params=payload)
 
-            if "Welcome" in response.text or "Dashboard" in response.text:
+            if "welcome" in response.text or "dashboard" in response.text.lower() or "hello" in response.text.lower():
                 results.append("[+] SQL Injection successful!")
             else:
                 results.append("[-] SQL Injection failed.")
@@ -1013,44 +1027,35 @@ def login_sql_injection(base_url, session):
 
 def is_login_required(url, session):
     """
-    Determines whether the given URL requires login based on content keywords.
+    Determines whether the given URL requires login based on actual form analysis.
 
     Args:
         url (str): Page URL to inspect.
         session (requests.Session): Active HTTP session.
 
     Returns:
-        bool: True if login-related keywords are found, False otherwise.
+        bool: True if login-related form is found, False otherwise.
     """
-
     try:
         headers = {"User-Agent": "Mozilla/5.0"}
         r = session.get(url, headers=headers, timeout=10, verify=False)
-        #print (r.text.lower())
+        soup = BeautifulSoup(r.text, "html.parser")
 
-        keywords = ["signin", "login", "password", "auth", "loginform"]
-        found = False
-
-        for k in keywords:
-            if k in r.text.lower():
+        for form in soup.find_all("form"):
+            inputs = [i.get("name", "").lower() for i in form.find_all("input")]
+            if any(k in i for i in inputs for k in ["user", "uname", "email", "login","uid"]) and \
+               any(k in i for i in inputs for k in ["pass", "password","passw"]):
                 print(f"[🔐] Login form detected at {url}")
-                print(f"[DEBUG] Keyword matched: '{k}'")
-                found = True
-                break
-            else:
-                print(f"[DEBUG] Keyword '{k}' not found in response.")
+                return True
 
-        return found
+        return False  # No valid login form found
 
     except Exception as e:
         print(f"[!] Error checking for login at {url}: {e}")
         return False
 
 
-
 # brute force only function
-
-
 def test_brute_force(base_url):
     """
     Dynamically attempts brute-force login by parsing login form structure and trying credentials.
@@ -1070,74 +1075,80 @@ def test_brute_force(base_url):
     login = is_login_required(base_url,session)
     #print(login)
     if login:
-        print(f"Login required ")
-        results.append(f"Possible login form detected ")
-        # Load credentials
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        usernames = open(os.path.join(
-            base_dir, "usernames.txt")).read().splitlines()
-        passwords = open(os.path.join(
-            base_dir, "passwords.txt")).read().splitlines()
+        print(f"[*] Starting brute-force login on: {base_url}")
 
-        # Get form structure dynamically like SQLi does
-        parsed = parse_input_fields(base_url, session)
-        #print(parsed)
-        if not parsed["forms"]:
-            return ["[-] No login form found on target page."]
+    try:
+        resp = session.get(base_url, timeout=10)
+        soup = BeautifulSoup(resp.text, "html.parser")
+    except Exception as e:
+        print(f"[!] Failed to load login page: {e}")
+        return None
 
-        form = parsed["forms"][0]  # Use first form
-        form_action = form.get("action") or base_url
-        if not form_action.startswith("http"):
-            form_action = base_url.rstrip("/") + "/" + form_action.lstrip("/")
-        method = form.get("method", "post").lower()
+    form = soup.find("form")
+    if not form:
+        print("[-] No <form> found on the page.")
+        return None
 
-        print(f"[DEBUG] Form action: {form_action} | Method: {method}")
+    action = form.get("action")
+    print(" action",action )
+    form_action = urljoin(base_url, action) if action else base_url
+    print("form action, ", form_action)
+    method = form.get("method", "post").lower()
 
-        results.append(
-            "\n=============== Brute Force Login Test ===============")
+    inputs = form.find_all("input")
+    input_names = [i.get("name") for i in inputs if i.get("name")]
 
-        for u in usernames:
-            for p in passwords:
-                data = {}
-                for field in form["inputs"]:
-                    if "user" in field["name"].lower():
-                        data[field["name"]] = u
-                    elif "pass" in field["name"].lower():
-                        data[field["name"]] = p
-                    else:
-                        data[field["name"]] = "test"
+    # Load credentials
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    user_file = os.path.join(base_dir, "usernames.txt")
+    pass_file = os.path.join(base_dir, "passwords.txt")
 
-                try:
-                    if method == "post":
-                        r = session.post(
-                            form_action, data=data, headers=headers, timeout=5, allow_redirects=False)
-                    else:
-                        r = session.get(
-                            form_action, params=data, headers=headers, timeout=5, allow_redirects=False)
+    try:
+        with open(user_file, "r") as f:
+            usernames = [line.strip() for line in f if line.strip()]
+        with open(pass_file, "r") as f:
+            passwords = [line.strip() for line in f if line.strip()]
+    except FileNotFoundError:
+        print("[-] Username or password file not found.")
+        return None
 
-                    text = r.text.lower()
-                    redirect = r.headers.get("Location", "").lower()
-                    code = r.status_code
+    for username, password in product(usernames, passwords):
+        data = {}
+        for tag in inputs:
+            name = tag.get("name")
+            if not name:
+                continue
+            # Fill based on name heuristics
+            if any(k in name.lower() for k in ["user", "email", "uid", "login"]):
+                data[name] = username
+            elif any(k in name.lower() for k in ["pass", "pwd"]):
+                data[name] = password
+            else:
+                data[name] = tag.get("value", "test")  # Keep default or dummy
 
-                    success = (
-                        code == 302 and "dashboard" in redirect or
-                        any(x in text for x in [
-                            "welcome", "success", "logged in"])
-                    )
-                    fail = any(x in text for x in [
-                               "invalid", "incorrect", "failed"])
+        print(f"Trying: {username} | {password}")
+        try:
+            if method == "post":
+                response = session.post(form_action, data=data, timeout=10)
+            else:
+                response = session.get(form_action, params=data, timeout=10)
+            # Debugging output
+            if username == "admin" and password == "admin":
+                print(f"[DEBUG] Status: {response.status_code} | URL: {response.url}")
+                print(f"[DEBUG] Response Snippet:\n{response.text}\n")
 
-                    if success and not fail:
-                        results.append(f"[+] Valid → {u}:{p}")
-                except Exception as e:
-                    results.append(f"[!] Error → {u}:{p} → {str(e)}")
+            text = response.text.lower()
 
-        if len(results) == 1:
-            results.append("[-] No valid credentials found.")
-    else:
-        results.append(f" No Login Required ")
+            if any(k in text for k in ["logout", "welcome", "dashboard", "you have logged in", "hello"]):
+                print(f"[+] Brute-force success: {username}:{password}")
+                results.append(f"[+] Brute-force success: {username}:{password}")
+                return results
+
+        except Exception as e:
+            print(f"[!] Error during attempt {username}:{password} → {e}")
+
+    print("[-] No valid credentials found.")
     return results
-
 
 def complete_scan(target_url):
     """
@@ -1159,7 +1170,10 @@ def complete_scan(target_url):
     session = requests.Session()
     print(f"Target URL: {target_url}")
     base_url = detect_login_page(target_url, session)
+    print(f"#########################################################################")
     print(f"Location returned {base_url}")
+    print(f"Base URL: {base_url}")
+    print(f"Target URL: {target_url}")
     # Extract base login URL (e.g., http://127.0.0.1:5000)
     # base_url = "/".join(target_url.split("/")[:3])
     # check if login is required using a flag
@@ -1200,7 +1214,7 @@ def complete_scan(target_url):
             if endpoints:
                 results.append(
                     "[+] API Endpoints found — performing API-based testing only.")
-
+                
                 # Test ONLY the API endpoints
                 results.extend(test_sql_injection(
                     target_url, session, is_api=True, api_endpoints=endpoints))
@@ -1214,14 +1228,14 @@ def complete_scan(target_url):
             else:
                 results.append(
                     "[-] No API endpoints found — performing standard form-based testing.")
-
+                
                 # Test standard forms
                 results.extend(test_sql_injection(target_url, session))
                 results.extend(test_xss(target_url, session))
                 results.extend(test_command_injection(target_url, session))
                 results.extend(test_html_injection(target_url, session))
                 return results
-
+            
         # if login failed
         else:
             print("[-] Access denied — login required but not bypassed.")
