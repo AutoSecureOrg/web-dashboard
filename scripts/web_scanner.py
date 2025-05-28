@@ -183,7 +183,7 @@ def detect_login_page(target_url, session):
 
             for form in soup.find_all("form"):
                 inputs = [i.get("name", "").lower()
-                          for i in form.find_all("input")]
+                        for i in form.find_all("input")]
                 if any("user" in i or "email" in i or "login" in i for i in inputs) and any("pass" in i or "pswd" in i or "password" in i for i in inputs):
                     print(f"[+] Login page identified at: {full_url}")
                     return full_url
@@ -387,7 +387,7 @@ def test_sql_injection(base_url, session, is_api=False, api_endpoints=[]):
                             f"[-] Input reflected but no SQL error: {payload}")
                     elif any(err in r.text.lower() for err in sql_error_signatures) or r.status_code == 500:
                         results.append(
-                            f"[~] SQL error-based injection detected with payload: {payload}")
+                            f"[~] Possible SQL error-based injection detected with payload: {payload}")
                     # no change
                     elif length_diff < 10:
                         results.append(
@@ -1149,84 +1149,6 @@ def test_brute_force(base_url):
 
     print("[-] No valid credentials found.")
     return results
-def is_security_level_configurable(session, base_url):
-    """
-    Detects if a web app has a configurable security level (e.g., DVWA).
-
-    Args:
-        session (requests.Session): Authenticated session.
-        base_url (str): Base URL of the target site.
-
-    Returns:
-        bool: True if a security level form is detected.
-    """
-    try:
-        url = urljoin(base_url, "security.php")
-        r = session.get(url, timeout=5)
-        soup = BeautifulSoup(r.text, "html.parser")
-
-        if soup.find("select", {"name": "security"}):
-            print("[+] Security level configuration detected.")
-            return True
-    except Exception as e:
-        print(f"[-] Security level check failed: {e}")
-    return False
-
-
-def set_dvwa_security_level(session, base_url, level):
-    """
-    Changes DVWA security level via security.php.
-
-    Args:
-        session (requests.Session): Authenticated session.
-        base_url (str): Base URL of DVWA (e.g., http://127.0.0.1/dvwa/).
-        level (str): 'low', 'medium', or 'high'.
-
-    Returns:
-        bool: True if level was changed successfully.
-    """
-    url = urljoin(base_url, "security.php")
-    payload = {"security": level}
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    try:
-        r = session.post(url, data=payload, headers=headers, timeout=5)
-        print(f"[DEBUG] Changed security level to {level}. Current cookies: {session.cookies.get_dict()}")
-        return level in r.text
-    except Exception as e:
-        print(f"[!] Error changing security level: {e}")
-        return False
-
-
-def scan_dvwa_at_all_levels(target_url, session, endpoints=[]):
-    """
-    If DVWA-style security levels are present, scan at each level (low, medium, high).
-    
-    Args:
-        target_url (str): The target DVWA base URL.
-        session (requests.Session): Authenticated session.
-
-    Returns:
-        list: Combined results across all levels.
-    """
-    results = []
-    base_url = "/".join(target_url.split("/")[:4]) + "/"  # e.g., http://127.0.0.1/dvwa/
-
-    if is_security_level_configurable(session, base_url):
-        for level in ["low", "medium", "high"]:
-            results.append(f"\n=== Testing Security Level: {level.upper()} ===")
-            if set_dvwa_security_level(session, base_url, level):
-                results.append(f"[+] Security level set to {level}")
-                print(f"[+] Security level set to {level}")
-                results.extend(test_sql_injection(target_url, session, api_endpoints=endpoints))
-                results.extend(test_xss(target_url, session, api_endpoints=endpoints))
-                results.extend(test_command_injection(target_url, session, api_endpoints=endpoints))
-                results.extend(test_html_injection(target_url, session, api_endpoints=endpoints))
-            else:
-                results.append(f"[-] Could not set level to {level}")
-    else:
-        results.append("[-] Security level mechanism not detected.")
-    return results
-
 
 def complete_scan(target_url):
     """
@@ -1293,13 +1215,6 @@ def complete_scan(target_url):
                 results.append(
                     "[+] API Endpoints found — performing API-based testing only.")
                 
-                # If security level can be changed(DVWA)
-                if is_security_level_configurable(session, base_url):
-                    print("security level is configurable")
-                    results.append("[*] Detected DVWA-style security settings.")
-                    results.extend(scan_dvwa_at_all_levels(target_url, session, endpoints))
-                    return results  # Already scanned per level, skip redundant scan
-
                 # Test ONLY the API endpoints
                 results.extend(test_sql_injection(
                     target_url, session, is_api=True, api_endpoints=endpoints))
@@ -1314,13 +1229,6 @@ def complete_scan(target_url):
                 results.append(
                     "[-] No API endpoints found — performing standard form-based testing.")
                 
-                # If security level can be changed(DVWA)
-                if is_security_level_configurable(session, base_url):
-                    print("security level is configurable")
-                    results.append("[*] Detected DVWA-style security settings.")
-                    results.extend(scan_dvwa_at_all_levels(target_url, session))
-                    return results  # Already scanned per level, skip redundant scan
-
                 # Test standard forms
                 results.extend(test_sql_injection(target_url, session))
                 results.extend(test_xss(target_url, session))
@@ -1366,13 +1274,6 @@ def complete_scan(target_url):
             results.extend(test_html_injection(target_url, session))
 
         print("[-] No login required.")
-
-        #if security level can be changed(DVWA)
-        if is_security_level_configurable(session, base_url):
-            results.append("[*] Detected DVWA-style security settings.")
-            results.extend(scan_dvwa_at_all_levels(target_url, session))
-            return results  # Already scanned per level, skip redundant scan
-        
         return results
 
 
