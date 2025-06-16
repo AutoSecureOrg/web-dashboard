@@ -7,6 +7,16 @@
 Preview Landing Page: <a href="https://autosecureorg.github.io">AutoSecure</a>
 </div>
 
+## Table of Contents
+- [Introduction](#introduction)
+- [Features](#features)
+- [Project Setup](#project-setup)
+  - [Dashboard Prerequisite Setup](#dashboard-prerequisite-setup)
+  - [Automation Setup](#automation-setup)
+  - [AI Server Setup](#ai-server-setup)
+- [Disclaimer](#disclaimer)
+- [Authors](#authors)
+
 ## Introduction
 
 AutoSecure is a dashboard designed to automate tedious penetration testing tasks, providing cybersecurity professionals with a quick and comprehensive solution for assessing security vulnerabilities.
