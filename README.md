@@ -158,17 +158,19 @@ AutoSecure is a dashboard designed to automate tedious penetration testing tasks
     ```bash
     git clone https://github.com/ggerganov/llama.cpp.git
     cd llama.cpp
+    #Install libcurl support:
+    sudo apt install libcurl4-openssl-dev
     cmake -B build
     cmake --build build --config Release
     ```
 
-* Create a models directory (e.g., inside `llama.cpp`) and download the Llama-3 WhiteRabbitNeo GGUF model:
+* Download the Llama-3 WhiteRabbitNeo GGUF model:
 
     ```bash
+    sudo apt install aria2
     # Assuming you are in the llama.cpp directory
-    mkdir -p models
     cd models
-    wget https://huggingface.co/mradermacher/Llama-3-WhiteRabbitNeo-8B-v2.0-GGUF/resolve/main/Llama-3-WhiteRabbitNeo-8B-v2.0.Q4_K_M.gguf
+    aria2c -x 16 -s 16 "https://huggingface.co/mradermacher/Llama-3-WhiteRabbitNeo-8B-v2.0-GGUF/resolve/main/Llama-3-WhiteRabbitNeo-8B-v2.0.Q4_K_M.gguf"
     ```
 
     *Ensure the `MODEL_PATH` in `ai_server.py` points to the correct location of this downloaded model file (e.g., `/home/autosecure/llama.cpp/models/Llama-3-WhiteRabbitNeo-8B-v2.0.Q4_K_M.gguf`).*
