@@ -149,8 +149,7 @@ AutoSecure is a dashboard designed to automate tedious penetration testing tasks
 
     ```bash
     # Run AI Server
-    # Ensure VENV_PATH is defined, e.g., VENV_PATH=/home/autosecure/FYP/web-dashboard/venv
-    x-terminal-emulator -e "bash -c 'source $VENV_PATH/bin/activate && python3 /home/autosecure/FYP/web-dashboard/ai_server.py; exec bash'" &
+    x-terminal-emulator -e "bash -c 'cd FYP/web-dashboard && source venv/bin/activate && python3 ai_server.py; exec bash'" &
     ```
 
 * Clone `llama.cpp` repository and build it:
